@@ -3,7 +3,7 @@ name: Compilar APK
 on:
   push:
     branches: [main]
-    paths-ignore: ['voley/**', '.github/workflows/voley.yml', 'domino/**', '.github/workflows/domino.yml']
+    paths-ignore: ['voley/**', '.github/workflows/voley.yml', 'domino/**', '.github/workflows/domino.yml', 'parchis/**', '.github/workflows/parchis.yml']
   workflow_dispatch:
 
 permissions:
