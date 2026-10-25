@@ -71,7 +71,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.7.2';
+const VERSION='v1.7.3';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.14;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -161,13 +161,13 @@ const mk=()=>{ const o={}; for(const k of BTN) o[k]=0; return o; };
 const keys=[mk(),mk()], tch=mk(), bridge=[mk(),mk()], latch=[mk(),mk()];
 const KM={KeyA:[0,'left'],KeyD:[0,'right'],KeyW:[0,'a'],KeyS:[0,'down'],Space:[0,'a'],KeyF:[0,'b'],KeyG:[0,'b'],ShiftLeft:[0,'b'],KeyP:[0,'start'],Escape:[0,'start'],
   ArrowLeft:[1,'left'],ArrowRight:[1,'right'],ArrowUp:[1,'a'],ArrowDown:[1,'down'],Enter:[1,'a'],NumpadEnter:[1,'a'],KeyK:[1,'a'],KeyL:[1,'b'],ShiftRight:[1,'b'],Numpad0:[1,'b']};
-addEventListener('keydown',e=>{ const m=KM[e.code]; if(m){ if(padOpen) return; keys[m[0]][m[1]]=1; latch[m[0]][m[1]]=1; if(m[1]==='a'){ keys[m[0]].up=1; }  e.preventDefault(); initAudio(); } });
-addEventListener('keyup',e=>{ const m=KM[e.code]; if(m){ keys[m[0]][m[1]]=0; if(m[1]==='a') keys[m[0]].up=0; e.preventDefault(); } });
+addEventListener('keydown',e=>{ const m=KM[e.code]; if(m){ if(padOpen) return; keys[m[0]][m[1]]=1; latch[m[0]][m[1]]=1;  e.preventDefault(); initAudio(); } });
+addEventListener('keyup',e=>{ const m=KM[e.code]; if(m){ keys[m[0]][m[1]]=0; e.preventDefault(); } });
 addEventListener('blur',()=>{ for(const s of [0,1]) for(const k of BTN){ keys[s][k]=0; bridge[s][k]=0; } });
 // puente con la app Android: cada mando físico tiene su jugador
 let padUsed=false;
 function usePad(){ if(!padUsed){ padUsed=true; layout(); } }
-window.kikoKey=(k,down,slot)=>{ const s=slot?1:0; if(k in bridge[s]){ bridge[s][k]=down?1:0; if(down) latch[s][k]=1; if(k==='a') bridge[s].up=down?1:0; if(down){ initAudio(); usePad(); } } };
+window.kikoKey=(k,down,slot)=>{ const s=slot?1:0; if(k in bridge[s]){ bridge[s][k]=down?1:0; if(down) latch[s][k]=1; if(down){ initAudio(); usePad(); } } };
 
 const ctl=document.getElementById('ctl'), dpad=document.getElementById('dpad'), kl=document.getElementById('kl'), kr=document.getElementById('kr'), bA=document.getElementById('bA'), bB=document.getElementById('bB'), pz=document.getElementById('pz');
 let isTV=/[?&]tv=1/.test(location.search); try{ if(window.KikoApp&&KikoApp.isTV()) isTV=true; }catch(_){}
