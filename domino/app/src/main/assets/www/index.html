@@ -7,6 +7,7 @@
 <style>@font-face{font-family:"Caveat";src:url(caveat.woff2) format("woff2");font-weight:700;font-display:swap}</style>
 </head><body>
 
+<style>@font-face{font-family:"Dancing Script";src:url(dancing.woff2) format("woff2");font-weight:700;font-display:swap}</style>
 <style>
 :root{
   /* Layout: mesa arriba (canvas) y la mano del jugador abajo; en la tele solo la mesa; en el móvil conectado solo la mano */
@@ -181,10 +182,10 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 #cuba{flex-basis:100%;display:flex;justify-content:center;align-items:flex-end;gap:26px;margin-top:2px}
 #cuba .flag{width:96px;height:49px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));animation:ond 2.4s ease-in-out infinite alternate;transform-origin:left center}
 #cuba .cmg{display:flex;flex-direction:column;align-items:center}
-#cuba .cmg span{font:700 16px Caveat,cursive;color:#ffe9a8;margin-top:-4px}
+#cuba .cmg span{font:700 22px 'Dancing Script',cursive;color:#ffe9a8;margin-top:-6px;white-space:nowrap;text-shadow:0 2px 3px rgba(0,0,0,.6)}
 #cuba .tinajon{width:92px;height:67px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
 @keyframes ond{from{transform:skewY(-2deg) scaleX(.97)}to{transform:skewY(2deg) scaleX(1)}}
-@media (max-height:460px){#cuba .flag{width:70px;height:36px} #cuba .tinajon{width:70px;height:51px} #cuba .cmg span{font-size:13px}}
+@media (max-height:460px){#cuba .flag{width:70px;height:36px} #cuba .tinajon{width:70px;height:51px} #cuba .cmg span{font-size:18px}}
 #pick{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:680px}
 #pick button{min-width:300px}
 #menu{overflow-y:auto}
@@ -308,7 +309,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.6';
+const VERSION='v2.9.7';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
