@@ -176,6 +176,8 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 #gclose.focus{outline:3px solid var(--gold);outline-offset:3px}
 #pick,#sub{display:flex;flex-direction:column;align-items:center;gap:12px}
 #pick:not([hidden]){display:flex}
+#menu #ptab{background:#2f7fe0;border-color:#1c4c94}
+#menu #psolo{background:#22a04a;border-color:#0f5a26}
 #pick{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:680px}
 #pick button{min-width:300px}
 #menu{overflow-y:auto}
@@ -277,7 +279,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.2';
+const VERSION='v2.9.3';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
