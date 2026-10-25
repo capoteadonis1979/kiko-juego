@@ -37,6 +37,10 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 #tilt{flex:1;display:flex;flex-direction:column;gap:12px;min-height:0}
 #drag{flex:1;min-height:200px;border-radius:24px;background:#163248;border:3px solid #2c4c66;display:grid;grid-template-columns:64px 1fr 64px;grid-template-rows:1fr auto;align-items:center;gap:8px;padding:12px;touch-action:none;user-select:none}
 #drag .tz{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:var(--btn);border:2px solid #2c4c66;font-size:24px}
+#drag{position:relative;transition:background .25s,border-color .25s}
+#drag.jp{background:#2a6a3e;border-color:#8aff6a;transition:none}
+#dot{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:4px solid #ffe070;background:rgba(255,224,112,.25);pointer-events:none;display:none}
+#dot.on{display:block}
 #drag .tz.on{background:#2fbf71;border-color:#1a7a44}
 #dragtrack{height:14px;border-radius:7px;background:#0e2233;position:relative}
 #dragknob{position:absolute;top:-17px;left:50%;width:48px;height:48px;margin-left:-24px;border-radius:50%;background:#ffe070;box-shadow:0 0 0 4px #7a3a00}
@@ -86,7 +90,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 <div id="pad" hidden>
   <div id="padtop"><button id="padexit">SALIR</button><button id="padpair">EMPAREJAR</button><button id="padmode">BOTONES</button><span id="padst">Buscando la tele...</span><div class="padman" hidden><input id="padip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Direccion de la tele"><button id="padgo">CONECTAR</button></div></div>
   <div id="tilt">
-    <div id="drag"><div class="tz" id="tzl">&#9664;</div><div id="dragtrack"><i id="dragknob"></i></div><div class="tz" id="tzr">&#9654;</div><span id="draghint">TOCA PARA SALTAR · DEJA EL DEDO Y DESLIZA PARA MOVERTE</span></div>
+    <div id="drag"><div class="tz" id="tzl">&#9664;</div><div id="dragtrack"><i id="dragknob"></i></div><div class="tz" id="tzr">&#9654;</div><i id="dot"></i><span id="draghint">TOCA PARA SALTAR · DEJA EL DEDO Y DESLIZA PARA MOVERTE</span></div>
     <div id="tiltbtns"><div data-k="up" class="pk">&#9650;</div><div data-k="down" class="pk">&#9660;</div><div data-k="start" class="pk">START</div></div>
   </div>
   <div id="padmain" hidden>
@@ -97,7 +101,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.16.0';
+const VERSION='v1.16.1';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -810,8 +814,10 @@ window.kikoMove=()=>{}; window.kikoMoveVal=()=>{}; window.kikoMoveInfo=()=>{};
 const dragEl=document.getElementById('drag'), knob=document.getElementById('dragknob');
 let dId=null, dX0=0, dT0=0, dMoved=false;
 function knobAt(f){ knob.style.left=(50+clamp(f,-1,1)*46)+'%'; }
-dragEl.addEventListener('pointerdown',e=>{ e.preventDefault(); if(dId!==null){ jumpNow(); return; } dId=e.pointerId; try{ dragEl.setPointerCapture(e.pointerId); }catch(_){} dX0=e.clientX; dT0=performance.now(); dMoved=false; });
-dragEl.addEventListener('pointermove',e=>{
+const dot=document.getElementById('dot');
+function dotAt(e){ const b=dragEl.getBoundingClientRect(); dot.style.left=(e.clientX-b.left)+'px'; dot.style.top=(e.clientY-b.top)+'px'; dot.classList.add('on'); }
+dragEl.addEventListener('pointerdown',e=>{ e.preventDefault(); dotAt(e); if(dId!==null){ jumpNow(); return; } dId=e.pointerId; try{ dragEl.setPointerCapture(e.pointerId); }catch(_){} dX0=e.clientX; dT0=performance.now(); dMoved=false; });
+dragEl.addEventListener('pointermove',e=>{ if(dId===e.pointerId) dotAt(e);
   if(e.pointerId!==dId) return;
   let dx=e.clientX-dX0; const W=Math.max(120,dragEl.clientWidth*0.3), th=14;
   if(Math.abs(dx)>8) dMoved=true;
@@ -819,8 +825,8 @@ dragEl.addEventListener('pointermove',e=>{
   knobAt(dx/W);
   setDir(dx<-th?-1:dx>th?1:(Math.abs(dx)<th*0.5?0:tiltDir));
 });
-function jumpNow(){ ctrl('a',true); setTimeout(()=>ctrl('a',false),140); try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} }
-const dragEnd=e=>{ if(e.pointerId!==dId) return; dId=null; setDir(0); knobAt(0);
+function jumpNow(){ dragEl.classList.add('jp'); setTimeout(()=>dragEl.classList.remove('jp'),180); ctrl('a',true); setTimeout(()=>ctrl('a',false),140); try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} }
+const dragEnd=e=>{ if(e.pointerId!==dId) return; dId=null; dot.classList.remove('on'); setDir(0); knobAt(0);
   if(!dMoved&&performance.now()-dT0<260) jumpNow(); };
 dragEl.addEventListener('pointerup',dragEnd); dragEl.addEventListener('pointercancel',dragEnd); dragEl.addEventListener('lostpointercapture',dragEnd);
 function setTilt(on){
