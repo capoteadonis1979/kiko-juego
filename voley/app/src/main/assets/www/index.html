@@ -93,7 +93,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.13.1';
+const VERSION='v1.14.0';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -671,7 +671,7 @@ function drawBall(){
   const r=BALLR;
   if(!ball.held){ ctx.fillStyle='rgba(60,30,0,0.38)'; const s=clamp(1-(GY-ball.y)/260,0.45,1); ctx.beginPath(); ctx.ellipse(ball.x,GY+1,12*s,3.4*s,0,0,Math.PI*2); ctx.fill(); }
   for(let i=0;i<ball.trail.length-1;i++){ const [tx,ty]=ball.trail[i]; ctx.fillStyle='rgba(255,255,255,'+(0.05*i)+')'; ctx.beginPath(); ctx.arc(tx,ty,r-2,0,Math.PI*2); ctx.fill(); }
-  const x=Math.round(ball.x), y=Math.round(ball.y);
+  const x=ball.x, y=ball.y;
   if(y<r+2){
     // flecha que marca dónde está el balón cuando se va por arriba
     const ax=clamp(x,14,VW-14), bob=Math.sin(G.frame*0.3)*2, h=Math.min(1,Math.max(0.55,1-(-y)/400));
@@ -690,16 +690,16 @@ function drawBall(){
   ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(x,y,r-0.5,0,Math.PI*2); ctx.stroke();
 }
 function drawHUD(){
-  // marcador pequeño en la esquina de abajo a la izquierda
-  const X=6, Y=VH-31;
-  R(X,Y,98,28,'rgba(6,18,28,0.72)');
+  // cada jugador tiene su marcador en su esquina de arriba
   for(const t of [0,1]){
-    const y=Y+3+t*13;
-    drawFlag(G.flag[t],X+4,y+1,15,10,false);
-    txt(pad(G.score[t],2),X+24,y,'#ffffff','left',8);
-    if(G.serve===t) circ(X+48,y+6,2.6,'#ffe070');
+    const W=78, X=t===0?6:VW-6-W, Y=5, R0=t===0;
+    R(X,Y,W,34,'rgba(6,18,28,0.72)');
+    drawFlag(G.flag[t],R0?X+5:X+W-26,Y+5,21,14,false);
+    txt(pad(G.score[t],2),R0?X+32:X+W-32,Y+3,'#ffffff',R0?'left':'right',13);
+    if(G.serve===t) circ(R0?X+W-8:X+8,Y+11,3,'#ffe070');
     const n=G.lastTeam===t?G.touches:0;
-    for(let k=0;k<3;k++) circ(X+60+k*9,y+6,2.8,k<n?TEAM[t].hi:'rgba(255,255,255,0.28)');
+    for(let k=0;k<3;k++){ const cx=R0?X+9+k*9:X+W-9-k*9; circ(cx,Y+27,2.8,k<n?TEAM[t].hi:'rgba(255,255,255,0.28)'); }
+    txt('TOQUES',R0?X+36:X+W-36,Y+23,'rgba(255,255,255,0.7)',R0?'left':'right',5);
   }
 }
 function drawGame(){
@@ -762,7 +762,7 @@ function draw(){
   ctx.setTransform(SC,0,0,SC,0,0);
   if(G.state==='menu') drawMenu(); else if(G.state==='over') drawOver(); else if(G.state==='pick') drawPick(); else drawGame();
   if(G.pairT>0){ G.pairT--; const ty2=G.state==='menu'?2:38; R(VW/2-110,ty2,220,22,'rgba(20,90,40,0.94)'); txt('MANDO EMPAREJADO ('+G.net+')',VW/2,ty2+7,'#ffffff','center',8); }
-  txt(VERSION,VW-4,G.state==='menu'||G.state==='pick'?VH-12:3,'rgba(255,255,255,0.8)','right',6);
+  txt(VERSION,VW-4,VH-10,'rgba(255,255,255,0.8)','right',6);
 }
 
 /* ================= MÓVIL COMO MANDO ================= */
@@ -831,10 +831,16 @@ function layout(){
 addEventListener('resize',layout); layout();
 
 let last=performance.now(), acc=0;
+const STEP=1000/60, MOV=[ball,...players];
+// el juego calcula 60 veces por segundo; entre cálculo y cálculo se dibujan posiciones intermedias
 function loop(now){
   acc+=Math.min(100,now-last); last=now;
-  let n=0; while(acc>=1000/60&&n<5){ update(); acc-=1000/60; n++; }
-  draw(); requestAnimationFrame(loop);
+  let n=0; while(acc>=STEP&&n<5){ for(const o of MOV){ o.px=o.x; o.py=o.y; } update(); acc-=STEP; n++; }
+  const a=Math.min(1,acc/STEP), keep=[];
+  for(const o of MOV){ keep.push(o.x,o.y); if(o.px!==undefined&&Math.abs(o.x-o.px)<40&&Math.abs(o.y-o.py)<40){ o.x=o.px+(o.x-o.px)*a; o.y=o.py+(o.y-o.py)*a; } }
+  draw();
+  MOV.forEach((o,i)=>{ o.x=keep[i*2]; o.y=keep[i*2+1]; });
+  requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 if(inApp){ try{ initAudio(); }catch(_){} }
