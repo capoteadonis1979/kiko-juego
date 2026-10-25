@@ -4,6 +4,9 @@
 <title>Dominó Cubano</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>@font-face{font-family:"Fredoka";src:url(fredoka.woff2) format("woff2");font-weight:300 700;font-display:block}html,body{margin:0}</style>
+<style>@font-face{font-family:"Caveat";src:url(caveat.woff2) format("woff2");font-weight:700;font-display:swap}</style>
+</head><body>
+
 <style>
 :root{
   /* Layout: mesa arriba (canvas) y la mano del jugador abajo; en la tele solo la mesa; en el móvil conectado solo la mano */
@@ -35,6 +38,21 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #power.full #powtrack{box-shadow:0 0 12px #ff5a2a;border-color:#ffd23a}
 #powpct{font:700 13px var(--font);color:#fff}
 #powtrack::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 calc(10% - 2px),rgba(0,0,0,.55) calc(10% - 2px) 10%);pointer-events:none}
+#handbar #blib{background:#f6f0e2!important;color:#2a1608!important;border-color:#8a5a2a!important}
+#libreta{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:22;background:rgba(30,16,6,.85);display:flex;justify-content:center;padding:6px;box-sizing:border-box}
+#libpage{position:relative;width:min(100%,640px);height:100%;overflow-y:auto;touch-action:pan-y;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.5);
+  background:repeating-linear-gradient(180deg,#fdfbf2 0 27px,#a9c4e8 27px 28px);background-color:#fdfbf2;font:700 22px Caveat,"Comic Sans MS",cursive;color:#1b2a6b;padding:6px 14px 10px 64px;box-sizing:border-box}
+#libpage::before{content:'';position:absolute;left:52px;top:0;bottom:0;width:2px;background:#e05a5a}
+#libpage h4{margin:0 0 4px;font:700 26px Caveat,cursive;color:#1b2a6b;line-height:28px}
+#libpage table{border-collapse:collapse;width:100%}
+#libpage td,#libpage th{height:28px;line-height:28px;padding:0 6px;text-align:center;font-weight:700}
+#libpage th{font-size:20px;color:#8a1e1e}
+#libpage td.n{color:#8a8a8a;width:30px;text-align:left}
+#libpage td.new{animation:ink 1.2s ease-out}
+@keyframes ink{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+#libpage .fin{color:#c8281e;font-size:26px;text-align:center}
+#libpage .palos{letter-spacing:2px}
+#libx{position:absolute;right:14px;top:10px;font:700 16px var(--font);background:#5a3a1a;color:#fff;border:2px solid #8a5a2a;border-radius:10px;padding:2px 12px;z-index:2}
 #handbar .bpan{background:#2f7fe0!important;border-color:#1c4c94!important;color:#fff}
 #panel{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:20;background:rgba(30,16,6,.96);display:flex;flex-direction:column;padding:6px 10px;box-sizing:border-box}
 #panhead{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px}
@@ -133,8 +151,6 @@ body.mesa #menu>p{display:none}
 #menu button:focus-visible,#menu button.focus{outline:3px solid var(--gold);outline-offset:3px}
 #ver{position:fixed;right:8px;bottom:4px;font-size:11px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
 </style>
-</head><body>
-
 <div id="app">
   <div id="tablebox">
     <canvas id="t" width="960" height="540" aria-label="Mesa de dominó"></canvas>
@@ -145,11 +161,12 @@ body.mesa #menu>p{display:none}
     </div>
   </div>
   <div id="hand">
-    <div id="handbar"><button id="bsort">ORDENAR</button><button class="bexp" data-k="0">¿QUÉ QUÉ?</button><button class="bexp" data-k="1">¿CÓMO?</button><button class="bpan" data-p="f">FRASES</button><button class="bpan" data-p="c">CARITAS</button><span id="turnmsg">—</span><span id="myscore"></span></div>
+    <div id="handbar"><button id="bsort">ORDENAR</button><button class="bexp" data-k="0">¿QUÉ QUÉ?</button><button class="bexp" data-k="1">¿CÓMO?</button><button class="bpan" data-p="f">FRASES</button><button class="bpan" data-p="c">CARITAS</button><button id="blib">LIBRETA</button><span id="turnmsg">—</span><span id="myscore"></span></div>
     <div id="tiles"></div>
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
+    <div id="libreta" hidden><div id="libpage"></div><button id="libx">✕</button></div>
     <div id="panel" hidden><div id="panhead"><b id="pantitle">FRASES</b><button id="panx">✕</button></div><div id="pangrid"></div></div>
     <div id="hint">Toca la ficha para ponerla · deslízala hacia arriba para el golpetazo · arrastra a los lados para ordenar</div>
   </div>
@@ -187,7 +204,7 @@ body.mesa #menu>p{display:none}
         <li><b>Desliza la ficha hacia arriba</b> para dar un <b>golpetazo</b> con toda la fuerza acumulada.</li>
         <li>La barra <b>FUERZA</b> (a la izquierda) tiene <b>10 niveles</b>: cada ficha que pones sube un nivel, y si <b>pasas baja 2</b>. Pegar no la gasta. Empieza en 0 en cada mano. Con más nivel: más llena, más fuerte cae la ficha, más polvo, la botella se tambalea y con todo lleno se vira. La <b>ficha con la que te pegas</b> pega el doble, y <b>el que va ganando</b> pega más duro que el que va perdiendo.</li>
         <li>Arrastra una ficha a los lados para ordenarlas, o toca <b>ORDENAR</b>.</li>
-        <li><b>FRASES</b>: frases cubanas del dominó y de la charada. <b>CARITAS</b>: risa, bravo, enfurecido… <b>¿QUÉ QUÉ?</b> y <b>¿CÓMO?</b> sacan a sus personajes en la mesa.</li>
+        <li><b>FRASES</b>: frases cubanas del dominó y de la charada. <b>CARITAS</b>: risa, bravo, enfurecido… <b>¿QUÉ QUÉ?</b> y <b>¿CÓMO?</b> salen en un globo junto a tu puesto.</li>
       </ul>
       <button id="gclose">ENTENDIDO</button>
     </div>
@@ -209,14 +226,14 @@ body.mesa #menu>p{display:none}
     <div id="lobby" hidden>
       <div id="lip"></div>
       <div id="lseats"></div>
-      <div id="lbtns"><button id="lmode">MODO: PAREJAS</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
+      <div id="lbtns"><button id="lpairs">CAMBIAR PAREJAS</button><button id="lmode">MODO: PAREJAS</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
     </div>
   </div>
 </div>
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.3.0';
+const VERSION='v2.4.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -313,15 +330,16 @@ const same=(x,y)=>x&&y&&((x[0]===y[0]&&x[1]===y[1])||(x[0]===y[1]&&x[1]===y[0]))
 /* ================= REGLAS ================= */
 const SEATS=['TÚ','DERECHA','COMPAÑERO','IZQUIERDA'];
 const TEAMN=()=>isTV?['PAREJA A','PAREJA B']:['NOSOTROS','ELLOS'];
-const G=window.__D={state:'menu',hands:[[],[],[],[]],chain:[],ends:null,turn:0,passes:0,energy:[0,0,0,0],scores:[0,0],pscores:[0,0,0,0],mode:'parejas',handNo:0,starter:0,lastWinner:-1,msg:'',msgT:0,
-  human:[true,false,false,false],names:['TÚ','MÁQUINA 1','MÁQUINA 2','MÁQUINA 3'],aiT:0,anim:[],shake:0,dust:[],exps:[],says:[],fallT:-1,wobT:-999,wobA:0,photos:[null,null,null,null],fly:null,frame:0,remote:[null,null,null,null],over:false,target:100};
+const G=window.__D={state:'menu',hands:[[],[],[],[]],chain:[],ends:null,turn:0,passes:0,log:[],wins:[0,0,0,0],matchNo:0,energy:[0,0,0,0],scores:[0,0],pscores:[0,0,0,0],mode:'parejas',handNo:0,starter:0,lastWinner:-1,msg:'',msgT:0,
+  human:[true,false,false,false],names:['TÚ','MÁQUINA 1','MÁQUINA 2','MÁQUINA 3'],aiT:0,anim:[],shake:0,dust:[],exps:[],says:[],fallT:-1,fallHold:false,megaT:-1,wobT:-999,wobA:0,photos:[null,null,null,null],fly:null,frame:0,remote:[null,null,null,null],over:false,target:100};
 function newDeck(){ const d=[]; for(let a=0;a<=9;a++) for(let b=a;b<=9;b++) d.push([a,b]); for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; } return d; }
 function canPlay(t){ if(!G.ends) return ['L']; const s=[]; if(t[0]===G.ends[0]||t[1]===G.ends[0]) s.push('L'); if(t[0]===G.ends[1]||t[1]===G.ends[1]) s.push('R'); return s; }
 function playable(seat){ return G.hands[seat].filter(t=>canPlay(t).length); }
-function startMatch(){ G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.over=false; dealHand(); }
+function startMatch(){ G.log=[]; G.matchNo=(G.matchNo||0)+1; G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.over=false; dealHand(); }
 function dealHand(){
+  try{ if(!G.remoteMode) libEl.hidden=true; }catch(_){}
   const d=newDeck(); for(let s=0;s<4;s++) G.hands[s]=d.slice(s*10,s*10+10);
-  G.chain=[]; G.ends=null; G.passes=0; G.handNo++; G.anim=[]; G.fly=null; G.fallT=-1; G.energy=[0,0,0,0];   // se recogen la botella y el tabaco
+  G.chain=[]; G.ends=null; G.passes=0; G.handNo++; G.anim=[]; G.fly=null; G.fallT=-1; G.energy=[0,0,0,0]; G.fallHold=false; G.megaT=-1;   // se recogen la botella y el tabaco
   if(G.lastWinner<0){
     // primera mano: sale quien tenga el doble más alto
     let best=-1, who=0; for(let s=0;s<4;s++) for(const t of G.hands[s]) if(t[0]===t[1]&&t[0]>best){ best=t[0]; who=s; }
@@ -359,18 +377,22 @@ function landed(){
   const f=G.fly; G.fly=null;
   const win=!G.hands[f.seat].length;   // la última ficha, la que pega, vale el doble
   const E=(f.slam||0)*3*leadMult(f.seat)*(win?2:1), L=E>=0.5?Math.min(E,4.5):0;
-  if(L){ slam(L); G.shake=14+L*8; G.slamT=G.frame;
+  const mega=win&&(f.slam||0)>0;   // el golpe con el que te pegas: se cae todo
+  if(mega){ G.megaT=G.frame; slam(4.5); setTimeout(()=>slam(3),160); G.shake=60;
+    for(const it of G.chain) if(it!==f.item){ it.jx=(Math.random()-0.5)*150; it.jy=(Math.random()-0.5)*110; it.jr=(Math.random()-0.5)*2.6; it.joltT=G.frame; it.mega=true; }
+    G.fallT=G.frame; G.fallHold=true; }
+  else if(L){ slam(L); G.shake=14+L*8; G.slamT=G.frame;
     const J=14+L*10;
     for(const it of G.chain) if(it!==f.item){ it.jx=(Math.random()-0.5)*J; it.jy=(Math.random()-0.5)*J; it.jr=(Math.random()-0.5)*(0.25+L*0.15); it.joltT=G.frame; }
     setTimeout(settle,650); }
   else clack(f.force);
   f.item.landT=G.frame;
-  if(L){
-    const p=L/2; boom(Math.min(1.5,p));
-    G.wobT=G.frame; G.wobA=0.45+L*0.3; if(L>=2.95&&G.fallT<0) G.fallT=G.frame;
+  if(L||mega){
+    const p=mega?2.2:L/2; boom(Math.min(2.2,p)); if(mega) setTimeout(()=>boom(1.4),220);
+    G.wobT=G.frame; G.wobA=mega?1.6:0.45+L*0.3; if(L>=2.95&&G.fallT<0) G.fallT=G.frame;
     const LC=layoutChain(), q=LC[G.chain.indexOf(f.item)];
-    if(q){ const x=VW/2+q.x, y=VH/2-6+q.y, n=Math.round(10+L*18);
-      for(let k=0;k<n;k++){ const a=Math.random()*Math.PI*2, sp=(0.6+Math.random()*2.4)*(0.5+L*0.35);
+    if(q){ const x=VW/2+q.x, y=VH/2-6+q.y, n=mega?160:Math.round(10+L*18);
+      for(let k=0;k<n;k++){ const a=Math.random()*Math.PI*2, sp=(0.6+Math.random()*2.4)*(mega?3.2:0.5+L*0.35);
         G.dust.push({x:x+Math.cos(a)*10,y:y+Math.sin(a)*6,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*0.6-0.4,r:2+Math.random()*4,life:1,dec:0.012+Math.random()*0.02}); } }
   }
   const seat=f.seat;
@@ -435,70 +457,19 @@ function expShow(seat,k){
   if(G.exps.some(e=>e.k===k&&G.frame-e.t<70)) return;
   G.exps=G.exps.filter(e=>e.k!==k); G.exps.push({seat,k,t:G.frame}); expSound(k);
 }
-// personajes de caricatura que se asoman por una esquina, dicen la frase y se esconden
-function drawLady(c,talk,blink){
-  // pelo con rolos
-  c.fillStyle='#2a1a12'; c.beginPath(); c.ellipse(0,-58,62,44,0,0,7); c.fill();
-  const rolos=['#ff7ab0','#5ad0ff','#ffd23a','#7aff9a','#ff7ab0'];
-  rolos.forEach((col,i)=>{ const x=-48+i*24, y=-86+Math.abs(i-2)*7; c.fillStyle=col; c.beginPath(); c.ellipse(x,y,12,9,0,0,7); c.fill(); c.strokeStyle='rgba(0,0,0,.35)'; c.lineWidth=2; c.stroke(); });
-  // cara
-  c.fillStyle='#c98a5a'; c.beginPath(); c.ellipse(0,-20,48,56,0,0,7); c.fill();
-  // aretes
-  c.strokeStyle='#ffd23a'; c.lineWidth=4; c.beginPath(); c.arc(-48,4,9,0,7); c.stroke(); c.beginPath(); c.arc(48,4,9,0,7); c.stroke();
-  // ojos muy abiertos y cejas arriba
-  for(const sx of [-18,18]){ c.fillStyle='#fff'; c.beginPath(); c.ellipse(sx,-32,13,blink?2:15,0,0,7); c.fill(); if(!blink){ c.fillStyle='#2a1a12'; c.beginPath(); c.arc(sx+2,-30,6,0,7); c.fill(); }
-    c.strokeStyle='#2a1a12'; c.lineWidth=4; c.beginPath(); c.arc(sx,-52,13,Math.PI*1.15,Math.PI*1.85); c.stroke(); }
-  // boca con pintalabios
-  const m=talk; c.fillStyle='#5a0a14'; c.beginPath(); c.ellipse(0,10,16,4+m*13,0,0,7); c.fill();
-  c.strokeStyle='#e0202e'; c.lineWidth=5; c.beginPath(); c.ellipse(0,10,16,4+m*13,0,0,7); c.stroke();
-  // cuello y blusa
-  c.fillStyle='#c98a5a'; c.fillRect(-16,30,32,22); c.fillStyle='#e0408a'; c.beginPath(); c.ellipse(0,74,64,30,0,Math.PI,0); c.fill();
-}
-function drawOld(c,talk,blink){
-  // cara
-  c.fillStyle='#e0a878'; c.beginPath(); c.ellipse(0,-18,46,54,0,0,7); c.fill();
-  // orejas
-  c.beginPath(); c.ellipse(-46,-14,9,14,0,0,7); c.ellipse(46,-14,9,14,0,0,7); c.fill();
-  // sombrero de yarey
-  c.fillStyle='#e8cf86'; c.beginPath(); c.ellipse(0,-58,84,16,0,0,7); c.fill();
-  c.fillStyle='#dcbf70'; c.beginPath(); c.moveTo(-42,-60); c.quadraticCurveTo(-40,-106,0,-108); c.quadraticCurveTo(40,-106,42,-60); c.closePath(); c.fill();
-  c.fillStyle='#3a2a1a'; c.fillRect(-42,-70,84,9);
-  c.strokeStyle='rgba(120,90,30,.5)'; c.lineWidth=1.5; for(let i=-3;i<=3;i++){ c.beginPath(); c.moveTo(i*12,-62); c.lineTo(i*10,-104); c.stroke(); }
-  // ojos como platos y cejas canosas
-  for(const sx of [-17,17]){ c.fillStyle='#fff'; c.beginPath(); c.arc(sx,-28,blink?3:14,0,7); c.fill(); if(!blink){ c.fillStyle='#222'; c.beginPath(); c.arc(sx,-27,5,0,7); c.fill(); }
-    c.strokeStyle='#eee'; c.lineWidth=6; c.beginPath(); c.moveTo(sx-13,-50+(sx<0?-4:0)); c.lineTo(sx+13,-50+(sx<0?0:-4)); c.stroke(); }
-  // nariz
-  c.fillStyle='#c98a5a'; c.beginPath(); c.ellipse(0,-8,9,12,0,0,7); c.fill();
-  // boca abierta y bigote
-  c.fillStyle='#4a0a0a'; c.beginPath(); c.ellipse(0,18,13,3+talk*14,0,0,7); c.fill();
-  c.fillStyle='#f4f4f4'; c.beginPath(); c.ellipse(-14,6,16,7,-0.25,0,7); c.ellipse(14,6,16,7,0.25,0,7); c.fill();
-  // camisa guayabera
-  c.fillStyle='#e0a878'; c.fillRect(-15,32,30,20); c.fillStyle='#f6f2e4'; c.beginPath(); c.ellipse(0,76,66,32,0,Math.PI,0); c.fill();
-}
 function drawExps(){
-  G.exps=G.exps.filter(e=>G.frame-e.t<120);
+  // sin muñecos: solo el globo con la frase junto al jugador
+  G.exps=G.exps.filter(e=>G.frame-e.t<110);
   for(const e of G.exps){
-    const t=G.frame-e.t, txt=EXPS[e.k], left=e.k===0;
-    // sale (0-14), habla (14-95), se esconde (95-120)
-    const up=t<14?1-Math.pow(1-t/14,3):t<95?1:1-Math.pow((t-95)/25,2);
-    const bx=left?92:VW-92, by=VH+60-up*190;
-    const talk=t>=14&&t<95?Math.abs(Math.sin(t*0.45)):0.1, blink=t%60>55;
-    ctx.save(); ctx.translate(bx,by); ctx.rotate(left?0.18:-0.18); ctx.scale(1.15,1.15);
-    (left?drawLady:drawOld)(ctx,talk,blink);
+    const t=G.frame-e.t, txt=EXPS[e.k], p=sayPos(e.seat);
+    const sc=t<8?t/8*1.15:t<14?1.15-(t-8)/6*0.15:1, al=t>90?(110-t)/20:1;
+    ctx.save(); ctx.globalAlpha=al; ctx.translate(p.x,p.y); ctx.rotate(e.k===0?-0.05:0.05); ctx.scale(sc,sc);
+    ctx.font='700 32px '+getComputedStyle(document.body).fontFamily; const w=ctx.measureText(txt).width+36;
+    ctx.fillStyle='#fff'; ctx.strokeStyle='#111'; ctx.lineWidth=4; rr(ctx,-w/2,-28,w,56,24); ctx.fill(); ctx.stroke();
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineWidth=6; ctx.strokeStyle='#111'; ctx.strokeText(txt,0,2);
+    ctx.fillStyle=e.k===0?'#ffcc00':'#ff3b2f'; ctx.fillText(txt,0,2);
+    ctx.font='700 13px '+getComputedStyle(document.body).fontFamily; ctx.fillStyle='#fff'; ctx.lineWidth=4; ctx.strokeStyle='#111'; ctx.strokeText(G.names[e.seat],0,42); ctx.fillText(G.names[e.seat],0,42);
     ctx.restore();
-    if(t>=12&&t<100){
-      const sc=t<20?(t-12)/8*1.15:t<26?1.15-(t-20)/6*0.15:1;
-      const px=left?bx+150:bx-150, py=VH-250;
-      ctx.save(); ctx.translate(px,py); ctx.rotate(left?-0.06:0.06); ctx.scale(sc,sc);
-      ctx.font='700 36px '+getComputedStyle(document.body).fontFamily; const w=ctx.measureText(txt).width+40;
-      ctx.fillStyle='#fff'; ctx.strokeStyle='#111'; ctx.lineWidth=5;
-      rr(ctx,-w/2,-32,w,64,28); ctx.fill(); ctx.stroke();
-      const tx=left?-w/2+30:w/2-30; ctx.beginPath(); ctx.moveTo(tx-10,30); ctx.lineTo(tx+(left?-34:34),62); ctx.lineTo(tx+12,30); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillRect(tx-12,25,26,8);
-      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineWidth=7; ctx.strokeStyle='#111'; ctx.strokeText(txt,0,2);
-      ctx.fillStyle=e.k===0?'#ffcc00':'#ff3b2f'; ctx.fillText(txt,0,2);
-      ctx.restore();
-    }
   }
 }
 function drawCigar(c){
@@ -514,12 +485,14 @@ function drawProps(){
   // botella (abajo a la izquierda)
   const wt=G.frame-G.wobT, wob=wt>=0&&wt<120?G.wobA*Math.exp(-wt/28)*Math.sin(wt*0.42):0;
   let ff=G.fallT>=0?G.frame-G.fallT:-1;
+  if(G.fallHold&&ff>110) ff=110;
   if(ff>=150){ G.fallT=-1; ff=-1; }
   const rec=ff>120?Math.min(1,(ff-120)/26):0, re=1-rec*rec*(3-2*rec);   // a los 2 s vuelven a su sitio
+  if(ff>=0){ c.fillStyle='rgba(0,0,0,'+(0.3*Math.min(1,ff/16)*re)+')'; c.beginPath(); c.ellipse(238,478,74,8,0,0,7); c.fill(); }
   if(ff>=0){ const k=Math.min(1,ff/16), ang=(Math.PI/2*k*k-(ff>16?0.2*Math.exp(-(ff-16)/7)*Math.abs(Math.sin((ff-16)*0.55)):0))*re;
     c.save(); c.translate(150+26*0.78,474); c.rotate(ang); c.translate(-26*0.78,0); c.scale(0.78,0.78); }
   else { c.save(); c.translate(150+(wob>0?14:-14)*0.78,474); c.rotate(wob*0.16); c.translate(-(wob>0?14:-14)*0.78,0); c.scale(0.78,0.78); }
-  if(ff<0){ c.fillStyle='rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(16,6,40,12,0,0,7); c.fill(); } else { c.fillStyle='rgba(0,0,0,'+(0.3*Math.min(1,ff/16)*re)+')'; c.beginPath(); c.ellipse(-90,-34,96,12,Math.PI/2,0,7); c.fill(); }
+  if(ff<0){ c.fillStyle='rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(16,6,40,12,0,0,7); c.fill(); } 
   const bg=c.createLinearGradient(-26,0,26,0); bg.addColorStop(0,'#3a1a06'); bg.addColorStop(0.35,'#a2561a'); bg.addColorStop(0.55,'#d88a3a'); bg.addColorStop(1,'#4a2208');
   c.fillStyle=bg; c.beginPath(); c.moveTo(-26,0); c.lineTo(-26,-96); c.quadraticCurveTo(-26,-118,-9,-128); c.lineTo(-9,-158); c.lineTo(9,-158); c.lineTo(9,-128); c.quadraticCurveTo(26,-118,26,-96); c.lineTo(26,0); c.quadraticCurveTo(0,6,-26,0); c.fill();
   c.fillStyle='rgba(255,255,255,.28)'; c.fillRect(-18,-110,5,100);
@@ -571,6 +544,7 @@ function endHand(winner,tranque){
   if(!tranque){ const los=[0,1,2,3].filter(x=>x!==winner&&(G.mode==='sencillo'||teamOf(x)!==teamOf(winner))); los.forEach((x,i)=>setTimeout(()=>expShow(x,i%2),i*450)); }
     chime(winner===0&&!isTV);
     if(G.pscores.some(v=>v>=G.target)) G.over=true;
+    noteHand(team>=0?winner:-1,team>=0?all:0,tranque);
     broadcast(); return;
   }
   if(tranque){
@@ -587,7 +561,21 @@ function endHand(winner,tranque){
   if(!tranque){ const los=[0,1,2,3].filter(x=>x!==winner&&(G.mode==='sencillo'||teamOf(x)!==teamOf(winner))); los.forEach((x,i)=>setTimeout(()=>expShow(x,i%2),i*450)); }
   chime(team===0);
   if(G.scores[0]>=G.target||G.scores[1]>=G.target){ G.over=true; }
+  noteHand(team,team>=0?all:0,tranque);
   broadcast();
+}
+// el bot apunta cada data en la libreta
+function noteHand(w,pts,tranque){
+  if(!isTV&&!G.remoteMode) setTimeout(()=>openLibreta(true),2600);
+  const sen=G.mode==='sencillo';
+  G.log.push({n:G.handNo,w,pts,tr:!!tranque,tot:sen?G.pscores.slice():G.scores.slice()});
+  if(G.over){ const t=sen?G.pscores:G.scores, mx=Math.max(...t), wi=t.indexOf(mx); G.wins[wi]=(G.wins[wi]||0)+1;
+    G.log[G.log.length-1].fin={wi,pollona:t.every((v,i)=>i===wi||v===0)}; }
+}
+function libData(){
+  const sen=G.mode==='sencillo';
+  return {sen,match:G.matchNo,target:G.target,log:G.log,wins:sen?G.wins.slice(0,4):G.wins.slice(0,2),
+    cols:sen?G.names.slice():[G.names[0]+' y '+G.names[2],G.names[1]+' y '+G.names[3]]};
 }
 // ---------- máquina ----------
 function aiChoose(seat){
@@ -616,7 +604,7 @@ function layoutChain(){
   // Los dobles siempre van cruzados y nunca hacen esquina; después de un doble la línea sigue recta (nunca se pega de lado).
   // Las fichas puestas no se mueven nunca.
   const res=[]; const idx0=G.chain.findIndex(i=>i.side==='C'); if(idx0<0) return res;
-  const BX=300, H=Math.PI/2;
+  const BX=270, H=Math.PI/2;   // margen: la fila nunca llega a las fichas de los jugadores de los lados
   const c0=G.chain[idx0];
   res[idx0]={x:0,y:0,ang:c0.dbl?H:0,a:c0.a,b:c0.b};
   for(const dirSide of ['R','L']){
@@ -626,7 +614,7 @@ function layoutChain(){
     for(const i of list){
       const it=G.chain[i];
       if(mode==='h'){
-        const bx=y===0?240:BX;   // la primera fila más corta: deja sitio a los nombres de los lados
+        const bx=BX;
         if(!it.dbl&&!prevDbl&&Math.abs(x+dx*TL)>bx){
           // esquina: ficha de pie con su mitad alineada con la fila
           cx=x+dx*TW/2; res[i]={x:cx,y:y+V*TW/2,ang:V>0?H:-H,a:it.a,b:it.b};
@@ -665,33 +653,6 @@ function drawTable(){
   ctx.strokeStyle='rgba(255,230,160,0.35)'; ctx.lineWidth=2; rr(ctx,36,36,VW-72,VH-72,20); ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.font='700 64px '+getComputedStyle(document.body).fontFamily; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('DOMINÓ',VW/2,VH/2+150);
   drawProps();
-  // cadena
-  const sx=G.shake>0?(Math.random()-0.5)*G.shake:0, sy=G.shake>0?(Math.random()-0.5)*G.shake:0;
-  const L=layoutChain();
-  let minx=0,maxx=0,miny=0,maxy=0; for(const p of L) if(p){ minx=Math.min(minx,p.x-TL/2); maxx=Math.max(maxx,p.x+TL/2); miny=Math.min(miny,p.y-TL/2); maxy=Math.max(maxy,p.y+TL/2); }
-  const fit=1;
-  const ox=VW/2+sx, oy=VH/2-6+sy;
-  G.chain.forEach((it,i)=>{
-    const p=L[i]; if(!p) return;
-    if(G.fly&&G.fly.item===it) return;
-    const bump=it.landT&&G.frame-it.landT<10?Math.sin((G.frame-it.landT)/10*Math.PI)*-4:0;
-    let jx=0,jy=0,jr=0,hop=0;
-    if(it.joltT!=null){ const t=G.frame-it.joltT; let k;
-      if(t<8){ k=t/8; hop=Math.sin(k*Math.PI)*-14; } else if(t<40) k=1; else if(t<75){ const u=(t-40)/35; k=1-u*u*(3-2*u); } else { k=0; it.joltT=null; }
-      jx=(it.jx||0)*k; jy=(it.jy||0)*k; jr=(it.jr||0)*k; }
-    ctx.save(); ctx.translate(ox+p.x*fit+jx,oy+p.y*fit+bump+jy+hop); ctx.rotate(p.ang+jr); drawTile(ctx,p.a,p.b,TL*fit,TW*fit,true); ctx.restore();
-  });
-  // polvo levantado por el golpe
-  for(const d of G.dust){ ctx.fillStyle='rgba(225,210,180,'+(0.45*d.life)+')'; ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,7); ctx.fill(); }
-  // ficha volando
-  if(G.fly){
-    const f=G.fly, it=f.item, p=L[G.chain.indexOf(it)];
-    const k=clamp(f.t/f.dur,0,1), e=1-Math.pow(1-k,3);
-    const from=seatPos(f.seat), tx=ox+p.x*fit, ty=oy+p.y*fit;
-    const x=from.x+(tx-from.x)*e, y=from.y+(ty-from.y)*e-Math.sin(k*Math.PI)*60*(0.5+f.force);
-    const sc=1+Math.sin(k*Math.PI)*0.35;
-    ctx.save(); ctx.translate(x,y); ctx.rotate(p.ang+(1-e)*(f.seat%2?2.4:-2.4)); drawTile(ctx,p.a,p.b,TL*fit*sc,TW*fit*sc,true); ctx.restore();
-  }
   // extremos abiertos
   if(G.ends&&G.state==='play'){ ctx.font='700 18px '+getComputedStyle(document.body).fontFamily; ctx.fillStyle='rgba(255,240,200,0.85)'; ctx.textAlign='left';
     ctx.fillText('A LOS '+G.ends[0]+'   ·   A LOS '+G.ends[1],52,52); }
@@ -709,6 +670,10 @@ function drawTable(){
   ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='700 20px '+font; ctx.fillText(G.scores[0],VW-22,30); ctx.fillText(G.scores[1],VW-22,54);
   }
   ctx.font='600 12px '+font; ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.textAlign='left'; ctx.fillText('A '+G.target+' · MANO '+G.handNo,20,18);
+  if(G.megaT>=0){ const t=G.frame-G.megaT;
+    if(t<6){ ctx.fillStyle='rgba(255,250,220,'+(0.85-t*0.12)+')'; ctx.fillRect(0,0,VW,VH); }
+    else if(t<130){ const on=Math.random()<(t<70?0.45:0.75); ctx.fillStyle='rgba(0,0,0,'+(on?0.05:(0.55+Math.random()*0.3))+')'; ctx.fillRect(0,0,VW,VH);
+      if(!on&&Math.random()<0.15){ ctx.fillStyle='rgba(255,240,180,0.25)'; ctx.fillRect(0,0,VW,VH); } } }
   drawSays();
   drawExps();
   // mensaje
@@ -726,6 +691,38 @@ function drawTable(){
     ctx.fillText((r.team<0?'Nadie se anota':TEAMN()[r.team]+' SE ANOTA '+r.all+' TANTOS')+'  ·  '+G.scores[0]+' a '+G.scores[1],VW/2,VH/2-36);
     }
     if(G.mode==='parejas'&&G.over){ ctx.font='700 30px '+font; ctx.fillStyle='#8aff6a'; ctx.fillText(isTV?('¡GANA LA '+TEAMN()[G.scores[0]>=G.target?0:1]+'!'):(G.scores[0]>=G.target?'¡GANAMOS EL PARTIDO!':'GANAN ELLOS EL PARTIDO'),VW/2,VH/2+4); }
+  }
+  drawChainLayer();
+}
+// las fichas de la mesa se dibujan siempre encima de todo: nada tapa sus números
+function drawChainLayer(){
+  // cadena
+  const sx=G.shake>0?(Math.random()-0.5)*G.shake:0, sy=G.shake>0?(Math.random()-0.5)*G.shake:0;
+  const L=layoutChain();
+  let minx=0,maxx=0,miny=0,maxy=0; for(const p of L) if(p){ minx=Math.min(minx,p.x-TL/2); maxx=Math.max(maxx,p.x+TL/2); miny=Math.min(miny,p.y-TL/2); maxy=Math.max(maxy,p.y+TL/2); }
+  const fit=1;
+  const ox=VW/2+sx, oy=VH/2-6+sy;
+  // polvo levantado por el golpe
+  for(const d of G.dust){ ctx.fillStyle='rgba(225,210,180,'+(0.45*d.life)+')'; ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,7); ctx.fill(); }
+  G.chain.forEach((it,i)=>{
+    const p=L[i]; if(!p) return;
+    if(G.fly&&G.fly.item===it) return;
+    const bump=it.landT&&G.frame-it.landT<10?Math.sin((G.frame-it.landT)/10*Math.PI)*-4:0;
+    let jx=0,jy=0,jr=0,hop=0;
+    if(it.joltT!=null){ const t=G.frame-it.joltT; let k;
+      if(it.mega){ k=t<10?t/10:1; hop=t<10?Math.sin(t/10*Math.PI)*-40:0; } else if(t<8){ k=t/8; hop=Math.sin(k*Math.PI)*-14; } else if(t<40) k=1; else if(t<75){ const u=(t-40)/35; k=1-u*u*(3-2*u); } else { k=0; it.joltT=null; }
+      jx=(it.jx||0)*k; jy=(it.jy||0)*k; jr=(it.jr||0)*k; }
+    ctx.save(); ctx.translate(ox+p.x*fit+jx,oy+p.y*fit+bump+jy+hop); ctx.rotate(p.ang+jr); drawTile(ctx,p.a,p.b,TL*fit,TW*fit,true); ctx.restore();
+  });
+
+  // ficha volando
+  if(G.fly){
+    const f=G.fly, it=f.item, p=L[G.chain.indexOf(it)];
+    const k=clamp(f.t/f.dur,0,1), e=1-Math.pow(1-k,3);
+    const from=seatPos(f.seat), tx=ox+p.x*fit, ty=oy+p.y*fit;
+    const x=from.x+(tx-from.x)*e, y=from.y+(ty-from.y)*e-Math.sin(k*Math.PI)*60*(0.5+f.force);
+    const sc=1+Math.sin(k*Math.PI)*0.35;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(p.ang+(1-e)*(f.seat%2?2.4:-2.4)); drawTile(ctx,p.a,p.b,TL*fit*sc,TW*fit*sc,true); ctx.restore();
   }
 }
 function seatPos(s){ return [{x:VW/2,y:VH-20},{x:VW-40,y:VH/2},{x:VW/2,y:20},{x:40,y:VH/2}][s]; }
@@ -746,7 +743,7 @@ function drawSeat(s){
   // nombre
   const label=G.names[s];
   ctx.font='700 15px '+font; const w=ctx.measureText(label).width+22;
-  let lx=pos.x, ly=pos.y+(s===0?-50:s===2?52:0); if(s===1) lx=pos.x-70; if(s===3) lx=pos.x+70;
+  let lx=pos.x, ly=pos.y+(s===0?-50:s===2?52:0); if(s===1||s===3){ ly=VH/2-120; lx=s===1?Math.min(VW-w/2-8,pos.x):Math.max(w/2+8,pos.x); }
   if(s===0&&showLocalHand()) ly=VH-26;
   ctx.fillStyle=me?'#ffd23a':'rgba(0,0,0,0.5)'; rr(ctx,lx-w/2,ly-13,w,26,13); ctx.fill();
   ctx.fillStyle=me?'#3a2600':'#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label,lx,ly+1);
@@ -878,6 +875,24 @@ function openPanel(type){
 }
 document.querySelectorAll('.bpan').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.p)));
 document.getElementById('panx').addEventListener('click',()=>panel.hidden=true);
+const libEl=document.getElementById('libreta');
+function palos(n){ let t=''; for(let i=0;i<n;i++) t+=(i%5===4)?'/ ':'|'; return t||'—'; }
+function renderLibreta(fresh){
+  const d=G.remoteMode?G.rLib:libData(); const pg=document.getElementById('libpage'); if(!d){ pg.innerHTML='<h4>Libreta vacía</h4>'; return; }
+  const cols=d.cols.map(c=>c.length>16?c.slice(0,16)+'…':c);
+  let h='<h4>Partido '+d.match+' · a '+d.target+'</h4><table><tr><th></th>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>';
+  d.log.forEach((e,i)=>{ const last=i===d.log.length-1&&fresh;
+    h+='<tr><td class="n">'+e.n+'</td>'+cols.map((_,c)=>{ const won=d.sen?e.w===c:e.w===c; const txt=e.w<0?(c===0?'tranque':''):won?(e.tot[c]+(e.pts?'':'')):'';
+      return '<td'+(last&&won?' class="new"':'')+'>'+(won?('<span style="font-size:15px;color:#4a6a2a">+'+e.pts+'</span> '+e.tot[c]):txt)+'</td>'; }).join('')+'</tr>';
+    if(e.fin) h+='<tr><td></td><td colspan="'+cols.length+'" class="fin">¡Ganan '+esc(cols[e.fin.wi])+'!'+(e.fin.pollona?' ¡POLLONA!':'')+'</td></tr>';
+  });
+  h+='</table><h4 style="margin-top:8px">Partidos ganados</h4><table><tr>'+cols.map((c,i)=>'<td style="text-align:left">'+esc(c)+': <span class="palos">'+palos(d.wins[i]||0)+'</span></td>').join('')+'</tr></table>';
+  pg.innerHTML=h;
+}
+function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function openLibreta(fresh){ renderLibreta(fresh); libEl.hidden=false; const pg=document.getElementById('libpage'); pg.scrollTop=pg.scrollHeight; }
+document.getElementById('blib').addEventListener('click',()=>openLibreta(false));
+document.getElementById('libx').addEventListener('click',()=>libEl.hidden=true);
 let expLast=-1e9;
 document.querySelectorAll('.bexp').forEach(b=>b.addEventListener('click',()=>{
   const now=performance.now(); if(now-expLast<1500) return; expLast=now; initAudio(); const k=+b.dataset.k;
@@ -896,7 +911,7 @@ function broadcast(){
 }
 function stateFor(s){
   const turn=G.turn===s&&G.state==='play';
-  return {t:'state',seat:s,energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?'TE TOCA: TOCA UNA FICHA':'JUEGA '+G.names[G.turn]):G.msg,
+  return {t:'state',seat:s,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?'TE TOCA: TOCA UNA FICHA':'JUEGA '+G.names[G.turn]):G.msg,
     score:G.mode==='sencillo'?('TÚ '+G.pscores[s]+' · MÁX '+Math.max(...G.pscores)):(s%2===0?G.scores[0]+' – '+G.scores[1]:G.scores[1]+' – '+G.scores[0])};
 }
 // en la tele: llega un móvil
@@ -930,6 +945,8 @@ window.kikoFromTV=(line)=>{
   let o; try{ o=JSON.parse(line); }catch(_){ return; }
   if(o.t==='state'){
     const wasTurn=G.rTurn; G.rHand=G.rHand&&G.rHand.length===o.hand.length&&o.hand.every(t=>G.rHand.some(x=>same(x,t)))?G.rHand:o.hand;
+    if(o.lib){ const nl=o.lib.log.length; if(G.rLib&&nl>G.rLib.log.length) setTimeout(()=>openLibreta(true),2600); G.rLib=o.lib; if(!libEl.hidden) renderLibreta(); }
+    if(o.hand&&G.rHand&&o.hand.length===10&&G.rHand.length<10) libEl.hidden=true;
     G.rEnergy=+o.energy||0; G.rEnds=o.ends; G.rTurn=o.turn; G.rMsg=o.msg; G.rScore=o.score;
     document.getElementById('rends').textContent=o.ends?('A los '+o.ends[0]+'  ·  a los '+o.ends[1]):'Mesa vacía';
     if(o.turn&&!wasTurn){ try{ navigator.vibrate&&navigator.vibrate([40,60,40]); }catch(_){} }
@@ -977,6 +994,14 @@ const menu=document.getElementById('menu');
 document.getElementById('mplay').addEventListener('click',()=>{ initAudio(); menu.hidden=true; startMatch(); layout(); renderHand(); });
 const tvDevice=isTV, pick=document.getElementById('pick'), sub=document.getElementById('sub'), lobby=document.getElementById('lobby'), lmode=document.getElementById('lmode');
 document.getElementById('lplay').addEventListener('click',()=>document.getElementById('mplay').click());
+// rota los jugadores de los puestos 1,2,3 (el 0 se queda): así salen las 3 formas de hacer parejas
+document.getElementById('lpairs').addEventListener('click',()=>{
+  const mv=a=>{ const t=a[3]; a[3]=a[2]; a[2]=a[1]; a[1]=t; };
+  [G.names,G.photos,G.remote,G.human].forEach(mv);
+  for(const id in peers){ const s0=peers[id]; peers[id]=s0===0?0:(s0%3)+1; }
+  for(let s=0;s<4;s++) if(G.remote[s]==null){ G.human[s]=false; G.names[s]='MÁQUINA '+(s+1); }
+  G.wins=[0,0,0,0]; G.matchNo=0; updateTvMenu(); broadcast();
+});
 lmode.addEventListener('click',()=>{ mmode.click(); lmode.textContent=mmode.textContent.replace(' (2 CONTRA 2)','').replace(' (CADA UNO SOLO)',''); updateTvMenu(); });
 function showPick(){ document.body.classList.remove('mesa'); lobby.hidden=true; pick.hidden=false; sub.hidden=true; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
 function showSub(){ pick.hidden=true; sub.hidden=false; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
