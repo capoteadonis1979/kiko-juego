@@ -71,7 +71,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.7.1';
+const VERSION='v1.7.2';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.14;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -407,7 +407,7 @@ function update(){
       { // filas: 0 modo, 1 bandera izquierda, 2 bandera derecha, 3 jugar
         const NR=canPad?5:4;
         if(s0.upP){ G.sel=(G.sel+NR-1)%NR; S.move(); }
-        if(s0.downP){ G.sel=(G.sel+1)%NR; S.move(); }
+        if(s0.downP||s0.bP){ G.sel=(G.sel+1)%NR; S.move(); }
         let dh=G.sel<3?(s0.rightP?1:0)-(s0.leftP?1:0):0, go=(s0.startP||s0.aP)&&G.sel===3;
         if(s0.aP&&G.sel<3){ dh=1; }
         if(tapAt){ const row=Math.floor((tapAt.y-118)/22); if(row>=0&&row<(canPad?5:4)){ G.sel=row; if(row===3) go=true; else if(row===4){ openPad(); break; } else dh=tapAt.x<VW/2?-1:1; } }
@@ -680,7 +680,7 @@ function drawMenu(){
     if(i>0) drawFlag(G.flag[i-1],VW/2-6,y-3,18,12,false);
     txt((on?'< ':'')+b+(on?' >':''),VW/2+18,y,on?'#ffe070':'#ffffff','left',8); });
   const ty=canPad?236:214;
-  txt('ARRIBA/ABAJO ELIGE   IZQ/DER CAMBIA   A JUGAR',VW/2,ty,'#ffffff','center',6);
+  txt(isTouch?'B BAJA   FLECHAS CAMBIAN   A ELIGE  (O TOCA LA FILA)':'ARRIBA/ABAJO O B ELIGE   IZQ/DER CAMBIA   A JUGAR',VW/2,ty,'#ffffff','center',6);
   txt('SALTA CON A - MAXIMO 3 TOQUES - GANA EL PRIMERO A 15',VW/2,ty+11,'#ffffff','center',6);
   if(inApp&&!canPad){ R(VW/2-200,238,400,14,'rgba(6,18,28,0.7)');
     txt(G.net>0?('MOVILES CONECTADOS COMO MANDO: '+G.net):('MANDO CON EL MOVIL - DIRECCION DE ESTA TELE: '+(G.ip||'...')),VW/2,242,G.net>0?'#8aff6a':'#ffffff','center',6); }
