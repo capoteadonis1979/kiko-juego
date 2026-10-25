@@ -56,6 +56,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float grav = 0, vel = 0;
     private int moveDir = 0;
     private long lastNs = 0;
+    private int evCount = 0;
     private float quiet = 0, rawMax = 0; private boolean cool = false; private long lastDbg = 0;
 
     private Sensor pickSensor() {
@@ -70,7 +71,16 @@ public class MainActivity extends Activity implements SensorEventListener {
             if (sm == null) return;
             if (linSensor == null) linSensor = pickSensor();
             if (on && !tiltOn && linSensor != null) { vel = 0; moveDir = 0; lastNs = 0; cool = false; quiet = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); tiltOn = true;
-                js("window.kikoMoveInfo&&kikoMoveInfo(" + JSONObject.quote((linReal ? "Sensor de movimiento: " : "Acelerometro: ") + linSensor.getName()) + ")"); }
+                js("window.kikoMoveInfo&&kikoMoveInfo(" + JSONObject.quote((linReal ? "Sensor de movimiento: " : "Acelerometro: ") + linSensor.getName()) + ")");
+                evCount = 0;
+                // si el sensor de movimiento no manda nada, pasar al acelerómetro normal
+                if (web != null) web.postDelayed(() -> {
+                    if (tiltOn && evCount == 0 && linReal) {
+                        Sensor acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                        if (acc != null) { sm.unregisterListener(this); linSensor = acc; linReal = false; lastNs = 0; sm.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
+                            js("window.kikoMoveInfo&&kikoMoveInfo(" + JSONObject.quote("Acelerometro: " + acc.getName()) + ")"); }
+                    }
+                }, 1200); }
             else if (on && linSensor == null) js("window.kikoMoveInfo&&kikoMoveInfo('Este movil no tiene sensor de movimiento')");
             else if (!on && tiltOn) { sm.unregisterListener(this); tiltOn = false; sendMove(0); }
         });
@@ -84,6 +94,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent e) {
+        evCount++;
         float ax = e.values[0];
         if (!linReal) { grav = grav * 0.92f + ax * 0.08f; ax = ax - grav; }   // quitar la gravedad
         if (lastNs == 0) { lastNs = e.timestamp; return; }
