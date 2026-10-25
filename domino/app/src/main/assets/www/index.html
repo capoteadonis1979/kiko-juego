@@ -180,9 +180,11 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 #menu #psolo{background:#22a04a;border-color:#0f5a26}
 #cuba{flex-basis:100%;display:flex;justify-content:center;align-items:flex-end;gap:26px;margin-top:2px}
 #cuba .flag{width:96px;height:49px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));animation:ond 2.4s ease-in-out infinite alternate;transform-origin:left center}
-#cuba .tinajon{width:52px;height:58px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
+#cuba .cmg{display:flex;flex-direction:column;align-items:center}
+#cuba .cmg span{font:700 16px Caveat,cursive;color:#ffe9a8;margin-top:-4px}
+#cuba .tinajon{width:92px;height:67px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
 @keyframes ond{from{transform:skewY(-2deg) scaleX(.97)}to{transform:skewY(2deg) scaleX(1)}}
-@media (max-height:460px){#cuba .flag{width:70px;height:36px} #cuba .tinajon{width:38px;height:42px}}
+@media (max-height:460px){#cuba .flag{width:70px;height:36px} #cuba .tinajon{width:70px;height:51px} #cuba .cmg span{font-size:13px}}
 #pick{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:680px}
 #pick button{min-width:300px}
 #menu{overflow-y:auto}
@@ -268,12 +270,20 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
             <path d="M0 0 L66 38 L0 76 Z" fill="#cf142b"/>
             <path d="M22 26.5 L25.1 35.7 L34.8 35.8 L27 41.6 L29.9 50.9 L22 45.3 L14.1 50.9 L17 41.6 L9.2 35.8 L18.9 35.7 Z" fill="#fff"/>
             <path d="M0 0 Q37 8 75 0 T150 0 V80 Q112 72 75 80 T0 80 Z" fill="rgba(0,0,0,.08)"/></g></svg>
-        <svg class="tinajon" viewBox="0 0 80 90"><defs><radialGradient id="tg" cx="35%" cy="40%" r="70%"><stop offset="0" stop-color="#d98a52"/><stop offset=".6" stop-color="#a8552a"/><stop offset="1" stop-color="#6e3216"/></radialGradient></defs>
-          <ellipse cx="40" cy="86" rx="22" ry="4" fill="rgba(0,0,0,.35)"/>
-          <path d="M28 10 Q26 18 18 26 Q4 42 10 62 Q16 80 40 84 Q64 80 70 62 Q76 42 62 26 Q54 18 52 10 Z" fill="url(#tg)"/>
-          <rect x="24" y="5" width="32" height="7" rx="3" fill="#8a4220"/><ellipse cx="40" cy="6" rx="16" ry="3" fill="#3a1a0a"/>
-          <path d="M14 40 Q40 46 66 40" stroke="#7a3a18" stroke-width="2" fill="none"/><path d="M12 54 Q40 60 68 54" stroke="#7a3a18" stroke-width="2" fill="none"/>
-          <path d="M22 30 Q16 44 20 60" stroke="rgba(255,220,180,.35)" stroke-width="3" fill="none"/></svg>
+        <div class="cmg"><svg class="tinajon" viewBox="0 0 150 110"><defs><radialGradient id="tg" cx="35%" cy="40%" r="70%"><stop offset="0" stop-color="#d98a52"/><stop offset=".6" stop-color="#a8552a"/><stop offset="1" stop-color="#6e3216"/></radialGradient></defs>
+          <ellipse cx="60" cy="104" rx="34" ry="5" fill="rgba(0,0,0,.35)"/>
+          <!-- palma real -->
+          <path d="M112 104 Q108 70 114 24" stroke="#cfc6b0" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <path d="M112 104 Q108 70 114 24" stroke="#9e957e" stroke-width="2" stroke-dasharray="2 5" fill="none"/>
+          <rect x="110" y="18" width="8" height="12" rx="3" fill="#6f9a3a"/>
+          <g fill="none" stroke="#2f8a3a" stroke-width="4" stroke-linecap="round">
+            <path d="M114 20 Q96 6 80 18"/><path d="M114 20 Q100 -2 86 2"/><path d="M114 20 Q122 -4 140 4"/><path d="M114 20 Q132 8 148 22"/><path d="M114 20 Q112 2 108 -4"/><path d="M114 20 Q96 22 86 36"/><path d="M114 20 Q132 24 142 38"/></g>
+          <!-- tinajón inclinado -->
+          <g transform="rotate(-14 56 70)">
+            <path d="M48 30 Q46 38 38 46 Q24 62 30 82 Q36 100 60 104 Q84 100 90 82 Q96 62 82 46 Q74 38 72 30 Z" fill="url(#tg)"/>
+            <rect x="44" y="25" width="32" height="7" rx="3" fill="#8a4220"/><ellipse cx="60" cy="26" rx="16" ry="3" fill="#3a1a0a"/>
+            <path d="M34 60 Q60 66 86 60" stroke="#7a3a18" stroke-width="2" fill="none"/><path d="M32 74 Q60 80 88 74" stroke="#7a3a18" stroke-width="2" fill="none"/>
+            <path d="M42 50 Q36 64 40 80" stroke="rgba(255,220,180,.35)" stroke-width="3" fill="none"/></g></svg><span>Camagüey</span></div>
       </div>
     </div>
     <div id="sub" hidden>
@@ -298,7 +308,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.4';
+const VERSION='v2.9.6';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -330,6 +340,10 @@ function clack(p,delay=0){
   if(p>0.55){ burst(t+0.045,0.03,3000,3,0.25*p); ping(t+0.045,1750,0.04,0.06*p); }   // rebote si va fuerte
 }
 // pingazo: golpe seco y fuerte en la mesa, las fichas saltan y luego se acomodan
+// el pilazo del gane: pocos sonidos pero fuertes (no satura la tele)
+function megaSound(){ if(!AC) return; const t=AC.currentTime;
+  burst(t,0.45,80,0.7,3.4,'lowpass'); burst(t,0.07,2600,2,2.4); ping(t,1500,0.15,0.4); clack(1);
+  for(let i=0;i<8;i++) clack(0.35+Math.random()*0.4,0.06+i*0.07+Math.random()*0.03); }
 function slam(L){
   if(!AC) return; const t=AC.currentTime, k=0.75+L*0.25;
   burst(t,0.3+L*0.08,90,0.8,2.6*k,'lowpass'); burst(t,0.06,2400,2,1.8*k); ping(t,1500,0.12,0.3*k);
@@ -449,9 +463,8 @@ function landed(){
   const win=!G.hands[f.seat].length;   // la última ficha, la que pega, vale el doble
   const E=(f.slam||0)*3*leadMult(f.seat)*(win?2:1), L=E>=0.5?Math.min(E,4.5):0;
   const mega=win&&(f.slam||0)>0;   // el golpe con el que te pegas: se cae todo
-  if(mega){ G.megaT=G.frame; clack(1); clack(1,0.025); slam(4.5); setTimeout(()=>slam(3),160); G.shake=60;
-    setTimeout(()=>{ if(AC) for(let k=0;k<26;k++) clack(0.3+Math.random()*0.7,Math.random()*0.8); },140);   // las fichas regadas cayendo
-    for(const it of G.chain) if(it!==f.item){ it.jx=(Math.random()-0.5)*150; it.jy=(Math.random()-0.5)*110; it.jr=(Math.random()-0.5)*2.6; it.joltT=G.frame; it.mega=true; }
+  if(mega){ G.megaT=G.frame; megaSound(); G.shake=34;   // golpe del gane: ligero para la tele
+    for(const it of G.chain) if(it!==f.item){ it.jx=(Math.random()-0.5)*36; it.jy=(Math.random()-0.5)*28; it.jr=(Math.random()-0.5)*0.5; it.joltT=G.frame; it.mega=true; }
     G.fallT=G.frame; G.fallHold=true; }
   else if(L){ slam(L); G.shake=14+L*8; G.slamT=G.frame;
     const J=14+L*10;
@@ -460,11 +473,11 @@ function landed(){
   else clack(f.force);
   f.item.landT=G.frame;
   if(L||mega){
-    const p=mega?2.2:L/2; boom(Math.min(2.2,p)); if(mega) setTimeout(()=>boom(1.4),220);
+    const p=mega?2.2:L/2; boom(Math.min(2.2,p));
     G.wobT=G.frame; G.wobA=mega?1.6:0.45+L*0.3; if(L>=2.95&&G.fallT<0) G.fallT=G.frame;
     const LC=layoutChain(), q=LC[G.chain.indexOf(f.item)];
-    if(q){ const x=VW/2+q.x, y=VH/2-6+q.y, n=mega?160:Math.round(10+L*18);
-      for(let k=0;k<n;k++){ const a=Math.random()*Math.PI*2, sp=(0.6+Math.random()*2.4)*(mega?3.2:0.5+L*0.35);
+    if(q){ const x=VW/2+q.x, y=VH/2-6+q.y, n=mega?45:Math.round(10+L*18);
+      for(let k=0;k<n;k++){ const a=Math.random()*Math.PI*2, sp=(0.6+Math.random()*2.4)*(mega?2.2:0.5+L*0.35);
         G.dust.push({x:x+Math.cos(a)*10,y:y+Math.sin(a)*6,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*0.6-0.4,r:2+Math.random()*4,life:1,dec:0.012+Math.random()*0.02}); } }
   }
   const seat=f.seat;
@@ -810,7 +823,7 @@ function drawTable(){
   ctx.font='600 12px '+font; ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.textAlign='left'; ctx.fillText('A '+G.target+' · MANO '+G.handNo,20,18);
   if(G.megaT>=0){ const t=G.frame-G.megaT;
     if(t<6){ ctx.fillStyle='rgba(255,250,220,'+(0.85-t*0.12)+')'; ctx.fillRect(0,0,VW,VH); }
-    else if(t<130){ const on=Math.random()<(t<70?0.45:0.75); ctx.fillStyle='rgba(0,0,0,'+(on?0.05:(0.55+Math.random()*0.3))+')'; ctx.fillRect(0,0,VW,VH);
+    else if(t<70){ const on=Math.random()<0.55; ctx.fillStyle='rgba(0,0,0,'+(on?0.05:(0.55+Math.random()*0.3))+')'; ctx.fillRect(0,0,VW,VH);
       if(!on&&Math.random()<0.15){ ctx.fillStyle='rgba(255,240,180,0.25)'; ctx.fillRect(0,0,VW,VH); } } }
   drawSays();
   drawExps();
@@ -847,7 +860,7 @@ function drawChainLayer(){
     const bump=it.landT&&G.frame-it.landT<10?Math.sin((G.frame-it.landT)/10*Math.PI)*-4:0;
     let jx=0,jy=0,jr=0,hop=0;
     if(it.joltT!=null){ const t=G.frame-it.joltT; let k;
-      if(it.mega){ k=t<10?t/10:1; hop=t<10?Math.sin(t/10*Math.PI)*-40:0; } else if(t<8){ k=t/8; hop=Math.sin(k*Math.PI)*-14; } else if(t<40) k=1; else if(t<75){ const u=(t-40)/35; k=1-u*u*(3-2*u); } else { k=0; it.joltT=null; }
+      if(it.mega){ k=t<8?t/8:1; hop=t<8?Math.sin(t/8*Math.PI)*-12:0; } else if(t<8){ k=t/8; hop=Math.sin(k*Math.PI)*-14; } else if(t<40) k=1; else if(t<75){ const u=(t-40)/35; k=1-u*u*(3-2*u); } else { k=0; it.joltT=null; }
       jx=(it.jx||0)*k; jy=(it.jy||0)*k; jr=(it.jr||0)*k; }
     let X=ox+p.x*fit+jx, Y=oy+p.y*fit+bump+jy+hop, A=p.ang+jr, S=1;
     const g=G.cnt&&G.state==='handover'?clamp((G.frame-G.cnt.t0-70)/40,0,1):0;
