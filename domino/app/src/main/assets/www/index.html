@@ -30,7 +30,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #power{position:absolute;left:6px;top:38px;bottom:30px;width:50px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:3px;touch-action:none}
 #powlbl{font:700 9px var(--font);color:#ffe9a8;letter-spacing:.5px}
 #powtrack{flex:1;width:30px;border-radius:15px;background:rgba(0,0,0,.45);border:2px solid #d8955a;position:relative;overflow:hidden}
-#powcap{position:absolute;left:0;right:0;bottom:0;height:0;background:rgba(255,255,255,.18);border-top:2px dashed #ffe9a8}
+#powcap{display:none;position:absolute;left:0;right:0;bottom:0;height:0;background:rgba(255,255,255,.18);border-top:2px dashed #ffe9a8}
 #powfill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(0deg,#2fbf71,#ffd23a 55%,#ff2a1a);border-radius:12px;transition:height .25s}
 #power.full #powtrack{box-shadow:0 0 12px #ff5a2a;border-color:#ffd23a}
 #powpct{font:700 12px var(--font);color:#fff}
@@ -150,7 +150,7 @@ body.mesa #menu>p{display:none}
     <div id="rack"></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
     <div id="panel" hidden><div id="panhead"><b id="pantitle">FRASES</b><button id="panx">✕</button></div><div id="pangrid"></div></div>
-    <div id="hint">Toca la ficha para tirarla · la barra FUERZA marca lo duro del golpe · arrastra a los lados para ordenar</div>
+    <div id="hint">Toca la ficha para ponerla · deslízala hacia arriba para el golpetazo · arrastra a los lados para ordenar</div>
   </div>
   <div id="prof" hidden>
     <h2>¿QUIÉN JUEGA?</h2>
@@ -182,8 +182,9 @@ body.mesa #menu>p{display:none}
       </ul>
       <h3>3 · En tu cel (el tablero)</h3>
       <ul>
-        <li><b>Toca una ficha</b> para tirarla a la mesa. Si casa por los dos lados, te pregunta a qué número ponerla.</li>
-        <li>La barra <b>FUERZA</b> (a la izquierda) marca lo duro del golpe. Cada 3 fichas que pones se llena entera (un golpetazo) y baja si pasas; solo pegas con lo que tengas cargado y el golpe gasta la carga. Con ella: más llena, más fuerte cae la ficha, más polvo, la botella se tambalea y con todo lleno se vira. La <b>ficha con la que te pegas</b> pega el doble, y <b>el que va ganando</b> pega más duro que el que va perdiendo.</li>
+        <li><b>Toca una ficha</b> para ponerla en la mesa (sin golpe). Si casa por los dos lados, te pregunta a qué número ponerla.</li>
+        <li><b>Desliza la ficha hacia arriba</b> para dar un <b>golpetazo</b> con toda la fuerza acumulada.</li>
+        <li>La barra <b>FUERZA</b> (a la izquierda) es tu fuerza acumulada: cada ficha que pones la llena un tercio (llena a las 3 fichas) y si pasas baja. El golpetazo usa toda la fuerza y la barra queda vacía hasta que la recuperes. Con más fuerza: más llena, más fuerte cae la ficha, más polvo, la botella se tambalea y con todo lleno se vira. La <b>ficha con la que te pegas</b> pega el doble, y <b>el que va ganando</b> pega más duro que el que va perdiendo.</li>
         <li>Arrastra una ficha a los lados para ordenarlas, o toca <b>ORDENAR</b>.</li>
         <li><b>FRASES</b>: frases cubanas del dominó y de la charada. <b>CARITAS</b>: risa, bravo, enfurecido… <b>¿QUÉ QUÉ?</b> y <b>¿CÓMO?</b> sacan a sus personajes en la mesa.</li>
       </ul>
@@ -214,7 +215,7 @@ body.mesa #menu>p{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.1.0';
+const VERSION='v2.2.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -347,7 +348,7 @@ function doPlay(seat,tile,side,force=0.5,slm=0){
   else if(side==='L'){ const out=t[0]===G.ends[0]?t[1]:t[0]; item={a:G.ends[0],b:out,side:'L'}; G.ends[0]=out; G.chain.unshift(item); }
   else { const out=t[0]===G.ends[1]?t[1]:t[0]; item={a:G.ends[1],b:out,side:'R'}; G.ends[1]=out; G.chain.push(item); }
   item.seat=seat; item.dbl=t[0]===t[1];
-  slm=Math.min(clamp(+slm||0,0,1),G.energy[seat]); G.energy[seat]=clamp(G.energy[seat]-slm+1/3,0,1);   // pegar gasta la barra; cada 3 fichas se llena entera
+  slm=Math.min(clamp(+slm||0,0,1),G.energy[seat]); if(slm<0.05) slm=0; G.energy[seat]=slm>0.05?0:clamp(G.energy[seat]+1/3,0,1);   // el golpe gasta toda la carga; cada ficha puesta sin golpe la llena 1/3
   if(slm) force=Math.max(force,slm); G.fly={item,seat,t:0,dur:slm>0.5?16:18+Math.round((1-force)*14),force,slam:slm}; G.passes=0;
   slide(0.12);
   return true;
@@ -804,11 +805,11 @@ function bindTile(el,tw,gap,x0){
     if(mode==='throw'){
       const speed=clamp(-vy/3,0,1);   // px/ms hacia arriba → fuerza 0..1
       if(dy<-50&&myTurn()&&myOpts(el._t).length){
-        const o=myOpts(el._t); let side=o[0];
-        if(o.length>1){ side=dx<0?'L':'R'; }
-        el.classList.add('fly'); el.style.transform='translate('+dx*0.6+'px,-'+(tilesEl.clientHeight+200)+'px) rotate('+dx*0.1+'deg)';
-        throwTile(el._t,side,Math.max(0.3,speed,effPower()),effPower());
-        try{ navigator.vibrate&&navigator.vibrate(18); }catch(_){}
+        const o=myOpts(el._t), pw=myEnergy();
+        const go=side=>{ el.classList.add('fly'); el.style.transform='translate('+dx*0.6+'px,-'+(tilesEl.clientHeight+200)+'px) rotate('+dx*0.1+'deg)';
+          throwTile(el._t,side,Math.max(0.4,speed,pw),pw); try{ navigator.vibrate&&navigator.vibrate(pw>0.1?[40,30,80]:18); }catch(_){} };
+        el.style.transform='';
+        if(o.length>1) askSide(el._t,pw,go); else go(o[0]);
         sel=null; return;
       }
       el.style.transform=''; if(dy<-50&&!myTurn()) flashMsg('Espera tu turno'); else if(dy<-50) flashMsg('Esa ficha no casa');
@@ -823,8 +824,8 @@ function bindTile(el,tw,gap,x0){
     // toque (o mantener y soltar): la ficha va a la mesa
     if(!myTurn()){ flashMsg('Espera tu turno'); return; }
     const o=myOpts(el._t); if(!o.length){ flashMsg('Esa ficha no casa'); return; }
-    const go=side=>{ el.classList.add('fly'); el.style.transform='translate(0,-'+(tilesEl.clientHeight+200)+'px)'; throwTile(el._t,side,Math.max(0.3,effPower()),effPower()); try{ navigator.vibrate&&navigator.vibrate(18); }catch(_){} };
-    if(o.length>1) askSide(el._t,lvl,go); else go(o[0]);
+    const go=side=>{ el.classList.add('fly'); el.style.transform='translate(0,-'+(tilesEl.clientHeight+200)+'px)'; throwTile(el._t,side,0.45,0); try{ navigator.vibrate&&navigator.vibrate(18); }catch(_){} };
+    if(o.length>1) askSide(el._t,0,go); else go(o[0]);
   };
   el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up);
 }
@@ -834,7 +835,7 @@ function askSide(t,lvl,go){
   const box=document.getElementById('sidebox'); const bl=document.getElementById('sideL'), br=document.getElementById('sideR');
   const same2=ends[0]===ends[1];
   bl.textContent='A LOS '+ends[0]+(same2?' (IZQUIERDA)':''); br.textContent='A LOS '+ends[1]+(same2?' (DERECHA)':'');
-  document.getElementById('sidelvl').textContent='FUERZA '+Math.round(effPower()*100)+'%';
+  document.getElementById('sidelvl').textContent=lvl>0.05?('GOLPETAZO '+Math.round(lvl*100)+'%'):'';
   box.hidden=false;
   const done=side=>{ box.hidden=true; bl.onclick=br.onclick=document.getElementById('sideX').onclick=null; if(side) go(side); };
   const t0=performance.now(), ok=()=>performance.now()-t0>400;   // ignora el toque fantasma del mismo dedo
@@ -849,17 +850,14 @@ let POWER=0.5;
 try{ const v=parseFloat(localStorage.getItem('dominoFuerza')); if(v>=0&&v<=1) POWER=v; }catch(_){}
 const powEl=document.getElementById('power'), powTrack=document.getElementById('powtrack');
 function myEnergy(){ return G.remoteMode?(G.rEnergy||0):(G.energy?G.energy[0]:0); }
-function effPower(){ return Math.min(POWER,myEnergy()); }
+function effPower(){ return myEnergy(); }
 window.showPower=showPower;
 function showPower(){ const e=myEnergy(), v=effPower();
   document.getElementById('powcap').style.height=Math.round(e*100)+'%'; document.getElementById('powfill').style.height=Math.round(v*100)+'%';
   document.getElementById('powpct').textContent=Math.round(v*100)+'%'; powEl.classList.toggle('full',e>=0.999); }
 function setPowerFromY(y){ const b=powTrack.getBoundingClientRect(); POWER=clamp(1-(y-b.top)/b.height,0,1); POWER=POWER>0.97?1:Math.round(POWER*20)/20; showPower(); try{ localStorage.setItem('dominoFuerza',String(POWER)); }catch(_){} }
 let powId=null;
-powEl.addEventListener('pointerdown',e=>{ e.preventDefault(); powId=e.pointerId; try{ powEl.setPointerCapture(powId); }catch(_){} setPowerFromY(e.clientY); });
-powEl.addEventListener('pointermove',e=>{ if(e.pointerId===powId) setPowerFromY(e.clientY); });
 const powEnd=e=>{ if(e.pointerId===powId){ powId=null; try{ navigator.vibrate&&navigator.vibrate(10+Math.round(POWER*40)); }catch(_){} } };
-powEl.addEventListener('pointerup',powEnd); powEl.addEventListener('pointercancel',powEnd);
 showPower();
 const panel=document.getElementById('panel'), pangrid=document.getElementById('pangrid');
 let sayLast=-1e9;
