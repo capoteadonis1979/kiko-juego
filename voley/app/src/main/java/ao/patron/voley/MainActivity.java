@@ -317,7 +317,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         @JavascriptInterface
         public void setPortrait(boolean p) {
             if (tv) return;
-            tilt(p);
             runOnUiThread(() -> setRequestedOrientation(p ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT : ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE));
         }
     }
