@@ -194,7 +194,8 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
 #menu button.main{background:var(--accent);border-color:#8a2418}
-#menu button:focus-visible,#menu button.focus{outline:3px solid var(--gold);outline-offset:3px}
+#menu button:focus{outline:none}
+#menu button.focus,#menu button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
 #ver{position:fixed;right:8px;bottom:4px;font-size:11px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
 </style>
 <div id="app">
@@ -310,7 +311,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.8';
+const VERSION='v3.0.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -755,26 +756,33 @@ function sortHand(seat,quiet){ G.hands[seat].sort((x,y)=>(Math.max(y[0],y[1])-Ma
 const TL=44, TW=22;     // tamaño de la ficha en la mesa (unidades lógicas)
 window.__lay=()=>layoutChain();
 function layoutChain(){
-  // Serpiente fija dentro de una zona limpia de la mesa (x ±340, y -200..212 desde el centro): nunca toca a los jugadores ni se sale.
-  // Sale del centro: la rama derecha va bajando por filas (0, 84, 168) y la izquierda subiendo (0, -84, -168); no se cruzan.
-  // Cada giro: ficha de pie con su mitad pegada a la última de la fila, otra de pie, y la fila vuelve en sentido contrario.
-  // Los dobles siempre cruzados y nunca hacen esquina; tras un doble la línea sigue recta. Las fichas puestas no se mueven nunca.
+  // Zona de las fichas FIJA y estricta: desde el centro x ±380, y -186..198. Así queda siempre al menos el ancho
+  // de una ficha entre la mesa de fichas y los tableros de los jugadores. Ninguna ficha sale de esta zona.
+  // Zigzag: la rama derecha baja por filas (0, 66, 132) y la izquierda sube (0, -66, -132); filas largas y una
+  // vueltecita de dos fichas de pie al llegar cerca del borde. Los dobles van cruzados y nunca hacen esquina;
+  // tras un doble la línea sigue recta. Las fichas puestas no se mueven nunca.
   const res=[]; const idx0=G.chain.findIndex(i=>i.side==='C'); if(idx0<0) return res;
-  const LIM=395, BXN=LIM-(TW+TL)-TW, H=Math.PI/2;   // BXN deja sitio para doble+ficha recta dos veces
+  const LIMX=380, TOP=-186, BOT=198, H=Math.PI/2;
+  const BXN=LIMX-2*(TW+TL)-TW;          // margen para un doble + ficha recta dos veces + la esquina
   const c0=G.chain[idx0];
   res[idx0]={x:0,y:0,ang:c0.dbl?H:0,a:c0.a,b:c0.b};
   for(const dirSide of ['R','L']){
-    const V=dirSide==='R'?1:-1;
-    let mode='h', dx=dirSide==='R'?1:-1, x=dx*(c0.dbl?TW:TL)/2, y=0, cx=0, yv=0, vcount=0, lastHalfW=TW/2, prevDbl=!!c0.dbl, rows=0;
+    const V=dirSide==='R'?1:-1, LY=V>0?BOT:-TOP;
+    let mode='h', dx=dirSide==='R'?1:-1, x=dx*(c0.dbl?TW:TL)/2, y=0, cx=0, yv=0, vcount=0, lastHalfW=TW/2, prevDbl=!!c0.dbl;
     const list=[]; if(dirSide==='R') for(let i=idx0+1;i<G.chain.length;i++) list.push(i); else for(let i=idx0-1;i>=0;i--) list.push(i);
+    const rowFits=()=>Math.abs(y)+3*TW+TW/2+TW<=LY;   // cabe otra fila (con margen por si un doble alarga la vuelta)
     for(const i of list){
       const it=G.chain[i];
       if(mode==='h'){
-        if(!it.dbl&&!prevDbl&&Math.abs(y+V*3*TW)+TW/2<=212&&Math.abs(x+dx*TL)>BXN){
+        const len=it.dbl?TW:TL;
+        if(!it.dbl&&!prevDbl&&(x+dx*TL)*dx>BXN&&rowFits()){   // gira solo al llegar al borde hacia el que va
           cx=x+dx*TW/2; res[i]={x:cx,y:y+V*TW/2,ang:V>0?H:-H,a:it.a,b:it.b};
           yv=y-V*TW/2+V*TL; vcount=1; lastHalfW=TW/2; mode='v'; prevDbl=false; continue;
         }
-        const len=it.dbl?TW:TL;
+        if(!it.dbl&&prevDbl&&(x+dx*(TL+TW/2+TL/2))*dx>LIMX&&rowFits()){   // tras un doble pegado al borde: baja desde la punta del doble
+          cx=x-dx*TW/2; const top=y+V*TL/2; res[i]={x:cx,y:top+V*TL/2,ang:V>0?H:-H,a:it.a,b:it.b};
+          yv=top+V*TL; vcount=2; lastHalfW=TW/2; mode='v'; prevDbl=false; continue;
+        }
         res[i]={x:x+dx*len/2,y,ang:it.dbl?H:(dx>0?0:Math.PI),a:it.a,b:it.b};
         x+=dx*len; prevDbl=!!it.dbl; continue;
       }
@@ -783,7 +791,7 @@ function layoutChain(){
         res[i]={x:cx,y:yv+V*len/2,ang:it.dbl?0:(V>0?H:-H),a:it.a,b:it.b};
         yv+=V*len; vcount++; lastHalfW=it.dbl?TL/2:TW/2; prevDbl=!!it.dbl; continue;
       }
-      dx=-dx; y=yv-V*TW/2; x=cx+dx*lastHalfW; mode='h'; rows++;
+      dx=-dx; y=yv-V*TW/2; x=cx+dx*lastHalfW; mode='h';
       const len=it.dbl?TW:TL;
       res[i]={x:x+dx*len/2,y,ang:it.dbl?H:(dx>0?0:Math.PI),a:it.a,b:it.b};
       x+=dx*len; prevDbl=!!it.dbl;
@@ -1284,11 +1292,20 @@ mmode.addEventListener('click',()=>{ if(G.remoteMode) return; setMode(G.mode==='
 let mFocus=-1;
 function menuBtns(){ return [...menu.querySelectorAll('button')].filter(b=>b.offsetParent!==null); }
 function defId(){ return !lobby.hidden?'lplay':!sub.hidden?'mplay':(tvDevice?'pmesa':'ptab'); }
-function menuMove(d){ const b=menuBtns(); if(!b.length) return; if(mFocus<0) mFocus=Math.max(0,b.indexOf(document.getElementById(defId())))-d; mFocus=(mFocus+d+b.length)%b.length; b.forEach((x,i)=>x.classList.toggle('focus',i===mFocus)); try{ b[mFocus].focus(); }catch(_){} }
-function menuOk(){ const b=menuBtns(); (mFocus>=0&&b[mFocus]?b[mFocus]:document.getElementById(defId())).click(); }
+function curBtn(){ const b=menuBtns(); const a=document.activeElement; if(a&&b.includes(a)) return a; if(mFocus>=0&&b[mFocus]) return b[mFocus]; return document.getElementById(defId()); }
+function setFocusBtn(el){ const b=menuBtns(); mFocus=b.indexOf(el); b.forEach(x=>x.classList.toggle('focus',x===el)); try{ el.focus({preventScroll:true}); }catch(_){} }
+// mueve el resaltado al botón más cercano en la dirección de la flecha
+function menuMove(d,dir){ const b=menuBtns(); if(!b.length) return; const c=curBtn(); if(!c||c.offsetParent===null){ setFocusBtn(document.getElementById(defId())||b[0]); return; }
+  dir=dir||(d>0?'down':'up'); const rc=c.getBoundingClientRect(), cx=rc.left+rc.width/2, cy=rc.top+rc.height/2; let best=null, bs=1e9;
+  for(const x of b){ if(x===c) continue; const q=x.getBoundingClientRect(), qx=q.left+q.width/2, qy=q.top+q.height/2, dx=qx-cx, dy=qy-cy;
+    const ok=dir==='down'?dy>8:dir==='up'?dy<-8:dir==='right'?dx>8:dx<-8; if(!ok) continue;
+    const main=(dir==='down'||dir==='up')?Math.abs(dy):Math.abs(dx), side=(dir==='down'||dir==='up')?Math.abs(dx):Math.abs(dy); const sc=main+side*2.2; if(sc<bs){ bs=sc; best=x; } }
+  if(best) setFocusBtn(best); else setFocusBtn(c); }
+function menuOk(){ const c=curBtn(); if(c) c.click(); }
+menu.addEventListener('focusin',e=>{ if(e.target.tagName==='BUTTON') menuBtns().forEach(x=>x.classList.toggle('focus',x===e.target)); });   // pulsa justo el botón resaltado
 addEventListener('keydown',e=>{ if(!pauseEl.hidden){ if(e.key==='ArrowDown'||e.key==='ArrowUp'){ pfoc(pFocus+(e.key==='ArrowDown'?1:-1)); e.preventDefault(); } else if(['Enter','NumpadEnter',' '].includes(e.key)){ pauseBtns()[pFocus].click(); e.preventDefault(); } else if(e.key==='Escape'){ closePause(); } return; }
   if(!guide.hidden){ if(e.key==='ArrowDown'||e.key==='ArrowUp'){ guide.scrollTop+=(e.key==='ArrowDown'?120:-120); e.preventDefault(); } else if(['Enter','NumpadEnter',' ','Escape'].includes(e.key)){ guide.hidden=true; e.preventDefault(); } return; }
-  if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){ menuMove(e.key==='ArrowDown'?1:-1); e.preventDefault(); return; }
+  if(!menu.hidden&&['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(e.key)){ menuMove(0,{ArrowDown:'down',ArrowUp:'up',ArrowLeft:'left',ArrowRight:'right'}[e.key]); e.preventDefault(); return; }
   if(['Enter','NumpadEnter',' '].includes(e.key)){ if(!menu.hidden){ menuOk(); e.preventDefault(); } else if(hsOK()){ nextHandOrMenu(); e.preventDefault(); } } });
 window.kikoKey=(k,down)=>{ if(down&&(k==='a'||k==='start')&&!pauseEl.hidden){ pauseBtns()[pFocus].click(); return; } if(down&&(k==='a'||k==='start')&&!guide.hidden){ guide.hidden=true; return; } if(down&&(k==='a'||k==='start')){ if(!menu.hidden) menuOk(); else if(hsOK()) nextHandOrMenu(); } };
 window.kikoBack=()=>{ if(!guide.hidden){ guide.hidden=true; return true; } if(!pauseEl.hidden){ closePause(); return true; } if(!G.remoteMode&&menu.hidden&&(G.state==='play'||G.state==='handover')){ openPause(); return true; } if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
