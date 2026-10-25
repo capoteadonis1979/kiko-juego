@@ -1,8 +1,8 @@
-# Aventura de Kiko
+# Gaspacho
 
 Juego de plataformas original para Android TV (TCL / Google TV) y móviles Android.
 
-- 4 niveles: Pradera, Cueva, Cielo y Castillo, con jefe final.
+- 32 niveles: 8 mundos de 4 (exterior, cueva, cielo y castillo con jefe).
 - Mando Bluetooth, control remoto de la tele o botones táctiles.
 - Funciona sin internet.
 

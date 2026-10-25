@@ -40,7 +40,7 @@ jobs:
       - name: Renombrar
         run: |
           mkdir -p salida
-          cp app/build/outputs/apk/release/app-release.apk salida/Kiko-1.0.0.apk
+          cp app/build/outputs/apk/release/app-release.apk salida/Gaspacho-1.1.0.apk
 
       - uses: actions/upload-artifact@v4
         with:
@@ -50,10 +50,10 @@ jobs:
       - name: Publicar en Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0-b${{ github.run_number }}
-          name: Kiko 1.0.0
+          tag_name: v1.1.0-b${{ github.run_number }}
+          name: Gaspacho 1.1.0
           body: |
-            Aventura de Kiko, juego de plataformas para tele Android (TCL/Google TV) y móvil.
+            Gaspacho, juego de plataformas con 32 niveles (8 mundos) para tele Android (TCL/Google TV) y móvil.
             Se juega con mando Bluetooth, con el control remoto o con los botones en pantalla.
             Descarga el archivo .apk e instálalo (permite "orígenes desconocidos").
           files: salida/*
