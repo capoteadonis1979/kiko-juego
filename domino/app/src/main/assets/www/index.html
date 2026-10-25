@@ -52,6 +52,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 @keyframes ink{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 #libpage .fin{color:#c8281e;font-size:26px;text-align:center}
 #libpage .palos{letter-spacing:2px}
+#libnext{position:absolute;right:14px;bottom:12px;z-index:2;font:700 17px var(--font);background:#2fbf71;color:#fff;border:3px solid #1a7a44;border-radius:12px;padding:10px 16px;box-shadow:0 4px 10px rgba(0,0,0,.4)}
 #libx{position:absolute;right:14px;top:10px;font:700 16px var(--font);background:#5a3a1a;color:#fff;border:2px solid #8a5a2a;border-radius:10px;padding:2px 12px;z-index:2}
 #passbox{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:19;background:rgba(120,14,10,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none}
 #passbox b{font-size:30px;color:#fff;letter-spacing:1px}
@@ -201,7 +202,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
     <div id="passbox" hidden><b>NO LLEVAS FICHA</b><span>Toca 1 o 2 veces la pantalla para pasar</span><i id="passn"></i></div>
     <div id="seatbox" hidden><b>ELIGE TU SILLA</b><div id="seatgrid"></div><small>Tu pareja es siempre el de enfrente</small></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
-    <div id="libreta" hidden><div id="libpage"></div><button id="libx">✕</button></div>
+    <div id="libreta" hidden><div id="libpage"></div><button id="libx">✕</button><button id="libnext" hidden>SIGUIENTE MANO ▶</button></div>
     <div id="panel" hidden><div id="panhead"><b id="pantitle">FRASES</b><button id="panx">✕</button></div><div id="pangrid"></div></div>
     <div id="hint">Toca la ficha para ponerla · deslízala hacia arriba para el golpetazo · arrastra a los lados para ordenar</div>
   </div>
@@ -275,7 +276,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.8.0';
+const VERSION='v2.8.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -653,7 +654,7 @@ function drawFist(){
   // al golpear, un poco de polvo
   if(f.n&&t>=12&&t<hitEnd&&((t-12)%16)===0) for(let q=0;q<10;q++){ const a=Math.random()*6.28; G.dust.push({x:Fx+Math.cos(a)*20,y:Fy+Math.sin(a)*14,vx:Math.cos(a)*1.2,vy:Math.sin(a)*0.8,r:2+Math.random()*2,life:0.7,dec:0.03}); }
 }
-function hsOK(){ return G.state==='handover'&&G.cnt&&G.frame-G.cnt.t0>60; }
+function hsOK(){ return G.state==='handover'&&G.cnt&&(G.cnt.done||!G.human.some(Boolean))&&G.frame-G.cnt.t0>60; }
 // dónde está cada ficha en el puesto de un jugador
 function seatTilePos(s,ti){ const pos=seatPos(s), n=G.hands[s].length, horiz=s%2===0, step=horiz?22:16;
   return horiz?{x:pos.x+(ti-(n-1)/2)*step,y:pos.y+(s===0?-18:18),a:Math.PI/2}:{x:pos.x+(s===1?-14:14),y:pos.y+(ti-(n-1)/2)*step,a:0}; }
@@ -668,7 +669,9 @@ function drawCounting(){
     ctx.save(); ctx.translate(X,Y); ctx.rotate(Math.PI/2); drawTile(ctx,x.t[0],x.t[1],44*sc,22*sc,true); ctx.restore(); });
   ctx.textAlign='center'; ctx.textBaseline='middle';
   if(N){ ctx.font='700 30px '+F; ctx.lineWidth=6; ctx.strokeStyle='#111'; const tx='TANTOS: '+c.sum; ctx.strokeText(tx,VW/2,VH/2-38); ctx.fillStyle='#ffd23a'; ctx.fillText(tx,VW/2,VH/2-38); }
-  if(c.done||!N){ const r=G.result, sen=G.mode==='sencillo'; let t1=r.team<0?'NADIE SE ANOTA':(sen?G.names[r.winner]:TEAMN()[r.team])+' SE ANOTA '+r.all;
+  if((c.done||!N)&&G.human.some(Boolean)&&hs>130+N*28+60){ ctx.font='700 17px '+F; const tp=G.over?'Toca NUEVA PARTIDA en el cel (o OK en el mando)':'Lean la libreta y toquen SIGUIENTE MANO en el cel (o OK en el mando)'; const w3=ctx.measureText(tp).width+30;
+    ctx.fillStyle='rgba(255,210,58,.95)'; rr(ctx,VW/2-w3/2,VH-92,w3,32,12); ctx.fill(); ctx.fillStyle='#2a1608'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(tp,VW/2,VH-76); }
+  if(c.done||!N){ const r=G.result, sen=G.mode==='sencillo'; let t1=r.team<0?'NADIE SE ANOTA':(sen?G.names[r.winner]+' SE ANOTA ':TEAMN()[r.team]+' SE ANOTAN ')+r.all;
     if(!sen&&r.team>=0) t1+='  ·  '+G.scores[0]+' a '+G.scores[1];
     ctx.font='700 22px '+F; const w=ctx.measureText(t1).width+40; const yy=VH/2+(N>30?150:100);
     ctx.fillStyle='rgba(10,20,14,0.85)'; rr(ctx,VW/2-w/2,yy-20,w,40,14); ctx.fill(); ctx.fillStyle='#fff'; ctx.fillText(t1,VW/2,yy);
@@ -855,7 +858,7 @@ function drawSeat(s){
   // nombre
   const label=G.names[s];
   ctx.font='700 15px '+font; const w=ctx.measureText(label).width+22;
-  let lx=pos.x, ly=pos.y; if(s===0||s===2){ ly=pos.y+(s===0?-18:18); lx=VW/2-128-w/2; } else { ly=VH/2-118; lx=s===1?Math.min(VW-w/2-4,VW-54):Math.max(w/2+4,54); }
+  let lx=pos.x, ly=pos.y; if(s===0||s===2){ ly=pos.y+(s===0?-18:18); lx=VW/2-128-w/2; } else { ly=VH/2-118; lx=s===1?Math.min(VW-w/2-4,VW-54):Math.max(w/2+26,54); }
   if(s===0&&showLocalHand()){ ly=VH-26; lx=VW/2; }
   ctx.fillStyle=me?'#ffd23a':'rgba(0,0,0,0.5)'; rr(ctx,lx-w/2,ly-13,w,26,13); ctx.fill();
   { const dx=lx-w/2-12; ctx.fillStyle=seatColor(s); ctx.beginPath(); ctx.arc(dx,ly,9,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke(); }   // punto de color del jugador
@@ -1006,6 +1009,10 @@ function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 function openLibreta(fresh){ renderLibreta(fresh); libEl.hidden=false; const pg=document.getElementById('libpage'); pg.scrollTop=pg.scrollHeight; }
 document.getElementById('blib').addEventListener('click',()=>openLibreta(false));
 document.getElementById('libx').addEventListener('click',()=>libEl.hidden=true);
+function canNext(){ return G.remoteMode?!!G.rCntDone:(G.state==='handover'&&G.cnt&&G.cnt.done); }
+function nextLabel(){ return (G.remoteMode?G.rOver:G.over)?'NUEVA PARTIDA ▶':'SIGUIENTE MANO ▶'; }
+setInterval(()=>{ const b=document.getElementById('libnext'); const ok=canNext(); b.hidden=!ok; if(ok) b.textContent=nextLabel(); },300);
+document.getElementById('libnext').addEventListener('click',()=>{ if(!canNext()) return; if(G.remoteMode){ netSend({t:'ctl',a:'next'}); G.rCntDone=false; } else nextHandOrMenu(); libEl.hidden=true; });
 // ---- pasar con 1 o 2 toques ----
 const passbox=document.getElementById('passbox'); let passTaps=0, passTm=null, passShown=false;
 function mustPass(){ return G.remoteMode?!!G.rMust:(G.state==='play'&&G.turn===0&&G.human[0]&&!G.fly&&!(G.passT>0)&&!playable(0).length); }
@@ -1067,7 +1074,7 @@ function broadcast(){
 function stateFor(s){
   const turn=G.turn===s&&G.state==='play';
   const must=G.state==='play'&&G.turn===s&&!G.fly&&!(G.passT>0)&&!playable(s).length;
-  return {t:'state',seat:s,must,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
+  return {t:'state',seat:s,must,over:!!G.over,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
     score:G.mode==='sencillo'?('TÚ '+G.pscores[s]+' · MÁX '+Math.max(...G.pscores)):(s%2===0?G.scores[0]+' – '+G.scores[1]:G.scores[1]+' – '+G.scores[0])};
 }
 // en la tele: llega un móvil
@@ -1089,7 +1096,7 @@ window.kikoMsg=(id,line)=>{
   if(o.t==='play'){ initAudio(); if(!doPlay(seat,o.tile,o.side,clamp(+o.force||0.4,0.1,1),o.pw!=null?clamp(+o.pw||0,0,1):clamp((o.slam===true?1:o.slam|0),0,3)/3)) sendTo(id,stateFor(seat)); }
   if(o.t==='exp'){ expShow(seat,o.k?1:0); return; }
   if(o.t==='pass'){ doPass(seat,o.n|0); return; }
-  if(o.t==='ctl'){ if(o.a==='restart'||o.a==='new') gameAction(o.a); return; }
+  if(o.t==='ctl'){ if(o.a==='restart'||o.a==='new') gameAction(o.a); else if(o.a==='next'&&G.state==='handover'&&G.cnt&&G.cnt.done) nextHandOrMenu(); return; }
   if(o.t==='seat'){ if(G.state==='menu'&&isTV){ const to=o.s|0, from=peers[id]; if(to>=0&&to<4&&to!==from&&isAct(to)) swapSeats(from,to); } return; }
   if(o.t==='say'){ if((o.type==='f'||o.type==='c')&&Number.isInteger(o.i)) sayShow(seat,o.type,o.i); return; }
   if(o.t==='hi'){
@@ -1106,7 +1113,7 @@ window.kikoFromTV=(line)=>{
     const wasTurn=G.rTurn; G.rHand=G.rHand&&G.rHand.length===o.hand.length&&o.hand.every(t=>G.rHand.some(x=>same(x,t)))?G.rHand:o.hand;
     if(o.lib){ G.rLib=o.lib; if(!libEl.hidden) renderLibreta(); }
     if(o.hand&&G.rHand&&o.hand.length===10&&G.rHand.length<10) libEl.hidden=true;
-    G.rMust=!!o.must; setTimeout(checkPassBox,0);
+    G.rMust=!!o.must; G.rOver=!!o.over; setTimeout(checkPassBox,0);
     if(o.lobby){ renderSeatBox(o.lobby,o.seat); seatbox.hidden=false; } else seatbox.hidden=true;
     if(o.cntDone&&!G.rCntDone) setTimeout(()=>openLibreta(true),400); G.rCntDone=!!o.cntDone;
     G.rEnergy=+o.energy||0; G.rEnds=o.ends; G.rTurn=o.turn; G.rMsg=o.msg; G.rScore=o.score;
@@ -1239,7 +1246,7 @@ addEventListener('keydown',e=>{ if(!pauseEl.hidden){ if(e.key==='ArrowDown'||e.k
   if(['Enter','NumpadEnter',' '].includes(e.key)){ if(!menu.hidden){ menuOk(); e.preventDefault(); } else if(hsOK()){ nextHandOrMenu(); e.preventDefault(); } } });
 window.kikoKey=(k,down)=>{ if(down&&(k==='a'||k==='start')&&!pauseEl.hidden){ pauseBtns()[pFocus].click(); return; } if(down&&(k==='a'||k==='start')&&!guide.hidden){ guide.hidden=true; return; } if(down&&(k==='a'||k==='start')){ if(!menu.hidden) menuOk(); else if(hsOK()) nextHandOrMenu(); } };
 window.kikoBack=()=>{ if(!guide.hidden){ guide.hidden=true; return true; } if(!pauseEl.hidden){ closePause(); return true; } if(!G.remoteMode&&menu.hidden&&(G.state==='play'||G.state==='handover')){ openPause(); return true; } if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
-function nextHandOrMenu(){ if(G.over){ G.state='menu'; menu.hidden=false; } else dealHand(); }
+function nextHandOrMenu(){ if(G.over){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } broadcast(); } else dealHand(); }
 cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu(); });
 
 /* ================= BUCLE ================= */
@@ -1256,7 +1263,7 @@ function update(){
     const c=G.cnt; if(c&&!c.done){ const hs=G.frame-c.t0;
       while(c.next<c.list.length&&hs>=130+c.next*28+16){ c.sum+=pips(c.list[c.next].t); c.next++; clack(0.45); }
       if(c.next>=c.list.length&&hs>=130+c.list.length*28+16){ c.done=true; broadcast(); if(!isTV&&!G.remoteMode) openLibreta(true); } }
-    if(G.timer>0) G.timer--; else nextHandOrMenu(); }
+    if(G.timer>0) G.timer--; else if(!G.human.some(Boolean)) nextHandOrMenu(); }   // con personas: esperan a que alguien toque SIGUIENTE
 }
 let last=performance.now(), acc=0;
 function loop(now){ acc+=Math.min(100,now-last); last=now; let n=0; while(acc>=1000/60&&n<5){ update(); acc-=1000/60; n++; } if(!G.remoteMode) drawTable(); requestAnimationFrame(loop); }
