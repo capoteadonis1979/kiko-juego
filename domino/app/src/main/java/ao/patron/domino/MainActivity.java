@@ -3,6 +3,11 @@ package ao.patron.domino;
 import android.app.Activity;
 import android.app.UiModeManager;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.provider.MediaStore;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.net.wifi.WifiManager;
@@ -54,6 +59,7 @@ public class MainActivity extends Activity {
 
     // ----- tele: servidor -----
     private ServerSocket server;
+    private boolean hosting = false;
     private final ConcurrentHashMap<Integer, OutputStream> clients = new ConcurrentHashMap<>();
     private int clientSeq = 1;
     private final ExecutorService tx = Executors.newSingleThreadExecutor();
@@ -92,14 +98,15 @@ public class MainActivity extends Activity {
         });
         setContentView(web);
         pantallaCompleta();
-        if (tv) startHost();
         web.loadUrl("https://appassets.androidplatform.net/assets/www/index.html" + (tv ? "?tv=1" : ""));
     }
 
     private void js(String code) { runOnUiThread(() -> { if (web != null) web.evaluateJavascript(code, null); }); }
 
     // ================= TELE =================
-    private void startHost() {
+    private synchronized void startHost() {
+        if (hosting) return;
+        hosting = true;
         new Thread(() -> {
             try {
                 server = new ServerSocket(TCP);
@@ -131,7 +138,7 @@ public class MainActivity extends Activity {
         try (BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = r.readLine()) != null) {
-                if (line.length() > 4000) continue;
+                if (line.length() > 120000) continue;
                 js("window.kikoMsg&&kikoMsg(" + id + "," + JSONObject.quote(line) + ")");
             }
         } catch (Exception ignored) { }
@@ -232,6 +239,28 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void startHost() { MainActivity.this.startHost(); notifyNet(); }
+
+        // foto del jugador con la cámara frontal (miniatura, sin permisos)
+        @JavascriptInterface
+        public void takePhoto() {
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    i.putExtra("android.intent.extras.CAMERA_FACING", 1);
+                    i.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                    i.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                    startActivityForResult(i, 77);
+                } catch (Exception e) {
+                    try {
+                        Intent g = new Intent(Intent.ACTION_GET_CONTENT); g.setType("image/*");
+                        startActivityForResult(g, 78);
+                    } catch (Exception ignored) { }
+                }
+            });
+        }
+
+        @JavascriptInterface
         public void ctrlStop() { ctrlGen++; closeCtrl(); }
 
         @JavascriptInterface
@@ -253,6 +282,25 @@ public class MainActivity extends Activity {
             getWindow().getAttributes().layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (res != RESULT_OK || data == null) return;
+        try {
+            Bitmap bm = null;
+            if (req == 77 && data.getExtras() != null) bm = (Bitmap) data.getExtras().get("data");
+            else if (req == 78 && data.getData() != null) bm = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+            if (bm == null) return;
+            int m = Math.min(bm.getWidth(), bm.getHeight());
+            Bitmap sq = Bitmap.createBitmap(bm, (bm.getWidth() - m) / 2, (bm.getHeight() - m) / 2, m, m);
+            Bitmap sm2 = Bitmap.createScaledBitmap(sq, 160, 160, true);
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            sm2.compress(Bitmap.CompressFormat.JPEG, 80, bo);
+            String url = "data:image/jpeg;base64," + Base64.encodeToString(bo.toByteArray(), Base64.NO_WRAP);
+            js("window.kikoPhoto&&kikoPhoto(" + JSONObject.quote(url) + ")");
+        } catch (Exception ignored) { }
     }
 
     @Override
