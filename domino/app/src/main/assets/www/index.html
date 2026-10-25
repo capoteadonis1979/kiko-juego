@@ -254,7 +254,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.6.0';
+const VERSION='v2.6.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -573,17 +573,42 @@ function doPass(seat,n){
   if(playable(seat).length) return false;
   n=n>=2?2:1; G.passes++; G.energy[seat]=Math.max(0,G.energy[seat]-0.2);   // pasar baja 2 niveles
   G.fist={seat,n,t:G.frame};
-  for(let k=0;k<n;k++) setTimeout(()=>{ knock1(1); G.shake=Math.max(G.shake,6); },200+k*270);
+  for(let k=0;k<n;k++) setTimeout(()=>{ knock1(1); G.shake=Math.max(G.shake,6); },200+k*267);
   say(G.names[seat]+(n>1?': ¡PASO, PASO!':': PASO'),80);
   if(G.passes>=4){ G.passT=99999; setTimeout(()=>{ if(G.state==='play') endHand(-1,true); },380+n*270); broadcast(); return true; }
   G.passT=Math.round((380+n*270)/16.7); broadcast(); return true;
 }
 function drawFist(){
-  const f=G.fist; if(!f) return; const t=G.frame-f.t, dur=24+f.n*17; if(t>dur){ G.fist=null; return; }
-  const pos=seatPos(f.seat), c={x:VW/2,y:VH/2}, k=Math.min(1,t/10);
-  const x=pos.x+(c.x-pos.x)*0.22*k, y=pos.y+(c.y-pos.y)*0.22*k;
-  const u=t<12?0:((t-12)%17)/17, lift=t<12?30:Math.abs(Math.cos(u*Math.PI))*26;
-  ctx.save(); ctx.globalAlpha=t>dur-6?(dur-t)/6:1; ctx.translate(x,y-lift); ctx.font='68px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✊',0,0); ctx.restore();
+  // un brazo sale del borde de la pantalla, por el lado del jugador, y la mano da 1 o 2 puñetazos en la mesa
+  const f=G.fist; if(!f) return; const t=G.frame-f.t, hitEnd=12+f.n*16, dur=hitEnd+14; if(t>dur){ G.fist=null; return; }
+  const E=[{x:VW/2+70,y:VH+40},{x:VW+40,y:VH/2+50},{x:VW/2-70,y:-40},{x:-40,y:VH/2-50}][f.seat];
+  const reach=f.seat%2===0?190:240, dx=VW/2-E.x, dy=VH/2-E.y, dl=Math.hypot(dx,dy), ux=dx/dl, uy=dy/dl, ang=Math.atan2(uy,ux);
+  let k; if(t<10) k=1-Math.pow(1-t/10,3); else if(t<=hitEnd) k=1; else k=1-Math.pow((t-hitEnd)/14,2);
+  // levantar la mano entre golpe y golpe (desde arriba se ve más grande y con la sombra más lejos)
+  let lift=0; if(t>=6&&t<hitEnd){ const u=((t-6)%16)/16; lift=Math.abs(Math.cos(u*Math.PI)); } else if(t<6) lift=1;
+  const Fx=E.x+ux*reach*k, Fy=E.y+uy*reach*k, sc=1+0.28*lift;
+  ctx.save();
+  // sombra de la mano en la mesa
+  ctx.fillStyle='rgba(0,0,0,'+(0.28-0.1*lift)+')'; ctx.beginPath(); ctx.ellipse(Fx+10+lift*16,Fy+12+lift*18,30,22,ang,0,7); ctx.fill();
+  // brazo: manga y antebrazo
+  const Mx=E.x+(Fx-E.x)*0.5, My=E.y+(Fy-E.y)*0.5;
+  ctx.lineCap='round';
+  ctx.strokeStyle='#b0763e'; ctx.lineWidth=30*sc; ctx.beginPath(); ctx.moveTo(Mx,My); ctx.lineTo(Fx-ux*14,Fy-uy*14); ctx.stroke();
+  ctx.strokeStyle='#c98a52'; ctx.lineWidth=22*sc; ctx.beginPath(); ctx.moveTo(Mx,My); ctx.lineTo(Fx-ux*14,Fy-uy*14); ctx.stroke();
+  ctx.strokeStyle='#2c5aa0'; ctx.lineWidth=40*sc; ctx.beginPath(); ctx.moveTo(E.x-ux*40,E.y-uy*40); ctx.lineTo(Mx,My); ctx.stroke();   // manga
+  ctx.strokeStyle='#1f4278'; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(Mx-uy*20*sc,My+ux*20*sc); ctx.lineTo(Mx+uy*20*sc,My-ux*20*sc); ctx.stroke();
+  // puño
+  ctx.translate(Fx,Fy); ctx.rotate(ang); ctx.scale(sc,sc);
+  const g=ctx.createLinearGradient(-20,-26,20,26); g.addColorStop(0,'#e0a46a'); g.addColorStop(1,'#a8693a');
+  ctx.fillStyle=g; rr(ctx,-24,-27,52,54,18); ctx.fill(); ctx.strokeStyle='#7a4a24'; ctx.lineWidth=2; ctx.stroke();
+  // nudillos
+  ctx.fillStyle='#d79b62'; for(let q=0;q<4;q++){ ctx.beginPath(); ctx.ellipse(22,-19+q*12.7,7,6,0,0,7); ctx.fill(); ctx.stroke(); }
+  // dedos doblados y pulgar
+  ctx.strokeStyle='rgba(90,50,20,.55)'; ctx.lineWidth=1.6; for(let q=1;q<4;q++){ ctx.beginPath(); ctx.moveTo(4,-26+q*13); ctx.lineTo(26,-26+q*13); ctx.stroke(); }
+  ctx.fillStyle='#c98a52'; rr(ctx,-6,-30,24,13,6); ctx.fill(); ctx.strokeStyle='#7a4a24'; ctx.stroke();
+  ctx.restore();
+  // al golpear, un poco de polvo
+  if(f.n&&t>=12&&t<hitEnd&&((t-12)%16)===0) for(let q=0;q<10;q++){ const a=Math.random()*6.28; G.dust.push({x:Fx+Math.cos(a)*20,y:Fy+Math.sin(a)*14,vx:Math.cos(a)*1.2,vy:Math.sin(a)*0.8,r:2+Math.random()*2,life:0.7,dec:0.03}); }
 }
 function hsOK(){ return G.state==='handover'&&G.cnt&&G.frame-G.cnt.t0>60; }
 // dónde está cada ficha en el puesto de un jugador
