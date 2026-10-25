@@ -277,7 +277,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.0';
+const VERSION='v2.9.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -613,13 +613,18 @@ function fistTarget(seat){
   const dx=VW/2-E.x, dy=VH/2-E.y, dl=Math.hypot(dx,dy), ux=dx/dl, uy=dy/dl;
   const L=layoutChain(), ox=VW/2, oy=VH/2-6, R=[];
   L.forEach(p=>{ if(!p) return; const hor=Math.abs(Math.cos(p.ang))>0.5, a=hor?TL:TW, b=hor?TW:TL; R.push([ox+p.x-a/2,oy+p.y-b/2,ox+p.x+a/2,oy+p.y+b/2]); });
-  const free=(x,y)=>{ const q=[x-40,y-40,x+40,y+40]; return !R.some(t=>q[0]<t[2]&&q[2]>t[0]&&q[1]<t[3]&&q[3]>t[1]); };
-  const base=seat%2===0?190:240;
-  for(const reach of [base,base-30,base+30,base-60,base+60,base-90,base+100,base+140]) for(const side of [0,70,-70,140,-140,210,-210]){
+  // botella y cenicero: la mano no cae encima ni el brazo pasa por arriba
+  const P=[[110,320,305,500],[780,425,915,495]];
+  const free=(x,y)=>{ const q=[x-40,y-40,x+40,y+40]; return !R.concat(P).some(t=>q[0]<t[2]&&q[2]>t[0]&&q[1]<t[3]&&q[3]>t[1]); };
+  const armOK=(x,y)=>{ for(let k=0.1;k<=1;k+=0.05){ const px=E.x+(x-E.x)*k, py=E.y+(y-E.y)*k; if(P.some(t=>px>t[0]-18&&px<t[2]+18&&py>t[1]-18&&py<t[3]+18)) return false; } return true; };
+  const min=seat%2===0?110:150;
+  // lo más cerca posible del jugador: primero alcances cortos
+  for(let reach=min;reach<=min+260;reach+=30) for(const side of [0,60,-60,120,-120,180,-180]){
     const x=E.x+ux*reach-uy*side, y=E.y+uy*reach+ux*side;
-    if(x<70||x>VW-70||y<70||y>VH-70) continue;
-    if(free(x,y)) return {x,y};
+    if(x<70||x>VW-70||y<60||y>VH-60) continue;
+    if(free(x,y)&&armOK(x,y)) return {x,y};
   }
+  const base=seat%2===0?190:240;
   return {x:E.x+ux*base,y:E.y+uy*base};
 }
 window.__fist=(s,n)=>{ G.fist={seat:s,n:n||1,t:G.frame,tg:fistTarget(s)}; };
