@@ -178,6 +178,11 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 #pick:not([hidden]){display:flex}
 #menu #ptab{background:#2f7fe0;border-color:#1c4c94}
 #menu #psolo{background:#22a04a;border-color:#0f5a26}
+#cuba{flex-basis:100%;display:flex;justify-content:center;align-items:flex-end;gap:26px;margin-top:2px}
+#cuba .flag{width:96px;height:49px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));animation:ond 2.4s ease-in-out infinite alternate;transform-origin:left center}
+#cuba .tinajon{width:52px;height:58px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))}
+@keyframes ond{from{transform:skewY(-2deg) scaleX(.97)}to{transform:skewY(2deg) scaleX(1)}}
+@media (max-height:460px){#cuba .flag{width:70px;height:36px} #cuba .tinajon{width:38px;height:42px}}
 #pick{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:680px}
 #pick button{min-width:300px}
 #menu{overflow-y:auto}
@@ -256,6 +261,20 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
       <button class="big" id="ptab">JUGADOR<small>Para el cel: aquí tienes tus fichas</small></button>
       <button id="psolo">JUGAR SOLO CONTRA LA MÁQUINA</button>
       <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
+      <div id="cuba" aria-hidden="true">
+        <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
+          <g clip-path="url(#fw)"><rect width="150" height="80" fill="#fff"/>
+            <rect y="0" width="150" height="15.2" fill="#002a8f"/><rect y="30.4" width="150" height="15.2" fill="#002a8f"/><rect y="60.8" width="150" height="15.2" fill="#002a8f"/>
+            <path d="M0 0 L66 38 L0 76 Z" fill="#cf142b"/>
+            <path d="M22 26.5 L25.1 35.7 L34.8 35.8 L27 41.6 L29.9 50.9 L22 45.3 L14.1 50.9 L17 41.6 L9.2 35.8 L18.9 35.7 Z" fill="#fff"/>
+            <path d="M0 0 Q37 8 75 0 T150 0 V80 Q112 72 75 80 T0 80 Z" fill="rgba(0,0,0,.08)"/></g></svg>
+        <svg class="tinajon" viewBox="0 0 80 90"><defs><radialGradient id="tg" cx="35%" cy="40%" r="70%"><stop offset="0" stop-color="#d98a52"/><stop offset=".6" stop-color="#a8552a"/><stop offset="1" stop-color="#6e3216"/></radialGradient></defs>
+          <ellipse cx="40" cy="86" rx="22" ry="4" fill="rgba(0,0,0,.35)"/>
+          <path d="M28 10 Q26 18 18 26 Q4 42 10 62 Q16 80 40 84 Q64 80 70 62 Q76 42 62 26 Q54 18 52 10 Z" fill="url(#tg)"/>
+          <rect x="24" y="5" width="32" height="7" rx="3" fill="#8a4220"/><ellipse cx="40" cy="6" rx="16" ry="3" fill="#3a1a0a"/>
+          <path d="M14 40 Q40 46 66 40" stroke="#7a3a18" stroke-width="2" fill="none"/><path d="M12 54 Q40 60 68 54" stroke="#7a3a18" stroke-width="2" fill="none"/>
+          <path d="M22 30 Q16 44 20 60" stroke="rgba(255,220,180,.35)" stroke-width="3" fill="none"/></svg>
+      </div>
     </div>
     <div id="sub" hidden>
       <button id="mmode">MODO: PAREJAS (2 CONTRA 2)</button>
@@ -279,7 +298,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.3';
+const VERSION='v2.9.4';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
