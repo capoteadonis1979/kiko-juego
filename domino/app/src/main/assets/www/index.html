@@ -176,6 +176,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 #gclose{display:block;margin:18px auto 8px;font:700 18px var(--font);padding:12px 30px;border-radius:14px;border:3px solid #8a2418;background:var(--accent);color:#fff}
 #gclose.focus{outline:3px solid var(--gold);outline-offset:3px}
 #pick,#sub{display:flex;flex-direction:column;align-items:center;gap:12px}
+#sub{gap:22px}
 #pick:not([hidden]){display:flex}
 #menu #ptab{background:#2f7fe0;border-color:#1c4c94}
 #menu #psolo{background:#22a04a;border-color:#0f5a26}
@@ -238,7 +239,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
       <h3>2 · Las reglas</h3>
       <ul>
         <li>Dominó <b>doble nueve</b>: 55 fichas, 4 jugadores con 10 fichas cada uno. Sobran 15 que no se usan. <b>No se roba.</b></li>
-        <li><b>Parejas</b>: tu compañero es el de enfrente. <b>Sencillo</b>: cada uno juega solo.</li>
+        <li><b>Parejas</b>: tu compañero es el de enfrente. <b>Individual</b>: cada uno juega solo.</li>
         <li>La primera mano sale el doble más alto; después sale el que ganó.</li>
         <li>Se juega hacia la derecha. Si no llevas ficha que case, <b>pasas</b>.</li>
         <li>Gana la mano quien <b>se pega</b> (pone su última ficha) y se anota todos los puntos que quedan en las manos.</li>
@@ -309,7 +310,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.7';
+const VERSION='v2.9.8';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -1158,7 +1159,7 @@ window.kikoFromTV=(line)=>{
     if(o.lib){ G.rLib=o.lib; if(!libEl.hidden) renderLibreta(); }
     if(o.hand&&G.rHand&&o.hand.length===10&&G.rHand.length<10) libEl.hidden=true;
     G.rMust=!!o.must; G.rOver=!!o.over; setTimeout(checkPassBox,0);
-    if(o.lobby){ renderSeatBox(o.lobby,o.seat); seatbox.hidden=false; } else seatbox.hidden=true;
+    if(o.lobby&&G.remoteMode){ renderSeatBox(o.lobby,o.seat); seatbox.hidden=false; } else seatbox.hidden=true;
     if(o.cntDone&&!G.rCntDone) setTimeout(()=>openLibreta(true),400); G.rCntDone=!!o.cntDone;
     G.rEnergy=+o.energy||0; G.rEnds=o.ends; G.rTurn=o.turn; G.rMsg=o.msg; G.rScore=o.score;
     document.getElementById('rends').textContent=o.ends?('A los '+o.ends[0]+'  ·  a los '+o.ends[1]):'Mesa vacía';
@@ -1200,7 +1201,8 @@ function startRemote(){
 }
 document.getElementById('rpair').addEventListener('click',()=>{ document.getElementById('rst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('rgo').addEventListener('click',()=>{ const ip=document.getElementById('rip').value.trim(); if(ip) try{ KikoApp.ctrlStart(ip); }catch(_){} });
-document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; document.body.classList.remove('remote'); document.getElementById('menu').hidden=false; showPick(); layout(); });
+document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
+  ['seatbox','passbox','libreta','panel','sidebox','pause'].forEach(i=>{ const e=document.getElementById(i); if(e) e.hidden=true; }); document.body.classList.remove('remote'); document.getElementById('menu').hidden=false; showPick(); layout(); });
 
 /* ================= MENÚ ================= */
 const menu=document.getElementById('menu');
@@ -1275,7 +1277,7 @@ window.kikoNet=(n,ip)=>{ G.ip=ip||''; updateTvMenu(); };
 isTV=false;   // hasta que se elija MESA
 // mando a distancia de la tele: OK empieza / sigue
 const mmode=document.getElementById('mmode');
-function setMode(m){ G.mode=m; mmode.textContent=m==='parejas'?'MODO: PAREJAS (2 CONTRA 2)':'MODO: SENCILLO (CADA UNO SOLO)'; try{ localStorage.setItem('dominoModo',m); }catch(_){} }
+function setMode(m){ G.mode=m; mmode.textContent=m==='parejas'?'MODO: PAREJAS (2 CONTRA 2)':'MODO: INDIVIDUAL (CADA UNO SOLO)'; try{ localStorage.setItem('dominoModo',m); }catch(_){} }
 try{ const m=localStorage.getItem('dominoModo'); if(m==='sencillo') setMode(m); }catch(_){}
 if(G.nPlayers<4&&G.mode==='parejas') setMode('sencillo');
 mmode.addEventListener('click',()=>{ if(G.remoteMode) return; setMode(G.mode==='parejas'?'sencillo':'parejas'); });
