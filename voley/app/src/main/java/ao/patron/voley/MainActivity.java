@@ -2,6 +2,7 @@ package ao.patron.voley;
 
 import android.app.Activity;
 import android.app.UiModeManager;
+import android.content.pm.ActivityInfo;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -220,6 +221,13 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void endPick() { picking = false; }
+
+        // el mando de inclinar se usa con el móvil en vertical
+        @JavascriptInterface
+        public void setPortrait(boolean p) {
+            if (tv) return;
+            runOnUiThread(() -> setRequestedOrientation(p ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT : ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE));
+        }
     }
 
     private void pantallaCompleta() {

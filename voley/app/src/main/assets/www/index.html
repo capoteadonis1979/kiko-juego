@@ -34,6 +34,18 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 [hidden]{display:none!important}
 #pad{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;padding:max(10px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;gap:10px;font:11px var(--pix);color:var(--fg)}
 #padtop{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#tilt{flex:1;display:flex;flex-direction:column;gap:12px;min-height:0}
+#tiltbar{display:flex;align-items:center;gap:10px;height:64px}
+#tiltbar .tz{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:var(--btn);border:2px solid #2c4c66;font-size:24px;flex:none}
+#tiltbar .tz.on{background:#2fbf71;border-color:#1a7a44}
+#tiltdot{flex:1;height:14px;border-radius:7px;background:#1d3a52;position:relative}
+#tiltdot::after{content:"";position:absolute;top:-8px;left:calc(50% + var(--g,0) * 1%);width:30px;height:30px;margin-left:-15px;border-radius:50%;background:#ffe070;box-shadow:0 0 0 3px #7a3a00}
+#tap{flex:1;min-height:120px;border-radius:24px;background:var(--a);border:3px solid #8a2418;display:grid;place-items:center;font:700 22px var(--pix);color:#fff;text-align:center;touch-action:none;user-select:none}
+#tap.on{filter:brightness(1.3)}
+#tiltbtns{display:flex;gap:10px;align-items:center;justify-content:space-between}
+#tiltbtns .pk{width:64px;height:56px;font-size:16px}
+#tiltbtns button{font:700 13px var(--pix);background:#2f7fe0;color:#fff;border:2px solid #1c4c94;border-radius:12px;padding:14px 12px}
+#padmode{background:#7a4ad0!important;border-color:#4a2a8a!important}
 #padpair{background:#2f7fe0!important;border-color:#1c4c94!important}
 #padtop button{font:10px var(--pix);background:var(--btn);color:var(--fg);border:2px solid #2c4c66;border-radius:10px;padding:10px 12px}
 #padst{flex:1;min-width:0;line-height:1.6}
@@ -63,8 +75,13 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
   <button id="pz" hidden aria-label="Pausa">II</button>
 </div>
 <div id="pad" hidden>
-  <div id="padtop"><button id="padexit">SALIR</button><button id="padpair">EMPAREJAR</button><span id="padst">Buscando la tele...</span><div class="padman" hidden><input id="padip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Direccion de la tele"><button id="padgo">CONECTAR</button></div></div>
-  <div id="padmain">
+  <div id="padtop"><button id="padexit">SALIR</button><button id="padpair">EMPAREJAR</button><button id="padmode">BOTONES</button><span id="padst">Buscando la tele...</span><div class="padman" hidden><input id="padip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Direccion de la tele"><button id="padgo">CONECTAR</button></div></div>
+  <div id="tilt">
+    <div id="tiltbar"><div class="tz" id="tzl">&#9664;</div><div id="tiltdot"></div><div class="tz" id="tzr">&#9654;</div></div>
+    <div id="tap" data-k="a">TOCA PARA SALTAR</div>
+    <div id="tiltbtns"><div data-k="up" class="pk">&#9650;</div><div data-k="down" class="pk">&#9660;</div><button id="tiltzero">CENTRAR</button><div data-k="start" class="pk">START</div></div>
+  </div>
+  <div id="padmain" hidden>
     <div id="cross"><div data-k="up" class="pk u">&#9650;</div><div data-k="left" class="pk l">&#9664;</div><div data-k="right" class="pk r">&#9654;</div><div data-k="down" class="pk d">&#9660;</div></div>
     <div data-k="start" class="pk st">START</div>
     <div id="ab"><div data-k="b" class="pk bb">B</div><div data-k="a" class="pk aa">A</div></div>
@@ -72,7 +89,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.11.0';
+const VERSION='v1.12.0';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -756,8 +773,9 @@ function openPad(){
   padOpen=true; stopMusic(); padEl.hidden=false; document.getElementById('wrap').hidden=true;
   padSt.textContent='Buscando la tele en tu Wi-Fi...'; padIp.parentNode.hidden=true;
   try{ KikoApp.ctrlStart(''); }catch(_){}
+  setTilt(tiltOn);
 }
-function closePad(){ padOpen=false; try{ KikoApp.ctrlStop(); }catch(_){} padEl.hidden=true; document.getElementById('wrap').hidden=false; G.sel=0; layout(); }
+function closePad(){ setDir(0); try{ KikoApp.setPortrait(false); }catch(_){} padOpen=false; try{ KikoApp.ctrlStop(); }catch(_){} padEl.hidden=true; document.getElementById('wrap').hidden=false; G.sel=0; layout(); }
 window.kikoCtrl=(m)=>{
   if(m.startsWith('OK:')){ padSt.textContent='Conectado a la tele ('+m.slice(3)+')'; padSt.className='ok'; padIp.parentNode.hidden=true; }
   else if(m.startsWith('ERR:')){ padSt.textContent=m.slice(4); padSt.className='err'; padIp.parentNode.hidden=false; }
@@ -772,6 +790,34 @@ document.querySelectorAll('#pad [data-k]').forEach(el=>{
 document.getElementById('padexit').addEventListener('click',closePad);
 document.getElementById('padpair').addEventListener('click',()=>{ padSt.textContent='Buscando la tele en tu Wi-Fi...'; padSt.className=''; padIp.parentNode.hidden=true; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('padgo').addEventListener('click',()=>{ const ip=padIp.value.trim(); if(!ip) return; padSt.textContent='Conectando a '+ip+'...'; padSt.className=''; try{ KikoApp.ctrlStart(ip); }catch(_){} });
+// inclinar el móvil para moverse (móvil en vertical)
+let tiltOn=true, tiltZero=0, lastG=0, tiltDir=0;
+const tzl=document.getElementById('tzl'), tzr=document.getElementById('tzr'), tdot=document.getElementById('tiltdot');
+function ctrl(k,d){ try{ KikoApp.ctrlSend(k,d); }catch(_){} }
+function setDir(d){
+  if(d===tiltDir) return;
+  if(tiltDir<0) ctrl('left',false); if(tiltDir>0) ctrl('right',false);
+  tiltDir=d;
+  if(d<0) ctrl('left',true); if(d>0) ctrl('right',true);
+  tzl.classList.toggle('on',d<0); tzr.classList.toggle('on',d>0);
+  if(d){ try{ navigator.vibrate&&navigator.vibrate(8); }catch(_){} }
+}
+addEventListener('deviceorientation',e=>{
+  if(e.gamma==null) return; lastG=e.gamma;
+  if(!padOpen||!tiltOn) return;
+  const g=clamp(e.gamma-tiltZero,-45,45), th=9;
+  tdot.style.setProperty('--g',(g/45*45).toFixed(1));
+  let d=tiltDir; if(g<-th) d=-1; else if(g>th) d=1; else if(Math.abs(g)<th*0.55) d=0;
+  setDir(d);
+});
+function setTilt(on){
+  tiltOn=on; setDir(0);
+  document.getElementById('tilt').hidden=!on; document.getElementById('padmain').hidden=on;
+  document.getElementById('padmode').textContent=on?'BOTONES':'INCLINAR';
+  try{ KikoApp.setPortrait(on); }catch(_){}
+}
+document.getElementById('padmode').addEventListener('click',()=>setTilt(!tiltOn));
+document.getElementById('tiltzero').addEventListener('click',()=>{ tiltZero=lastG; setDir(0); });
 const kb0=window.kikoBack; window.kikoBack=()=>{ if(padOpen){ closePad(); return true; } return kb0(); };
 
 /* ================= PANTALLA ================= */
