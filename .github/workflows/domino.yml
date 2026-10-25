@@ -1,0 +1,60 @@
+name: Compilar Dominó Cubano
+
+on:
+  push:
+    branches: [main]
+    paths: ['domino/**', '.github/workflows/domino.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Instalar SDK Android 36
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > domino/local.properties
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Llave de firma
+        run: cp keystore/release.jks domino/app/release.jks
+
+      - name: Compilar Dominó Cubano firmado
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle -p domino :app:assembleRelease --stacktrace
+
+      - name: Renombrar
+        run: |
+          mkdir -p salida
+          cp domino/app/build/outputs/apk/release/app-release.apk salida/DominoCubano.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: domino
+          path: salida/*
+
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: domino
+          name: Dominó Cubano
+          body: |
+            Dominó Cubano a parejas (doble nueve): la mesa en la tele y tus fichas en el móvil.
+            Para tele Android (TCL/Google TV) y móvil. Descarga DominoCubano.apk e instálalo.
+          files: salida/*
+          make_latest: false
