@@ -71,7 +71,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.7.3';
+const VERSION='v1.8.0';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.14;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -128,7 +128,7 @@ const RG={bpm:94,
          67,0,0,69, 0,72,0,0, 72,0,74,0, 0,76,0,0,
          74,0,0,72, 0,71,0,0, 71,0,72,0, 74,0,0,0 ]};
 const music={on:false,step:0,next:0,iv:null};
-function playMusic(){ stopMusic(); if(!AC) return; music.on=true; music.step=0; music.next=AC.currentTime+0.08; music.iv=setInterval(schedMusic,40); }
+function playMusic(lead){ stopMusic(); if(!AC) return; music.on=true; music.step=lead?64:0; music.next=AC.currentTime+0.08; music.iv=setInterval(schedMusic,40); }
 function stopMusic(){ if(music.iv) clearInterval(music.iv); music.iv=null; music.on=false; }
 function drum(kind,t){
   if(!AC) return;
@@ -404,6 +404,7 @@ function update(){
   const s0=inp[0];
   switch(G.state){
     case 'menu':
+      if(AC&&AC.state==='running'&&!music.on&&!padOpen) playMusic(true);
       { // filas: 0 modo, 1 bandera izquierda, 2 bandera derecha, 3 jugar
         const NR=canPad?5:4;
         if(s0.upP){ G.sel=(G.sel+NR-1)%NR; S.move(); }
@@ -744,6 +745,7 @@ function loop(now){
   draw(); requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+if(inApp){ try{ initAudio(); }catch(_){} }
 })();
 </script>
 
