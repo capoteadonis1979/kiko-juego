@@ -45,7 +45,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.3.0';
+const VERSION='v1.4.0';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.14;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -227,10 +227,10 @@ function point(win){
   G.msg='PUNTO PARA LA '+TEAM[win].name; G.msgC=TEAM[win].hi;
   G.state='point'; G.timer=120; G.serve=win; setMood(win);
 }
-const WIN_FX=['salto','baile','giro'], LOSE_FX=['llanto','nube','derretido'];
+const WIN_FX=['salto','baile','giro','atras'], LOSE_FX=['llanto','nube','derretido'];
 function setMood(win){
   G.win=win; G.moodT=0;
-  G.wType=WIN_FX[Math.floor(Math.random()*3)]; G.lType=LOSE_FX[Math.floor(Math.random()*3)];
+  G.wType=WIN_FX[Math.floor(Math.random()*WIN_FX.length)]; G.lType=LOSE_FX[Math.floor(Math.random()*3)];
   G.parts=[];
   const w=players[win];
   for(let i=0;i<40;i++) G.parts.push({k:'c',x:w.x,y:w.y-BH,vx:(Math.random()-0.5)*4,vy:-2-Math.random()*4,c:['#ffe070','#ff6a8a','#6ae0ff','#8aff6a','#ffffff'][i%5],t:0});
@@ -360,7 +360,7 @@ function update(){
       else if(G.state==='play') updBall();
       else if((updMood(),--G.timer<=0)){
         const [a,b]=G.score;
-        if((a>=15||b>=15)&&Math.abs(a-b)>=2){ G.winner=a>b?0:1; G.state='over'; G.timer=60; stopMusic(); S.win(); setMood(G.winner); G.wType='baile'; }
+        if((a>=15||b>=15)&&Math.abs(a-b)>=2){ G.winner=a>b?0:1; G.state='over'; G.timer=60; stopMusic(); S.win(); setMood(G.winner); }
         else resetRally();
       }
       break;
@@ -426,7 +426,9 @@ function drawPlayer(p){
   if(mood==='feliz'){
     if(G.wType==='salto'){ oy=-Math.abs(Math.sin(t*0.13))*30; const k=Math.abs(Math.sin(t*0.13)); sym=1+(k<0.15?-0.15:0.05); sxm=1+(k<0.15?0.15:-0.03); }
     else if(G.wType==='baile'){ ox=Math.sin(t*0.18)*7; rot=Math.sin(t*0.18)*0.3; oy=-Math.abs(Math.sin(t*0.36))*6; }
-    else { face=(Math.floor(t/7)%2)?1:-1; oy=-Math.abs(Math.sin(t*0.22))*12; sxm=0.75+Math.abs(Math.cos(t*0.45))*0.25; }
+    else if(G.wType==='giro'){ face=(Math.floor(t/7)%2)?1:-1; oy=-Math.abs(Math.sin(t*0.22))*12; sxm=0.75+Math.abs(Math.cos(t*0.45))*0.25; }
+    else { // paso deslizándose hacia atrás: mira al frente y se va para atrás
+      const ph=t%110; ox=-p.face*Math.min(ph,90)*0.6; rot=-p.face*0.08; oy=0; }
   } else if(mood==='triste'){
     if(G.lType==='derretido'){ const k=Math.min(1,t/50); sym=1-0.3*k; sxm=1+0.3*k; }
     else { sym=0.94; oy=1; }
@@ -439,6 +441,14 @@ function drawPlayer(p){
   const w=BW*(1+sq-st*0.5-br*0.6)*sxm, h=BH*(1-sq+st+br)*sym;
   const x=p.x+ox, y=p.y+oy;
   ctx.fillStyle='rgba(60,40,10,0.25)'; ctx.beginPath(); ctx.ellipse(p.x+ox,GY+1,w*0.45*(1+oy/80),3,0,0,Math.PI*2); ctx.fill();
+  if(mood==='feliz'&&G.wType==='atras'){
+    const st2=Math.floor(t/12)%2;
+    for(const k of [0,1]){ const up=(k===st2); const fx=p.x+ox+(k?7:-7)*p.face;
+      ctx.fillStyle='#111111'; ctx.save(); ctx.translate(fx,GY-2-(up?1:0)); ctx.rotate(up?-p.face*0.5:0);
+      ctx.beginPath(); ctx.ellipse(p.face*3,0,7,3,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+      ctx.fillStyle='#ffffff'; ctx.fillRect(fx-3,GY-6-(up?1:0),6,2); }
+    if(t%12===0) S.move();
+  }
   ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.translate(-x,-y);
   ctx.fillStyle=tc.d; ctx.beginPath(); ctx.ellipse(x,y-h*0.45,w*0.5+1,h*0.45+1,0,0,Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(x,y-h*0.72,w*0.38+1,h*0.3+1,0,0,Math.PI*2); ctx.fill();
