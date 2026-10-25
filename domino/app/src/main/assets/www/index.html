@@ -161,7 +161,7 @@ body.mesa #menu>p{display:none}
     </div>
   </div>
   <div id="hand">
-    <div id="handbar"><button id="bsort">ORDENAR</button><button class="bexp" data-k="0">¿QUÉ QUÉ?</button><button class="bexp" data-k="1">¿CÓMO?</button><button class="bpan" data-p="f">FRASES</button><button class="bpan" data-p="c">CARITAS</button><button id="blib">LIBRETA</button><span id="turnmsg">—</span><span id="myscore"></span></div>
+    <div id="handbar"><button id="bsort">ORDENAR</button><button class="bpan" data-p="f">FRASES</button><button class="bpan" data-p="c">CARITAS</button><button id="blib">LIBRETA</button><span id="turnmsg">—</span><span id="myscore"></span></div>
     <div id="tiles"></div>
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
@@ -204,7 +204,7 @@ body.mesa #menu>p{display:none}
         <li><b>Desliza la ficha hacia arriba</b> para dar un <b>golpetazo</b> con toda la fuerza acumulada.</li>
         <li>La barra <b>FUERZA</b> (a la izquierda) tiene <b>10 niveles</b>: cada ficha que pones sube un nivel, y si <b>pasas baja 2</b>. Pegar no la gasta. Empieza en 0 en cada mano. Con más nivel: más llena, más fuerte cae la ficha, más polvo, la botella se tambalea y con todo lleno se vira. La <b>ficha con la que te pegas</b> pega el doble, y <b>el que va ganando</b> pega más duro que el que va perdiendo.</li>
         <li>Arrastra una ficha a los lados para ordenarlas, o toca <b>ORDENAR</b>.</li>
-        <li><b>FRASES</b>: frases cubanas del dominó y de la charada. <b>CARITAS</b>: risa, bravo, enfurecido… <b>¿QUÉ QUÉ?</b> y <b>¿CÓMO?</b> salen en un globo junto a tu puesto.</li>
+        <li><b>FRASES</b>: frases cubanas del dominó y de la charada. <b>CARITAS</b>: risa, bravo, enfurecido…</li>
       </ul>
       <button id="gclose">ENTENDIDO</button>
     </div>
@@ -233,7 +233,7 @@ body.mesa #menu>p{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.4.0';
+const VERSION='v2.5.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -453,7 +453,7 @@ function expSound(k){
   }
   try{ if(window.speechSynthesis&&window.SpeechSynthesisUtterance){ const u=new SpeechSynthesisUtterance(k===0?'¿Qué qué?':'¿¡Cómo!?'); u.lang='es-ES'; u.rate=1.15; u.pitch=k===0?1.5:0.8; u.volume=1; speechSynthesis.cancel(); speechSynthesis.speak(u); } }catch(_){}
 }
-function expShow(seat,k){
+function expShow(seat,k){ return;   // quitado a petición del usuario
   if(G.exps.some(e=>e.k===k&&G.frame-e.t<70)) return;
   G.exps=G.exps.filter(e=>e.k!==k); G.exps.push({seat,k,t:G.frame}); expSound(k);
 }
@@ -596,27 +596,25 @@ function aiChoose(seat){
 function sortHand(seat,quiet){ G.hands[seat].sort((x,y)=>(Math.max(y[0],y[1])-Math.max(x[0],x[1]))||(pips(y)-pips(x))); if(!quiet) renderHand(); }
 
 /* ================= MESA: posición de cada ficha en la cadena ================= */
-const TL=56, TW=28;     // tamaño de la ficha en la mesa (unidades lógicas)
+const TL=44, TW=22;     // tamaño de la ficha en la mesa (unidades lógicas)
 window.__lay=()=>layoutChain();
 function layoutChain(){
-  // serpiente fija en la mesa: sale del centro hacia los dos lados. Al llegar al borde gira con dos fichas de pie
-  // (la primera con su mitad pegada justo a la última ficha de la fila) y vuelve en sentido contrario.
-  // Los dobles siempre van cruzados y nunca hacen esquina; después de un doble la línea sigue recta (nunca se pega de lado).
-  // Las fichas puestas no se mueven nunca.
+  // Serpiente fija dentro de una zona limpia de la mesa (x ±340, y -200..212 desde el centro): nunca toca a los jugadores ni se sale.
+  // Sale del centro: la rama derecha va bajando por filas (0, 84, 168) y la izquierda subiendo (0, -84, -168); no se cruzan.
+  // Cada giro: ficha de pie con su mitad pegada a la última de la fila, otra de pie, y la fila vuelve en sentido contrario.
+  // Los dobles siempre cruzados y nunca hacen esquina; tras un doble la línea sigue recta. Las fichas puestas no se mueven nunca.
   const res=[]; const idx0=G.chain.findIndex(i=>i.side==='C'); if(idx0<0) return res;
-  const BX=270, H=Math.PI/2;   // margen: la fila nunca llega a las fichas de los jugadores de los lados
+  const LIM=395, BXN=LIM-3*(TW+TL)-TW, H=Math.PI/2;   // BXN deja sitio para doble+ficha recta dos veces
   const c0=G.chain[idx0];
   res[idx0]={x:0,y:0,ang:c0.dbl?H:0,a:c0.a,b:c0.b};
   for(const dirSide of ['R','L']){
-    const V=dirSide==='R'?1:-1;            // la derecha baja, la izquierda sube
-    let mode='h', dx=dirSide==='R'?1:-1, x=dx*(c0.dbl?TW:TL)/2, y=0, cx=0, yv=0, vcount=0, lastHalfW=TW/2, prevDbl=!!c0.dbl;
+    const V=dirSide==='R'?1:-1;
+    let mode='h', dx=dirSide==='R'?1:-1, x=dx*(c0.dbl?TW:TL)/2, y=0, cx=0, yv=0, vcount=0, lastHalfW=TW/2, prevDbl=!!c0.dbl, rows=0;
     const list=[]; if(dirSide==='R') for(let i=idx0+1;i<G.chain.length;i++) list.push(i); else for(let i=idx0-1;i>=0;i--) list.push(i);
     for(const i of list){
       const it=G.chain[i];
       if(mode==='h'){
-        const bx=BX;
-        if(!it.dbl&&!prevDbl&&Math.abs(x+dx*TL)>bx){
-          // esquina: ficha de pie con su mitad alineada con la fila
+        if(!it.dbl&&!prevDbl&&Math.abs(y+V*3*TW)+TW/2<=212&&Math.abs(x+dx*TL)>BXN){
           cx=x+dx*TW/2; res[i]={x:cx,y:y+V*TW/2,ang:V>0?H:-H,a:it.a,b:it.b};
           yv=y-V*TW/2+V*TL; vcount=1; lastHalfW=TW/2; mode='v'; prevDbl=false; continue;
         }
@@ -624,14 +622,12 @@ function layoutChain(){
         res[i]={x:x+dx*len/2,y,ang:it.dbl?H:(dx>0?0:Math.PI),a:it.a,b:it.b};
         x+=dx*len; prevDbl=!!it.dbl; continue;
       }
-      // bajando (o subiendo) de pie
-      if(vcount<2||it.dbl||prevDbl){
+      if(vcount<2||prevDbl){
         const len=it.dbl?TW:TL;
         res[i]={x:cx,y:yv+V*len/2,ang:it.dbl?0:(V>0?H:-H),a:it.a,b:it.b};
         yv+=V*len; vcount++; lastHalfW=it.dbl?TL/2:TW/2; prevDbl=!!it.dbl; continue;
       }
-      // vuelve en horizontal pegada a la última mitad
-      dx=-dx; y=yv-V*TW/2; x=cx+dx*lastHalfW; mode='h';
+      dx=-dx; y=yv-V*TW/2; x=cx+dx*lastHalfW; mode='h'; rows++;
       const len=it.dbl?TW:TL;
       res[i]={x:x+dx*len/2,y,ang:it.dbl?H:(dx>0?0:Math.PI),a:it.a,b:it.b};
       x+=dx*len; prevDbl=!!it.dbl;
@@ -743,12 +739,12 @@ function drawSeat(s){
   // nombre
   const label=G.names[s];
   ctx.font='700 15px '+font; const w=ctx.measureText(label).width+22;
-  let lx=pos.x, ly=pos.y+(s===0?-50:s===2?52:0); if(s===1||s===3){ ly=VH/2-120; lx=s===1?Math.min(VW-w/2-8,pos.x):Math.max(w/2+8,pos.x); }
-  if(s===0&&showLocalHand()) ly=VH-26;
+  let lx=pos.x, ly=pos.y; if(s===0||s===2){ ly=pos.y+(s===0?-18:18); lx=VW/2-128-w/2; } else { ly=VH/2-118; lx=s===1?Math.min(VW-w/2-4,VW-54):Math.max(w/2+4,54); }
+  if(s===0&&showLocalHand()){ ly=VH-26; lx=VW/2; }
   ctx.fillStyle=me?'#ffd23a':'rgba(0,0,0,0.5)'; rr(ctx,lx-w/2,ly-13,w,26,13); ctx.fill();
   ctx.fillStyle=me?'#3a2600':'#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label,lx,ly+1);
   const ph=G.photos[s];
-  if(ph){ const R=26, ax=lx, ay=ly+(s===2?42:-42);
+  if(ph){ const R=(s===0||s===2)?20:26, ax=(s===0||s===2)?lx-w/2-26:lx, ay=(s===0||s===2)?ly:ly-42;
     ctx.save(); ctx.beginPath(); ctx.arc(ax,ay,R,0,7); ctx.closePath(); ctx.fillStyle='#000'; ctx.fill(); ctx.clip(); ctx.drawImage(ph,ax-R,ay-R,R*2,R*2); ctx.restore();
     ctx.strokeStyle=me?'#ffd23a':'#fff'; ctx.lineWidth=me?4:2.5; ctx.beginPath(); ctx.arc(ax,ay,R,0,7); ctx.stroke(); }
   ctx.restore();
