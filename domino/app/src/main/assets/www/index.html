@@ -136,7 +136,7 @@ body.mesa #menu>p{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v1.3.0';
+const VERSION='v1.4.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -180,7 +180,7 @@ function shuffleSound(){ if(!AC) return; for(let i=0;i<26;i++) clack(0.12+Math.r
 function chime(win){ if(!AC) return; const t=AC.currentTime; [0,4,7,12].forEach((n,i)=>{ const o=AC.createOscillator(), g=AC.createGain(); o.type='triangle'; o.frequency.value=440*Math.pow(2,((win?60:52)+n-69)/12); g.gain.setValueAtTime(0.25,t+i*0.12); g.gain.exponentialRampToValueAtTime(0.001,t+i*0.12+0.4); o.connect(g); g.connect(master); o.start(t+i*0.12); o.stop(t+i*0.12+0.45); }); }
 
 /* ================= FICHAS ================= */
-const PIPC=['#000','#1f5fd0','#1f9a4a','#d03030','#7a3ad0','#e07a10','#1a1a1a','#c0306a','#1a8a98','#7a5418'];
+const PIPC=Array(10).fill('#141414');   // todos los puntos negros, como el dominó de verdad
 const PIPS={0:[],1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],4:[[0,0],[2,0],[0,2],[2,2]],5:[[0,0],[2,0],[1,1],[0,2],[2,2]],
   6:[[0,0],[1,0],[2,0],[0,2],[1,2],[2,2]],7:[[0,0],[1,0],[2,0],[1,1],[0,2],[1,2],[2,2]],8:[[0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2]],9:[[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]]};
 // dibuja una ficha centrada en (0,0) a lo largo del eje x: medio "a" a la izquierda, "b" a la derecha
@@ -365,25 +365,39 @@ function sortHand(seat,quiet){ G.hands[seat].sort((x,y)=>(Math.max(y[0],y[1])-Ma
 /* ================= MESA: posición de cada ficha en la cadena ================= */
 const TL=56, TW=28;     // tamaño de la ficha en la mesa (unidades lógicas)
 function layoutChain(){
-  // serpiente: desde la ficha de salida hacia los dos lados; al llegar al borde gira con una ficha de pie
+  // serpiente fija en la mesa: sale del centro hacia los dos lados. Al llegar al borde gira con dos fichas de pie
+  // (la primera con su mitad pegada justo a la última ficha de la fila) y vuelve en sentido contrario.
+  // Los dobles siempre van cruzados y nunca hacen esquina. Las fichas puestas no se mueven nunca.
   const res=[]; const idx0=G.chain.findIndex(i=>i.side==='C'); if(idx0<0) return res;
-  const BX=300;
+  const BX=300, H=Math.PI/2;
   const c0=G.chain[idx0];
-  res[idx0]={x:0,y:0,ang:c0.dbl?Math.PI/2:0,a:c0.a,b:c0.b};
+  res[idx0]={x:0,y:0,ang:c0.dbl?H:0,a:c0.a,b:c0.b};
   for(const dirSide of ['R','L']){
     const V=dirSide==='R'?1:-1;            // la derecha baja, la izquierda sube
-    let dx=dirSide==='R'?1:-1, x=dx*(c0.dbl?TW:TL)/2, y=0;
+    let mode='h', dx=dirSide==='R'?1:-1, x=dx*(c0.dbl?TW:TL)/2, y=0, cx=0, yv=0, vcount=0, lastHalfW=TW/2;
     const list=[]; if(dirSide==='R') for(let i=idx0+1;i<G.chain.length;i++) list.push(i); else for(let i=idx0-1;i>=0;i--) list.push(i);
     for(const i of list){
       const it=G.chain[i];
-      const len=it.dbl?TW:TL;
-      if(Math.abs(x+dx*len)>BX){
-        // ficha de esquina, de pie, que une esta fila con la siguiente
-        res[i]={x:x+dx*TW/2,y:y+V*TL/2,ang:V>0?Math.PI/2:-Math.PI/2,a:it.a,b:it.b};
-        y=y+V*TL; dx=-dx;                 // la fila siguiente va en sentido contrario, una ficha más abajo (o arriba)
-        continue;
+      if(mode==='h'){
+        if(!it.dbl&&Math.abs(x+dx*TL)>BX){
+          // esquina: ficha de pie con su mitad alineada con la fila
+          cx=x+dx*TW/2; res[i]={x:cx,y:y+V*TW/2,ang:V>0?H:-H,a:it.a,b:it.b};
+          yv=y-V*TW/2+V*TL; vcount=1; lastHalfW=TW/2; mode='v'; continue;
+        }
+        const len=it.dbl?TW:TL;
+        res[i]={x:x+dx*len/2,y,ang:it.dbl?H:(dx>0?0:Math.PI),a:it.a,b:it.b};
+        x+=dx*len; continue;
       }
-      res[i]={x:x+dx*len/2,y,ang:it.dbl?Math.PI/2:(dx>0?0:Math.PI),a:it.a,b:it.b};
+      // bajando (o subiendo) de pie
+      if(vcount<2||it.dbl&&vcount<3){
+        const len=it.dbl?TW:TL;
+        res[i]={x:cx,y:yv+V*len/2,ang:it.dbl?0:(V>0?H:-H),a:it.a,b:it.b};
+        yv+=V*len; vcount++; lastHalfW=it.dbl?TL/2:TW/2; continue;
+      }
+      // vuelve en horizontal pegada a la última mitad
+      dx=-dx; y=yv-V*TW/2; x=cx+dx*lastHalfW; mode='h';
+      const len=it.dbl?TW:TL;
+      res[i]={x:x+dx*len/2,y,ang:it.dbl?H:(dx>0?0:Math.PI),a:it.a,b:it.b};
       x+=dx*len;
     }
   }
@@ -407,8 +421,8 @@ function drawTable(){
   const sx=G.shake>0?(Math.random()-0.5)*G.shake:0, sy=G.shake>0?(Math.random()-0.5)*G.shake:0;
   const L=layoutChain();
   let minx=0,maxx=0,miny=0,maxy=0; for(const p of L) if(p){ minx=Math.min(minx,p.x-TL/2); maxx=Math.max(maxx,p.x+TL/2); miny=Math.min(miny,p.y-TL/2); maxy=Math.max(maxy,p.y+TL/2); }
-  const fit=Math.min(1,(VW-260)/Math.max(1,maxx-minx),(VH-210)/Math.max(1,maxy-miny));
-  const ox=VW/2-(minx+maxx)/2*fit+sx, oy=VH/2-(miny+maxy)/2*fit+sy;
+  const fit=1;
+  const ox=VW/2+sx, oy=VH/2-6+sy;
   G.chain.forEach((it,i)=>{
     const p=L[i]; if(!p) return;
     if(G.fly&&G.fly.item===it) return;
