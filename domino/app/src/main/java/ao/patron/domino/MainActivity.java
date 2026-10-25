@@ -208,6 +208,13 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isTV() { return tv; }
 
+        // identificador fijo del aparato (para el código de activación)
+        @JavascriptInterface
+        public String deviceId() {
+            try { String a = android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID); return a == null ? "" : a; }
+            catch (Exception e) { return ""; }
+        }
+
         // tele → un móvil
         @JavascriptInterface
         public void sendTo(int id, String line) {
