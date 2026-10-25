@@ -49,31 +49,52 @@ public class MainActivity extends Activity implements SensorEventListener {
     private final ArrayList<Integer> devs = new ArrayList<>();
     private final boolean[][] ax = new boolean[2][4];
 
-    // ===== Inclinación con el acelerómetro (lo tienen todos los móviles) =====
+    // ===== Mover el móvil a los lados (solo el desplazamiento, sin contar la inclinación) =====
     private SensorManager sm;
     private boolean tiltOn = false;
-    private float gx = 0, gy = 9.8f, lastSent = 999;
-    private long lastT = 0;
+    private Sensor linSensor; private boolean linReal = false;
+    private float grav = 0, vel = 0;
+    private int moveDir = 0;
+    private long lastNs = 0;
+    private float quiet = 0; private boolean cool = false;
+
+    private Sensor pickSensor() {
+        Sensor l = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        linReal = l != null;
+        return l != null ? l : sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    }
 
     private void tilt(boolean on) {
         runOnUiThread(() -> {
             if (sm == null) sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (sm == null) return;
-            Sensor acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            if (on && !tiltOn && acc != null) { sm.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME); tiltOn = true; }
-            else if (!on && tiltOn) { sm.unregisterListener(this); tiltOn = false; }
+            if (linSensor == null) linSensor = pickSensor();
+            if (on && !tiltOn && linSensor != null) { vel = 0; moveDir = 0; lastNs = 0; cool = false; quiet = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); tiltOn = true; }
+            else if (!on && tiltOn) { sm.unregisterListener(this); tiltOn = false; sendMove(0); }
         });
+    }
+
+    private void sendMove(int d) {
+        if (d == moveDir) return;
+        moveDir = d;
+        js("window.kikoMove&&kikoMove(" + d + ")");
     }
 
     @Override
     public void onSensorChanged(SensorEvent e) {
-        gx = gx * 0.7f + e.values[0] * 0.3f;   // suavizado
-        gy = gy * 0.7f + e.values[1] * 0.3f;
-        float deg = (float) Math.toDegrees(Math.atan2(-gx, Math.abs(gy) + 0.001f));
-        long now = System.currentTimeMillis();
-        if (now - lastT > 33 && Math.abs(deg - lastSent) > 0.4f) {
-            lastT = now; lastSent = deg;
-            js("window.kikoTilt&&kikoTilt(" + String.format(java.util.Locale.US, "%.1f", deg) + ")");
+        float ax = e.values[0];
+        if (!linReal) { grav = grav * 0.92f + ax * 0.08f; ax = ax - grav; }   // quitar la gravedad
+        if (lastNs == 0) { lastNs = e.timestamp; return; }
+        float dt = Math.min(0.05f, (e.timestamp - lastNs) / 1e9f); lastNs = e.timestamp;
+        if (Math.abs(ax) < 0.25f) ax = 0;                       // ignorar temblores pequeños
+        quiet = ax == 0 ? quiet + dt : 0;
+        if (cool) { vel = 0; if (quiet >= 0.12f) cool = false; return; }   // esperar a que el móvil se quede quieto
+        vel = vel * 0.97f + ax * dt;                               // velocidad lateral del móvil
+        final float T = 0.08f;
+        if (moveDir == 0) {
+            if (vel < -T) sendMove(-1); else if (vel > T) sendMove(1);
+        } else if (moveDir * vel < T * 0.3f || quiet >= 0.25f) {
+            sendMove(0); cool = true; vel = 0;
         }
     }
 
@@ -380,7 +401,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
         if (web != null) web.onResume();
-        if (tiltOn && sm != null) { Sensor acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); if (acc != null) sm.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME); }
+        if (tiltOn && sm != null && linSensor != null) { vel = 0; lastNs = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); }
         pantallaCompleta();
     }
 
