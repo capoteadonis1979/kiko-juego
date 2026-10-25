@@ -72,7 +72,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.10.0';
+const VERSION='v1.11.0';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -237,7 +237,7 @@ const TEAM=[Object.assign({},COUNTRY[3]),Object.assign({},COUNTRY[0])];
 function setTeams(){ for(const t of [0,1]) TEAM[t]=Object.assign({},COUNTRY[G.flag[t]]); }
 const BALLR=13, BW=34, BH=42;          // bola del balón y tamaño del muñeco
 const G=window.__V={state:'menu',mode:1,sel:0,flag:[3,0],score:[0,0],serve:0,touches:0,lastTeam:-1,timer:0,msg:'',msgC:'#fff',frame:0,paused:false,winner:-1,pred:NX,flash:0,netShake:0};
-const ball={x:0,y:0,vx:0,vy:0,held:true,rot:0,trail:[]};
+const ball=window.__VB={x:0,y:0,vx:0,vy:0,held:true,rot:0,trail:[]};
 const players=[0,1].map(t=>({team:t,x:0,y:GY,vx:0,vy:0,on:true,cd:0,sq:0,face:t?-1:1}));
 const dirOf=t=>t===0?1:-1;
 const isHuman=t=>!G.demo&&(t===0||G.mode===2);
@@ -648,10 +648,19 @@ function drawParts(){
 }
 function drawBall(){
   const r=BALLR;
-  if(!ball.held){ ctx.fillStyle='rgba(60,40,10,0.22)'; const s=clamp(1-(GY-ball.y)/260,0.3,1); ctx.beginPath(); ctx.ellipse(ball.x,GY+1,9*s,2.5*s,0,0,Math.PI*2); ctx.fill(); }
+  if(!ball.held){ ctx.fillStyle='rgba(60,30,0,0.38)'; const s=clamp(1-(GY-ball.y)/260,0.45,1); ctx.beginPath(); ctx.ellipse(ball.x,GY+1,12*s,3.4*s,0,0,Math.PI*2); ctx.fill(); }
   for(let i=0;i<ball.trail.length-1;i++){ const [tx,ty]=ball.trail[i]; ctx.fillStyle='rgba(255,255,255,'+(0.05*i)+')'; ctx.beginPath(); ctx.arc(tx,ty,r-2,0,Math.PI*2); ctx.fill(); }
   const x=Math.round(ball.x), y=Math.round(ball.y);
-  if(y<-r){ ctx.fillStyle='#ffe070'; ctx.beginPath(); ctx.moveTo(x,4); ctx.lineTo(x-6,13); ctx.lineTo(x+6,13); ctx.closePath(); ctx.fill(); return; }
+  if(y<r+2){
+    // flecha que marca dónde está el balón cuando se va por arriba
+    const ax=clamp(x,14,VW-14), bob=Math.sin(G.frame*0.3)*2, h=Math.min(1,Math.max(0.55,1-(-y)/400));
+    const top=3+bob, wA=14*h+7, hA=17*h+7;
+    ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.moveTo(ax+1.5,top+1.5); ctx.lineTo(ax-wA+1.5,top+hA+1.5); ctx.lineTo(ax+wA+1.5,top+hA+1.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#ffe070'; ctx.strokeStyle='#7a3a00'; ctx.lineWidth=2.2; ctx.lineJoin='round';
+    ctx.beginPath(); ctx.moveTo(ax,top); ctx.lineTo(ax-wA,top+hA); ctx.lineTo(ax+wA,top+hA); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(ax,top+hA+8,5,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#7a3a00'; ctx.lineWidth=1; ctx.stroke();
+    if(y<-r) return;
+  }
   circ(x,y,r,'#ffffff');
   ctx.save(); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.clip(); ctx.translate(x,y); ctx.rotate(ball.rot);
   ctx.fillStyle='#f2b630'; ctx.beginPath(); ctx.ellipse(-r*0.2,-r*0.9,r*1.1,r*0.45,0.3,0,Math.PI*2); ctx.fill();
@@ -660,21 +669,22 @@ function drawBall(){
   ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(x,y,r-0.5,0,Math.PI*2); ctx.stroke();
 }
 function drawHUD(){
-    R(VW/2-128,5,256,29,'rgba(6,18,28,0.78)');
-  drawFlag(G.flag[0],VW/2-124,10,21,14,false); drawFlag(G.flag[1],VW/2+103,10,21,14,false);
-  txt(TEAM[0].name,VW/2-98,9,'#ffffff','left',8);
-  txt(TEAM[1].name,VW/2+98,9,'#ffffff','right',8);
-  txt(pad(G.score[0],2),VW/2-12,18,'#ffffff','right',8);
-  txt('-',VW/2,18,'#ffffff','center',8);
-  txt(pad(G.score[1],2),VW/2+12,18,'#ffffff','left',8);
-  // saque
-  circ(G.serve===0?VW/2-36:VW/2+36,22,3,'#ffe070');
-  // toques del equipo que tiene el balón
+  // marcador abajo, en la arena, para dejar libre el cielo
+  const Y=VH-30;
+  R(VW/2-128,Y,256,27,'rgba(6,18,28,0.82)');
+  drawFlag(G.flag[0],VW/2-124,Y+6,21,14,false); drawFlag(G.flag[1],VW/2+103,Y+6,21,14,false);
+  txt(TEAM[0].name,VW/2-98,Y+4,'#ffffff','left',8);
+  txt(TEAM[1].name,VW/2+98,Y+4,'#ffffff','right',8);
+  txt(pad(G.score[0],2),VW/2-12,Y+13,'#ffffff','right',8);
+  txt('-',VW/2,Y+13,'#ffffff','center',8);
+  txt(pad(G.score[1],2),VW/2+12,Y+13,'#ffffff','left',8);
+  circ(G.serve===0?VW/2-36:VW/2+36,Y+17,3,'#ffe070');
   for(const t of [0,1]){
     const n=G.lastTeam===t?G.touches:0, bx=t===0?16:VW-16-3*10;
-    for(let i=0;i<3;i++){ circ(bx+i*10+4,14,3,i<n?TEAM[t].hi:'rgba(255,255,255,0.25)'); }
+    R(bx-4,Y+3,40,24,'rgba(6,18,28,0.6)');
+    for(let i=0;i<3;i++){ circ(bx+i*10+4,Y+9,3,i<n?TEAM[t].hi:'rgba(255,255,255,0.3)'); }
+    txt('TOQUES',bx+14,Y+15,'rgba(255,255,255,0.75)','center',6);
   }
-  txt('TOQUES',16,20,'rgba(255,255,255,0.6)','left',6); txt('TOQUES',VW-16,20,'rgba(255,255,255,0.6)','right',6);
 }
 function drawGame(){
   if(!bgCanvas||bgCanvas.sc!==SC) buildBG();
@@ -736,7 +746,7 @@ function draw(){
   ctx.setTransform(SC,0,0,SC,0,0);
   if(G.state==='menu') drawMenu(); else if(G.state==='over') drawOver(); else if(G.state==='pick') drawPick(); else drawGame();
   if(G.pairT>0){ G.pairT--; const ty2=G.state==='menu'?2:38; R(VW/2-110,ty2,220,22,'rgba(20,90,40,0.94)'); txt('MANDO EMPAREJADO ('+G.net+')',VW/2,ty2+7,'#ffffff','center',8); }
-  txt(VERSION,VW-4,VH-12,'rgba(255,255,255,0.8)','right',8);
+  txt(VERSION,VW-4,G.state==='menu'||G.state==='pick'?VH-12:3,'rgba(255,255,255,0.8)','right',6);
 }
 
 /* ================= MÓVIL COMO MANDO ================= */
