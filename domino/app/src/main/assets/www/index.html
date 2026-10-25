@@ -220,7 +220,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
         <li>Instala <b>Dominó Cubano</b> en la tele (o una tablet) y en cada cel.</li>
         <li>Todos los aparatos conectados a la <b>misma Wi-Fi</b>.</li>
         <li>En la tele toca <b>MESA</b>: verás la sala con los 4 puestos y la dirección de la mesa.</li>
-        <li>En cada cel toca <b>TABLERO</b>, pon tu nombre, hazte una foto y toca <b>LISTO, A LA MESA</b>. El cel busca la mesa solo y en la tele aparece tu foto.</li>
+        <li>En cada cel toca <b>JUGADOR</b>, pon tu nombre, hazte una foto y toca <b>LISTO, A LA MESA</b>. El cel busca la mesa solo y en la tele aparece tu foto.</li>
         <li>Si el cel no encuentra la mesa, escribe la dirección que sale en la tele (ej. 192.168.1.20) y toca <b>CONECTAR</b>.</li>
         <li>Pueden jugar hasta <b>4 cels</b>. Los puestos libres los juega la máquina.</li>
         <li>En la tele elige el modo y pulsa <b>EMPEZAR PARTIDA</b> (con el mando: OK).</li>
@@ -235,7 +235,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
         <li><b>Tranque</b>: si nadie puede jugar, gana quien tenga menos puntos (en parejas, la pareja). Si empatan, nadie se anota.</li>
         <li>Gana el partido el primero que llegue a <b>100</b>.</li>
       </ul>
-      <h3>3 · En tu cel (el tablero)</h3>
+      <h3>3 · En tu cel (JUGADOR)</h3>
       <ul>
         <li><b>Toca una ficha</b> para ponerla en la mesa (sin golpe). Si casa por los dos lados, te pregunta a qué número ponerla.</li>
         <li><b>Desliza la ficha hacia arriba</b> para dar un <b>golpetazo</b> con toda la fuerza acumulada.</li>
@@ -251,7 +251,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
     <p>Doble nueve · 4 jugadores · 10 fichas cada uno · no se roba · partido a 100 puntos.</p>
     <div id="pick">
       <button class="big main" id="pmesa">MESA<small>Para la tele: aquí se ve la partida</small></button>
-      <button class="big" id="ptab">TABLERO<small>Para el cel: aquí tienes tus fichas</small></button>
+      <button class="big" id="ptab">JUGADOR<small>Para el cel: aquí tienes tus fichas</small></button>
       <button id="psolo">JUGAR SOLO CONTRA LA MÁQUINA</button>
       <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
     </div>
@@ -277,7 +277,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.9.1';
+const VERSION='v2.9.2';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -1220,7 +1220,7 @@ document.getElementById('gclose').addEventListener('click',()=>{ guide.hidden=tr
 function updateTvMenu(){
   if(!isTV) return;
   const n=Object.keys(peers).length;
-  document.getElementById('lip').innerHTML='En cada cel abre <b style="font-size:1em;letter-spacing:0">Dominó Cubano</b> y toca <b style="font-size:1em;letter-spacing:0">TABLERO</b>. Se conectan solos.<br>Si no la encuentra, escribe en el cel: <b>'+(G.ip||'...')+'</b><br>Jugadores conectados: '+n+' de 4';
+  document.getElementById('lip').innerHTML='En cada cel abre <b style="font-size:1em;letter-spacing:0">Dominó Cubano</b> y toca <b style="font-size:1em;letter-spacing:0">JUGADOR</b>. Se conectan solos.<br>Si no la encuentra, escribe en el cel: <b>'+(G.ip||'...')+'</b><br>Jugadores conectados: '+n+' de 4';
   const par=G.mode==='parejas';
   document.querySelectorAll('#lseats .lseat').forEach(d=>{ const s=+d.dataset.s, on=G.remote[s]!=null;
     const act=isAct(s); d.className='lseat'+(on?' on':'')+(par?(s%2===0?' pA':' pB'):' c'+s)+(lobSel===s?' sel':'')+(act?'':' off'); d.innerHTML='';
