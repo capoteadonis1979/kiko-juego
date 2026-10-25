@@ -35,12 +35,18 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #hint{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:13px;color:#d8c8a8;pointer-events:none}
 @media (max-height:460px){#hint{display:none}}
 #remotebar{display:none}
-body.remote #remotebar{flex-direction:row!important;align-items:center;gap:10px!important;padding:6px 12px!important}
+body.remote #remotebar{flex-direction:row!important;align-items:center;gap:10px!important;padding:3px 12px!important}
 body.remote #rb1{flex:1}
 body.remote #rst{max-width:40%}
-body.remote #hand{background:radial-gradient(ellipse at 50% 30%,#2a8a58,#145234);border-top:0}
-body.remote #handbar{background:rgba(0,0,0,.25)}
-#rack{display:none;position:absolute;left:6px;right:6px;bottom:4px;height:22px;border-radius:6px 6px 10px 10px;pointer-events:none;z-index:6;
+body.remote #hand{border-top:0;background:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 2px,transparent 2px 7px,rgba(255,220,170,.05) 7px 9px,transparent 9px 16px),linear-gradient(#a8662e,#8a4e20 55%,#5e3412)}
+body.remote #tablebox{background:#2a1608}
+body.remote #tiles{top:32px;bottom:4px}
+body.remote #rb1 button{padding:5px 9px;font-size:12px}
+body.remote #rends{font-size:15px}
+body.remote #rst.ok,body.remote #rst.ok~*{display:none}
+body.remote.linked #rpair{display:none}
+body.remote #handbar{background:rgba(30,14,4,.55);height:30px}
+#rack{display:none;position:absolute;left:6px;right:6px;bottom:2px;height:26px;border-radius:6px 6px 10px 10px;pointer-events:none;z-index:6;
   background:linear-gradient(#b0713a,#7a4a20 45%,#4a2a10);box-shadow:0 -3px 0 #d8955a inset,0 6px 10px rgba(0,0,0,.5)}
 body.remote #rack{display:block}
 body.remote .tile.no{opacity:1;filter:brightness(.55)}
@@ -50,7 +56,7 @@ body.remote .tile.no{opacity:1;filter:brightness(.55)}
 #pform{display:flex;flex-direction:column;gap:10px;min-width:220px}
 #pname{font:700 20px var(--font);padding:10px 12px;border-radius:12px;border:3px solid #2c4c66;background:#0e2a3e;color:var(--fg)}
 #pgo{font:700 18px var(--font);padding:12px;border-radius:14px;border:3px solid #8a2418;background:var(--accent);color:#fff}
-body.remote #tablebox{flex:0 0 auto;height:auto;padding:10px 0 4px}
+body.remote #tablebox{flex:0 0 auto;height:auto;padding:0}
 body.remote #t{display:none}
 body.remote #remotebar{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:0 14px;box-sizing:border-box}
 body.remote #hand{flex:1;height:auto}
@@ -470,11 +476,11 @@ function tileCanvas(t,w,h){
 function renderHand(){
   const h=myHand(); tilesEl.innerHTML='';
   const H=tilesEl.clientHeight||150; let th=Math.min(H-18,120), tw=th/2;
-  if(G.remoteMode){ const n=Math.max(1,h.length); tw=Math.min((H-34)/2,(tilesEl.clientWidth-24-(n-1)*6)/n); th=tw*2; }
-  const gap=Math.min(10,Math.max(-tw*0.45,(tilesEl.clientWidth-24-h.length*tw)/Math.max(1,h.length-1)));
+  if(G.remoteMode){ const n=Math.max(1,h.length); tw=Math.min((H-22)/2,(tilesEl.clientWidth-12-(n-1)*4)/n); th=tw*2; }
+  const gap=G.remoteMode?4:Math.min(10,Math.max(-tw*0.45,(tilesEl.clientWidth-24-h.length*tw)/Math.max(1,h.length-1)));
   const total=h.length*tw+(h.length-1)*gap, x0=(tilesEl.clientWidth-total)/2;
   h.forEach((t,i)=>{
-    const el=document.createElement('div'); el.className='tile'; el.style.width=tw+'px'; el.style.height=th+'px'; el.style.left=(x0+i*(tw+gap))+'px'; el.style.top=(G.remoteMode?Math.max(4,H-th-12):Math.max(14,(H-th)/2+6))+'px';
+    const el=document.createElement('div'); el.className='tile'; el.style.width=tw+'px'; el.style.height=th+'px'; el.style.left=(x0+i*(tw+gap))+'px'; el.style.top=(G.remoteMode?Math.max(2,H-th-14):Math.max(14,(H-th)/2+6))+'px';
     el.appendChild(tileCanvas(t,tw,th)); el._t=t; el._i=i;
     const opts=myOpts(t);
     if(myTurn()&&!opts.length) el.classList.add('no');
@@ -581,8 +587,8 @@ window.kikoFromTV=(line)=>{
 };
 window.kikoCtrl=(m)=>{
   const st=document.getElementById('rst'), ip=document.querySelector('.ipbox');
-  if(m.startsWith('OK:')){ st.textContent='Conectado a la tele ('+m.slice(3)+')'; st.className='ok'; ip.hidden=true; netSend({t:'hi',name:PR.name,photo:PR.photo}); }
-  else if(m.startsWith('ERR:')){ st.textContent=m.slice(4); st.className='err'; ip.hidden=false; }
+  if(m.startsWith('OK:')){ st.textContent='Conectado a la tele ('+m.slice(3)+')'; st.className='ok'; ip.hidden=true; document.body.classList.add('linked'); netSend({t:'hi',name:PR.name,photo:PR.photo}); }
+  else if(m.startsWith('ERR:')){ st.textContent=m.slice(4); st.className='err'; ip.hidden=false; document.body.classList.remove('linked'); }
   else { st.textContent=m; st.className=''; }
 };
 /* ===== perfil: nombre y foto (se guardan en el móvil) ===== */
