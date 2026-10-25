@@ -88,7 +88,8 @@ public class MainActivity extends Activity {
                 if (p.length < 2 || !p[0].matches("left|right|up|down|a|b|start")) continue;
                 final String k = p[0];
                 final boolean down = p[1].equals("1");
-                final int sl = slot(id);
+                final int sl = slot(id, k.equals("a") && down);
+                if (sl < 0) continue;
                 runOnUiThread(() -> tecla(k, down, sl));
             }
         } catch (Exception ignored) { }
@@ -110,9 +111,14 @@ public class MainActivity extends Activity {
     private void ctrlStatus(String m) { runOnUiThread(() -> js("window.kikoCtrl&&kikoCtrl(" + JSONObject.quote(m) + ")")); }
 
     // cada mando físico es un jugador: el primero que se usa es el 1, el segundo el 2
-    private synchronized int slot(int dev) {
+    // al elegir mandos, un mando nuevo solo entra cuando pulsa A (el primero es la izquierda)
+    private volatile boolean picking = false;
+    private synchronized int slot(int dev, boolean aDown) {
         int i = devs.indexOf(dev);
-        if (i < 0) { devs.add(dev); i = devs.size() - 1; }
+        if (i < 0) {
+            if (picking && !aDown) return -1;
+            devs.add(dev); i = devs.size() - 1;
+        }
         return i > 1 ? 1 : i;
     }
 
@@ -210,7 +216,10 @@ public class MainActivity extends Activity {
 
         // al empezar un partido de 2, el primero que pulse es el jugador 1
         @JavascriptInterface
-        public void resetPlayers() { synchronized (MainActivity.this) { devs.clear(); for (boolean[] a : ax) java.util.Arrays.fill(a, false); } }
+        public void resetPlayers() { synchronized (MainActivity.this) { devs.clear(); picking = true; for (boolean[] a : ax) java.util.Arrays.fill(a, false); } }
+
+        @JavascriptInterface
+        public void endPick() { picking = false; }
     }
 
     private void pantallaCompleta() {
@@ -279,7 +288,8 @@ public class MainActivity extends Activity {
     public boolean dispatchKeyEvent(KeyEvent e) {
         String k = nombre(e);
         if (k != null) {
-            int s = slot(e.getDeviceId());
+            int s = slot(e.getDeviceId(), k.equals("a") && e.getAction() == KeyEvent.ACTION_DOWN);
+            if (s < 0) return true;
             if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) tecla(k, true, s);
             else if (e.getAction() == KeyEvent.ACTION_UP) tecla(k, false, s);
             return true;
@@ -302,7 +312,8 @@ public class MainActivity extends Activity {
             float x = e.getAxisValue(MotionEvent.AXIS_X), hx = e.getAxisValue(MotionEvent.AXIS_HAT_X);
             float y = e.getAxisValue(MotionEvent.AXIS_Y), hy = e.getAxisValue(MotionEvent.AXIS_HAT_Y);
             boolean l = x < -0.4f || hx < -0.5f, r = x > 0.4f || hx > 0.5f, d = y > 0.5f || hy > 0.5f, u = y < -0.5f || hy < -0.5f;
-            int s = slot(e.getDeviceId());
+            int s = slot(e.getDeviceId(), false);
+            if (s < 0) return true;
             boolean[] a = ax[s];
             if (l != a[0]) { a[0] = l; tecla("left", l, s); }
             if (r != a[1]) { a[1] = r; tecla("right", r, s); }
