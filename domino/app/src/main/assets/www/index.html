@@ -72,6 +72,17 @@ body.remote #hand{flex:1;height:auto}
 #menu h1{margin:0;font-size:clamp(30px,6vw,52px);color:var(--gold);text-shadow:0 3px 0 #5e3214}
 #menu p{margin:0;max-width:34em;line-height:1.4;color:#d8e8dc;font-size:15px}
 #menu button{font:700 18px var(--font);min-width:260px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg)}
+#lobby{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+#lip{font-size:clamp(15px,2.4vw,22px);color:#eaf4ec;text-align:center;line-height:1.35}
+#lip b{color:var(--gold);font-size:1.5em;letter-spacing:1px}
+#lseats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.lseat{width:150px;padding:10px 6px;border-radius:16px;background:rgba(255,255,255,.07);border:3px solid rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;gap:6px}
+.lseat.on{border-color:#8aff6a;background:rgba(138,255,106,.12)}
+.lseat i{width:64px;height:64px;border-radius:50%;background:#1d3a52 center/cover no-repeat;border:3px solid #fff;display:grid;place-items:center;font-style:normal;font-size:26px;color:#9cb}
+.lseat b{font-size:16px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lseat small{font-size:12px;opacity:.8}
+#lbtns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+body.mesa #menu>p{display:none}
 #pick,#sub{display:flex;flex-direction:column;align-items:center;gap:12px}
 #pick:not([hidden]){display:flex}
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
@@ -115,12 +126,17 @@ body.remote #hand{flex:1;height:auto}
       <button class="main" id="mplay">JUGAR CONTRA LA MÁQUINA</button>
       <p id="mtv" hidden></p>
     </div>
+    <div id="lobby" hidden>
+      <div id="lip"></div>
+      <div id="lseats"></div>
+      <div id="lbtns"><button id="lmode">MODO: PAREJAS</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
+    </div>
   </div>
 </div>
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v1.2.0';
+const VERSION='v1.3.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -166,7 +182,7 @@ function chime(win){ if(!AC) return; const t=AC.currentTime; [0,4,7,12].forEach(
 /* ================= FICHAS ================= */
 const PIPC=['#000','#1f5fd0','#1f9a4a','#d03030','#7a3ad0','#e07a10','#1a1a1a','#c0306a','#1a8a98','#7a5418'];
 const PIPS={0:[],1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],4:[[0,0],[2,0],[0,2],[2,2]],5:[[0,0],[2,0],[1,1],[0,2],[2,2]],
-  6:[[0,0],[2,0],[0,1],[2,1],[0,2],[2,2]],7:[[0,0],[2,0],[0,1],[1,1],[2,1],[0,2],[2,2]],8:[[0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2]],9:[[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]]};
+  6:[[0,0],[1,0],[2,0],[0,2],[1,2],[2,2]],7:[[0,0],[1,0],[2,0],[1,1],[0,2],[1,2],[2,2]],8:[[0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2]],9:[[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]]};
 // dibuja una ficha centrada en (0,0) a lo largo del eje x: medio "a" a la izquierda, "b" a la derecha
 function drawTile(c,a,b,L,W,face=true,glow=null){
   const r=W*0.16;
@@ -183,12 +199,22 @@ function drawTile(c,a,b,L,W,face=true,glow=null){
     c.fillStyle='#c9a84a'; c.beginPath(); c.arc(0,0,W*0.06,0,Math.PI*2); c.fill();
     for(const [v,cx] of [[a,-L/4],[b,L/4]]){
       const cell=W*0.27, pr=W*0.085; c.fillStyle=PIPC[v];
-      for(const [i,j] of PIPS[v]){ c.beginPath(); c.arc(cx+(i-1)*cell,(j-1)*cell,pr,0,Math.PI*2); c.fill(); }
+      for(const [i,j] of PIPS[v]){ pipHole(c,cx+(i-1)*cell,(j-1)*cell,pr,PIPC[v]); }
     }
   } else {
     c.fillStyle='rgba(255,255,255,0.18)'; c.beginPath(); c.arc(0,0,W*0.18,0,Math.PI*2); c.fill();
   }
   c.restore();
+}
+// punto como hoyito hundido en el marfil: sombra arriba dentro, brillo en el borde de abajo
+function pipHole(c,x,y,r,col){
+  c.fillStyle=col; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+  const g=c.createRadialGradient(x+r*0.35,y+r*0.45,r*0.1,x,y,r*1.05);
+  g.addColorStop(0,'rgba(255,255,255,0.10)'); g.addColorStop(0.55,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.55)');
+  c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+  c.lineWidth=Math.max(0.6,r*0.28);
+  c.strokeStyle='rgba(0,0,0,0.45)'; c.beginPath(); c.arc(x,y,r*0.98,Math.PI*0.95,Math.PI*1.95); c.stroke();
+  c.strokeStyle='rgba(255,255,255,0.9)'; c.beginPath(); c.arc(x,y,r*1.08,Math.PI*0.05,Math.PI*0.9); c.stroke();
 }
 function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
 const pips=t=>t[0]+t[1];
@@ -569,7 +595,7 @@ window.kikoMsg=(id,line)=>{
   if(o.t==='play'){ initAudio(); if(!doPlay(seat,o.tile,o.side,clamp(+o.force||0.4,0.1,1),!!o.slam)) sendTo(id,stateFor(seat)); }
   if(o.t==='hi'){
     if(o.name){ G.names[seat]=String(o.name).toUpperCase().slice(0,14); }
-    if(o.photo&&/^data:image\/(jpeg|png);base64,/.test(o.photo)&&o.photo.length<60000){ const im=new Image(); im.onload=()=>{ G.photos[seat]=im; }; im.src=o.photo; }
+    if(o.photo&&/^data:image\/(jpeg|png);base64,/.test(o.photo)&&o.photo.length<60000){ const im=new Image(); im.onload=()=>{ G.photos[seat]=im; updateTvMenu(); }; im.src=o.photo; }
     if(o.name) say(G.names[seat]+' SE SENTÓ',80);
     sendTo(id,stateFor(seat)); updateTvMenu();
   }
@@ -624,15 +650,19 @@ document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctr
 /* ================= MENÚ ================= */
 const menu=document.getElementById('menu');
 document.getElementById('mplay').addEventListener('click',()=>{ initAudio(); menu.hidden=true; startMatch(); layout(); renderHand(); });
-const tvDevice=isTV, pick=document.getElementById('pick'), sub=document.getElementById('sub');
-function showPick(){ pick.hidden=false; sub.hidden=true; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
+const tvDevice=isTV, pick=document.getElementById('pick'), sub=document.getElementById('sub'), lobby=document.getElementById('lobby'), lmode=document.getElementById('lmode');
+document.getElementById('lplay').addEventListener('click',()=>document.getElementById('mplay').click());
+lmode.addEventListener('click',()=>{ mmode.click(); lmode.textContent=mmode.textContent.replace(' (2 CONTRA 2)','').replace(' (CADA UNO SOLO)',''); updateTvMenu(); });
+function showPick(){ document.body.classList.remove('mesa'); lobby.hidden=true; pick.hidden=false; sub.hidden=true; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
 function showSub(){ pick.hidden=true; sub.hidden=false; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
 // MESA: este aparato es la mesa (la tele); los cels se conectan a él
 function becomeTable(){
   isTV=true; for(let s=0;s<4;s++) if(G.remote[s]==null){ G.human[s]=false; G.names[s]='MÁQUINA '+(s+1); }
   document.getElementById('mplay').textContent='EMPEZAR PARTIDA'; document.getElementById('hand').hidden=true;
   try{ KikoApp.startHost(); }catch(_){}
-  updateTvMenu(); showSub(); layout();
+  document.body.classList.add('mesa'); pick.hidden=true; sub.hidden=true; lobby.hidden=false; mFocus=-1;
+  lmode.textContent=mmode.textContent.replace(' (2 CONTRA 2)','').replace(' (CADA UNO SOLO)','');
+  updateTvMenu(); layout();
 }
 function becomeSolo(){
   isTV=false; G.human=[true,false,false,false]; G.names=['TÚ','MÁQUINA 1','MÁQUINA 2','MÁQUINA 3'];
@@ -643,9 +673,17 @@ document.getElementById('pmesa').addEventListener('click',()=>{ initAudio(); bec
 document.getElementById('ptab').addEventListener('click',()=>{ initAudio(); isTV=false; document.getElementById('hand').hidden=false; openProfile(); });
 document.getElementById('psolo').addEventListener('click',()=>{ initAudio(); becomeSolo(); });
 function updateTvMenu(){
-  const p=document.getElementById('mtv'); if(!isTV) return; p.hidden=false;
+  if(!isTV) return;
   const n=Object.keys(peers).length;
-  p.textContent=(n?('Jugadores conectados: '+n+'. '):'')+'En cada cel abre Dominó Cubano y elige TABLERO. Dirección de esta mesa: '+(G.ip||'...');
+  document.getElementById('lip').innerHTML='En cada cel abre <b style="font-size:1em;letter-spacing:0">Dominó Cubano</b> y toca <b style="font-size:1em;letter-spacing:0">TABLERO</b>. Se conectan solos.<br>Si no la encuentra, escribe en el cel: <b>'+(G.ip||'...')+'</b><br>Jugadores conectados: '+n+' de 4';
+  const ls=document.getElementById('lseats'); ls.innerHTML='';
+  for(let s=0;s<4;s++){
+    const on=G.remote[s]!=null, d=document.createElement('div'); d.className='lseat'+(on?' on':'');
+    const i=document.createElement('i'); if(on&&G.photos[s]) i.style.backgroundImage='url('+G.photos[s].src+')'; else i.textContent=on?'👤':'🤖';
+    const b=document.createElement('b'); b.textContent=on?G.names[s]:'LIBRE';
+    const sm=document.createElement('small'); sm.textContent=(G.mode==='parejas'?(s%2===0?'PAREJA A · ':'PAREJA B · '):'')+(on?'conectado':'juega la máquina');
+    d.append(i,b,sm); ls.appendChild(d);
+  }
 }
 window.kikoNet=(n,ip)=>{ G.ip=ip||''; updateTvMenu(); };
 isTV=false;   // hasta que se elija MESA
@@ -656,12 +694,13 @@ try{ const m=localStorage.getItem('dominoModo'); if(m==='sencillo') setMode(m); 
 mmode.addEventListener('click',()=>{ if(G.remoteMode) return; setMode(G.mode==='parejas'?'sencillo':'parejas'); });
 let mFocus=-1;
 function menuBtns(){ return [...menu.querySelectorAll('button')].filter(b=>b.offsetParent!==null); }
-function menuMove(d){ const b=menuBtns(); if(!b.length) return; if(mFocus<0) mFocus=Math.max(0,b.indexOf(document.getElementById(sub.hidden?(tvDevice?'pmesa':'ptab'):'mplay')))-d; mFocus=(mFocus+d+b.length)%b.length; b.forEach((x,i)=>x.classList.toggle('focus',i===mFocus)); try{ b[mFocus].focus(); }catch(_){} }
-function menuOk(){ const b=menuBtns(); (mFocus>=0&&b[mFocus]?b[mFocus]:document.getElementById(sub.hidden?(tvDevice?'pmesa':'ptab'):'mplay')).click(); }
+function defId(){ return !lobby.hidden?'lplay':!sub.hidden?'mplay':(tvDevice?'pmesa':'ptab'); }
+function menuMove(d){ const b=menuBtns(); if(!b.length) return; if(mFocus<0) mFocus=Math.max(0,b.indexOf(document.getElementById(defId())))-d; mFocus=(mFocus+d+b.length)%b.length; b.forEach((x,i)=>x.classList.toggle('focus',i===mFocus)); try{ b[mFocus].focus(); }catch(_){} }
+function menuOk(){ const b=menuBtns(); (mFocus>=0&&b[mFocus]?b[mFocus]:document.getElementById(defId())).click(); }
 addEventListener('keydown',e=>{ if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){ menuMove(e.key==='ArrowDown'?1:-1); e.preventDefault(); return; }
   if(['Enter','NumpadEnter',' '].includes(e.key)){ if(!menu.hidden){ menuOk(); e.preventDefault(); } else if(G.state==='handover'&&G.timer<260){ nextHandOrMenu(); e.preventDefault(); } } });
 window.kikoKey=(k,down)=>{ if(down&&(k==='a'||k==='start')){ if(!menu.hidden) menuOk(); else if(G.state==='handover'&&G.timer<260) nextHandOrMenu(); } };
-window.kikoBack=()=>{ if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden){ showPick(); return true; } return false; };
+window.kikoBack=()=>{ if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
 function nextHandOrMenu(){ if(G.over){ G.state='menu'; menu.hidden=false; } else dealHand(); }
 cv.addEventListener('pointerdown',()=>{ initAudio(); if(G.state==='handover'&&G.timer<260) nextHandOrMenu(); });
 

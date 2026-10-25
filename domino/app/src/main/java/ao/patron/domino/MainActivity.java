@@ -42,6 +42,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.net.InterfaceAddress;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.Executors;
 
 /**
@@ -116,8 +120,6 @@ public class MainActivity extends Activity {
                     final int id;
                     synchronized (this) { id = clientSeq++; }
                     clients.put(id, c.getOutputStream());
-                    js("window.kikoPeer&&kikoPeer(" + id + ",true)");
-                    notifyNet();
                     new Thread(() -> readClient(c, id)).start();
                 }
             } catch (Exception ignored) { }
@@ -128,6 +130,11 @@ public class MainActivity extends Activity {
                 byte[] msg = BEACON.getBytes();
                 while (running) {
                     try { ds.send(new DatagramPacket(msg, msg.length, InetAddress.getByName("255.255.255.255"), UDP)); } catch (Exception ignored) { }
+                    try {
+                        for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces()))
+                            for (InterfaceAddress ia : ni.getInterfaceAddresses())
+                                if (ia.getBroadcast() != null) try { ds.send(new DatagramPacket(msg, msg.length, ia.getBroadcast(), UDP)); } catch (Exception ignored) { }
+                    } catch (Exception ignored) { }
                     Thread.sleep(1000);
                 }
             } catch (Exception ignored) { }
@@ -136,11 +143,16 @@ public class MainActivity extends Activity {
 
     private void readClient(Socket c, int id) {
         try (BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8))) {
-            String line;
+            String line; boolean announced = false;
             while ((line = r.readLine()) != null) {
                 if (line.length() > 120000) continue;
+                if (!announced) { announced = true; js("window.kikoPeer&&kikoPeer(" + id + ",true)"); notifyNet(); }
                 js("window.kikoMsg&&kikoMsg(" + id + "," + JSONObject.quote(line) + ")");
             }
+            clients.remove(id);
+            try { c.close(); } catch (Exception ignored) { }
+            if (announced) { js("window.kikoPeer&&kikoPeer(" + id + ",false)"); notifyNet(); }
+            return;
         } catch (Exception ignored) { }
         clients.remove(id);
         try { c.close(); } catch (Exception ignored) { }
@@ -151,12 +163,38 @@ public class MainActivity extends Activity {
     private void notifyNet() { js("window.kikoNet&&kikoNet(" + clients.size() + ",'" + myIp() + "')"); }
 
     private String myIp() {
+        String best = "", any = "";
         try {
-            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces()))
-                for (InetAddress a : Collections.list(ni.getInetAddresses()))
-                    if (!a.isLoopbackAddress() && a instanceof Inet4Address) return a.getHostAddress();
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!ni.isUp()) continue;
+                String n = ni.getName() == null ? "" : ni.getName();
+                for (InetAddress a : Collections.list(ni.getInetAddresses())) {
+                    if (a.isLoopbackAddress() || !(a instanceof Inet4Address)) continue;
+                    String h = a.getHostAddress();
+                    if (any.isEmpty()) any = h;
+                    if (a.isSiteLocalAddress() && (n.startsWith("wlan") || n.startsWith("ap") || n.startsWith("swlan") || n.startsWith("eth"))) return h;
+                    if (a.isSiteLocalAddress() && best.isEmpty()) best = h;
+                }
+            }
         } catch (Exception ignored) { }
-        return "";
+        return !best.isEmpty() ? best : any;
+    }
+
+    // si no llega el aviso, se prueba cada dirección de la red Wi-Fi
+    private void scanSubnet(String mine, AtomicReference<String> found, int gen) {
+        if (mine == null || mine.lastIndexOf('.') < 0) return;
+        String pre = mine.substring(0, mine.lastIndexOf('.') + 1);
+        ExecutorService pool = Executors.newFixedThreadPool(48);
+        for (int i = 1; i < 255; i++) {
+            final String ip = pre + i;
+            if (ip.equals(mine)) continue;
+            pool.execute(() -> {
+                if (found.get() != null || gen != ctrlGen) return;
+                try (Socket s = new Socket()) { s.connect(new InetSocketAddress(ip, TCP), 700); found.compareAndSet(null, ip); } catch (Exception ignored) { }
+            });
+        }
+        pool.shutdown();
+        try { pool.awaitTermination(20, TimeUnit.SECONDS); } catch (Exception ignored) { }
     }
 
     private void closeCtrl() {
@@ -191,19 +229,26 @@ public class MainActivity extends Activity {
                     if (ip.isEmpty()) {
                         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         if (wm != null) { lock = wm.createMulticastLock("domino"); lock.setReferenceCounted(false); lock.acquire(); }
-                        String mine = myIp();
+                        final String mine = myIp();
+                        final AtomicReference<String> found = new AtomicReference<>(null);
+                        ctrlStatus("Buscando la mesa en tu Wi-Fi...");
+                        new Thread(() -> scanSubnet(mine, found, gen)).start();
                         try (DatagramSocket ds = new DatagramSocket(null)) {
                             ds.setReuseAddress(true); ds.setBroadcast(true);
                             ds.bind(new InetSocketAddress(UDP));
-                            ds.setSoTimeout(15000);
-                            long end = System.currentTimeMillis() + 15000;
-                            while (System.currentTimeMillis() < end && gen == ctrlGen) {
+                            ds.setSoTimeout(400);
+                            long end = System.currentTimeMillis() + 20000;
+                            while (System.currentTimeMillis() < end && gen == ctrlGen && found.get() == null) {
                                 DatagramPacket pk = new DatagramPacket(new byte[64], 64);
-                                ds.receive(pk);
+                                try { ds.receive(pk); } catch (SocketTimeoutException t) { continue; }
                                 String from = pk.getAddress().getHostAddress();
-                                if (new String(pk.getData(), 0, pk.getLength()).equals(BEACON) && !from.equals(mine)) { ip = from; break; }
+                                if (new String(pk.getData(), 0, pk.getLength()).equals(BEACON) && !from.equals(mine)) { found.compareAndSet(null, from); }
                             }
+                        } catch (Exception e) {
+                            long end = System.currentTimeMillis() + 20000;
+                            while (System.currentTimeMillis() < end && gen == ctrlGen && found.get() == null) Thread.sleep(200);
                         }
+                        if (found.get() != null) ip = found.get();
                     }
                     if (gen != ctrlGen) return;
                     if (ip.isEmpty()) throw new Exception("sin tele");
@@ -221,7 +266,7 @@ public class MainActivity extends Activity {
                     } catch (Exception ignored) { }
                     if (gen == ctrlGen) ctrlStatus("ERR:Se perdió la conexión con la tele. Pulsa EMPAREJAR.");
                 } catch (Exception e) {
-                    if (gen == ctrlGen) ctrlStatus("ERR:No encuentro la tele. Abre Dominó Cubano en la tele, usa la misma Wi-Fi o escribe la dirección que sale en la tele.");
+                    if (gen == ctrlGen) ctrlStatus("ERR:No encuentro la mesa. Abre Dominó Cubano en la tele o tablet y elige MESA, usa la misma Wi-Fi o escribe la dirección que sale en la mesa.");
                 } finally { if (lock != null) try { lock.release(); } catch (Exception ignored) { } }
             }).start();
         }
