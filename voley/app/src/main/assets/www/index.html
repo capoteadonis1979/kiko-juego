@@ -72,8 +72,8 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.9.1';
-const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.14;
+const VERSION='v1.9.2';
+const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
 const FONT='"Fredoka", "Trebuchet MS", system-ui, sans-serif';
@@ -231,7 +231,7 @@ const COUNTRY=[
   {name:'ANGOLA',c:'#d0102f',d:'#6a0818',hi:'#ff7a8a',c2:'#1a1a1a'}];
 const TEAM=[Object.assign({},COUNTRY[3]),Object.assign({},COUNTRY[0])];
 function setTeams(){ for(const t of [0,1]) TEAM[t]=Object.assign({},COUNTRY[G.flag[t]]); }
-const BALLR=10, BW=34, BH=42;          // bola del balón y tamaño del muñeco
+const BALLR=13, BW=34, BH=42;          // bola del balón y tamaño del muñeco
 const G=window.__V={state:'menu',mode:1,sel:0,flag:[3,0],score:[0,0],serve:0,touches:0,lastTeam:-1,timer:0,msg:'',msgC:'#fff',frame:0,paused:false,winner:-1,pred:NX,flash:0,netShake:0};
 const ball={x:0,y:0,vx:0,vy:0,held:true,rot:0,trail:[]};
 const players=[0,1].map(t=>({team:t,x:0,y:GY,vx:0,vy:0,on:true,cd:0,sq:0,face:t?-1:1}));
@@ -320,7 +320,7 @@ function collideBlob(p){
       ball.x=cx+nx*(r+BALLR+0.5); ball.y=cy+ny*(r+BALLR+0.5);
       if(p.cd===0){
         if(!touch(p)) return true;
-        const sp=6.6+(p.on?0:0.6);
+        const sp=5.7+(p.on?0:0.5);
         ball.vx=nx*sp+p.vx*0.25; ball.vy=ny*sp+Math.min(0,p.vy)*0.25;
         if(ny>0.3&&!p.on){ S.spike(); G.flash=5; } else S.bump();
         p.cd=10;
@@ -337,7 +337,7 @@ function collideBlob(p){
 function updBall(){
   if(ball.held){ ball.y=GY-112+Math.sin(G.frame*0.08)*3; for(const p of players) if(collideBlob(p)){ ball.held=false; G.state='play'; } return; }
   ball.vy+=GRAV;
-  const sp=Math.hypot(ball.vx,ball.vy); if(sp>9){ ball.vx*=9/sp; ball.vy*=9/sp; }
+  const sp=Math.hypot(ball.vx,ball.vy); if(sp>7.4){ ball.vx*=7.4/sp; ball.vy*=7.4/sp; }
   ball.x+=ball.vx; ball.y+=ball.vy; ball.rot+=ball.vx*0.06;
   ball.trail.push([ball.x,ball.y]); if(ball.trail.length>6) ball.trail.shift();
   if(ball.x<BALLR){ ball.x=BALLR; ball.vx=Math.abs(ball.vx)*0.9; S.net(); }
