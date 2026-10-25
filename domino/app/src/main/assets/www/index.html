@@ -208,13 +208,16 @@ function drawTile(c,a,b,L,W,face=true,glow=null){
 }
 // punto como hoyito hundido en el marfil: sombra arriba dentro, brillo en el borde de abajo
 function pipHole(c,x,y,r,col){
+  // hoyito cóncavo (como hecho con broca): la pared de arriba-izquierda en sombra, el fondo redondo y la pared de abajo-derecha iluminada
   c.fillStyle=col; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
-  const g=c.createRadialGradient(x+r*0.35,y+r*0.45,r*0.1,x,y,r*1.05);
-  g.addColorStop(0,'rgba(255,255,255,0.10)'); g.addColorStop(0.55,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.55)');
+  const g=c.createRadialGradient(x+r*0.28,y+r*0.32,0,x+r*0.1,y+r*0.12,r*1.08);
+  g.addColorStop(0,'rgba(255,255,255,0.22)'); g.addColorStop(0.35,'rgba(255,255,255,0.05)'); g.addColorStop(0.7,'rgba(0,0,0,0.28)'); g.addColorStop(1,'rgba(0,0,0,0.7)');
   c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
-  c.lineWidth=Math.max(0.6,r*0.28);
-  c.strokeStyle='rgba(0,0,0,0.45)'; c.beginPath(); c.arc(x,y,r*0.98,Math.PI*0.95,Math.PI*1.95); c.stroke();
-  c.strokeStyle='rgba(255,255,255,0.9)'; c.beginPath(); c.arc(x,y,r*1.08,Math.PI*0.05,Math.PI*0.9); c.stroke();
+  c.lineWidth=Math.max(0.5,r*0.16); c.lineCap='round';
+  c.strokeStyle='rgba(255,255,255,0.45)'; c.beginPath(); c.arc(x,y,r*0.66,Math.PI*0.08,Math.PI*0.58); c.stroke();
+  c.lineWidth=Math.max(0.5,r*0.22);
+  c.strokeStyle='rgba(0,0,0,0.35)'; c.beginPath(); c.arc(x,y,r*0.92,Math.PI*1.0,Math.PI*1.75); c.stroke();
+  c.strokeStyle='rgba(255,255,255,0.75)'; c.beginPath(); c.arc(x,y,r*1.1,Math.PI*0.1,Math.PI*0.85); c.stroke();
 }
 function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
 const pips=t=>t[0]+t[1];
