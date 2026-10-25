@@ -20,6 +20,12 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #t{display:block;max-width:100%}
 #hand{flex:none;position:relative;height:clamp(150px,30vh,240px);background:linear-gradient(#3a2412,#24160a);border-top:3px solid #8a5a2a;touch-action:none;overflow:hidden}
 #handbar{position:absolute;left:0;right:0;top:0;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 max(12px,env(safe-area-inset-left,0px));gap:8px;font-weight:700;font-size:15px}
+#sidebox{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:21;background:rgba(30,16,6,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#sidebox b{color:var(--gold);font-size:20px}
+#sidelvl{color:#ff6a4a;font-weight:700}
+#sidebox div{display:flex;gap:18px}
+#sideL,#sideR{font:700 24px var(--font);background:#f6f0e2;color:#2a1608;border:3px solid #8a5a2a;border-radius:16px;padding:16px 26px;min-width:170px}
+#sideX{font:700 14px var(--font);background:#5a3a1a;color:#fff;border:2px solid #8a5a2a;border-radius:10px;padding:6px 14px}
 #handbar .bpan{background:#2f7fe0!important;border-color:#1c4c94!important;color:#fff}
 #panel{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:20;background:rgba(30,16,6,.96);display:flex;flex-direction:column;padding:6px 10px;box-sizing:border-box}
 #panhead{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px}
@@ -98,8 +104,20 @@ body.remote #hand{flex:1;height:auto}
 .lseat small{font-size:12px;opacity:.8}
 #lbtns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 body.mesa #menu>p{display:none}
+#guide{position:absolute;inset:0;z-index:40;background:rgba(6,16,10,.96);overflow-y:auto;touch-action:pan-y;padding:16px;box-sizing:border-box}
+#gbox{max-width:760px;margin:0 auto;line-height:1.45;font-size:16px;color:#eef6f0}
+#gbox h2{color:var(--gold);text-align:center;margin:4px 0 10px;font-size:24px}
+#gbox h3{color:#8aff6a;margin:16px 0 6px;font-size:18px}
+#gbox li{margin:4px 0}
+#gbox b{color:#ffe9a8}
+#gclose{display:block;margin:18px auto 8px;font:700 18px var(--font);padding:12px 30px;border-radius:14px;border:3px solid #8a2418;background:var(--accent);color:#fff}
+#gclose.focus{outline:3px solid var(--gold);outline-offset:3px}
 #pick,#sub{display:flex;flex-direction:column;align-items:center;gap:12px}
 #pick:not([hidden]){display:flex}
+#pick{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:680px}
+#pick button{min-width:300px}
+#menu{overflow-y:auto}
+@media (max-height:460px){#menu h1{font-size:28px} #menu>p{display:none} #menu button.big{font-size:20px;padding:8px 14px} #menu button{font-size:15px;padding:8px 12px;min-width:240px} #pick button{min-width:280px}}
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
 #menu button.main{background:var(--accent);border-color:#8a2418}
@@ -121,13 +139,47 @@ body.mesa #menu>p{display:none}
     <div id="handbar"><button id="bsort">ORDENAR</button><button class="bexp" data-k="0">¿QUÉ QUÉ?</button><button class="bexp" data-k="1">¿CÓMO?</button><button class="bpan" data-p="f">FRASES</button><button class="bpan" data-p="c">CARITAS</button><span id="turnmsg">—</span><span id="myscore"></span></div>
     <div id="tiles"></div>
     <div id="rack"></div>
+    <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
     <div id="panel" hidden><div id="panhead"><b id="pantitle">FRASES</b><button id="panx">✕</button></div><div id="pangrid"></div></div>
-    <div id="hint">Toca para elegir · arrastra a los lados para ordenar · desliza hacia arriba para lanzar</div>
+    <div id="hint">Toca la ficha para tirarla · mantenla apretada para el pingazo · arrastra a los lados para ordenar</div>
   </div>
   <div id="prof" hidden>
     <h2>¿QUIÉN JUEGA?</h2>
     <label id="pphoto"><span id="ptxt">TOCA PARA<br>HACERTE<br>UNA FOTO</span><input id="pfile" type="file" accept="image/*" capture="user" hidden></label>
     <div id="pform"><input id="pname" maxlength="14" placeholder="Tu nombre" autocomplete="off" aria-label="Tu nombre"><button id="pgo">LISTO, A LA MESA</button></div>
+  </div>
+  <div id="guide" hidden>
+    <div id="gbox">
+      <h2>CÓMO JUGAR AL DOMINÓ CUBANO</h2>
+      <h3>1 · Conectar los cels con la tele</h3>
+      <ol>
+        <li>Instala <b>Dominó Cubano</b> en la tele (o una tablet) y en cada cel.</li>
+        <li>Todos los aparatos conectados a la <b>misma Wi-Fi</b>.</li>
+        <li>En la tele toca <b>MESA</b>: verás la sala con los 4 puestos y la dirección de la mesa.</li>
+        <li>En cada cel toca <b>TABLERO</b>, pon tu nombre, hazte una foto y toca <b>LISTO, A LA MESA</b>. El cel busca la mesa solo y en la tele aparece tu foto.</li>
+        <li>Si el cel no encuentra la mesa, escribe la dirección que sale en la tele (ej. 192.168.1.20) y toca <b>CONECTAR</b>.</li>
+        <li>Pueden jugar hasta <b>4 cels</b>. Los puestos libres los juega la máquina.</li>
+        <li>En la tele elige el modo y pulsa <b>EMPEZAR PARTIDA</b> (con el mando: OK).</li>
+      </ol>
+      <h3>2 · Las reglas</h3>
+      <ul>
+        <li>Dominó <b>doble nueve</b>: 55 fichas, 4 jugadores con 10 fichas cada uno. Sobran 15 que no se usan. <b>No se roba.</b></li>
+        <li><b>Parejas</b>: tu compañero es el de enfrente. <b>Sencillo</b>: cada uno juega solo.</li>
+        <li>La primera mano sale el doble más alto; después sale el que ganó.</li>
+        <li>Se juega hacia la derecha. Si no llevas ficha que case, <b>pasas</b>.</li>
+        <li>Gana la mano quien <b>se pega</b> (pone su última ficha) y se anota todos los puntos que quedan en las manos.</li>
+        <li><b>Tranque</b>: si nadie puede jugar, gana quien tenga menos puntos (en parejas, la pareja). Si empatan, nadie se anota.</li>
+        <li>Gana el partido el primero que llegue a <b>100</b>.</li>
+      </ul>
+      <h3>3 · En tu cel (el tablero)</h3>
+      <ul>
+        <li><b>Toca una ficha</b> para tirarla a la mesa. Si casa por los dos lados, te pregunta a qué número ponerla.</li>
+        <li><b>Mantén la ficha apretada</b> 1, 2 o 3 segundos para el <b>pingazo</b> ×1, ×2 o ×3. Con el ×3 se vira la botella y salta el tabaco.</li>
+        <li>Arrastra una ficha a los lados para ordenarlas, o toca <b>ORDENAR</b>.</li>
+        <li><b>FRASES</b>: frases cubanas del dominó y de la charada. <b>CARITAS</b>: risa, bravo, enfurecido… <b>¿QUÉ QUÉ?</b> y <b>¿CÓMO?</b> sacan a sus personajes en la mesa.</li>
+      </ul>
+      <button id="gclose">ENTENDIDO</button>
+    </div>
   </div>
   <div id="menu">
     <h1>DOMINÓ CUBANO</h1>
@@ -136,6 +188,7 @@ body.mesa #menu>p{display:none}
       <button class="big main" id="pmesa">MESA<small>Para la tele: aquí se ve la partida</small></button>
       <button class="big" id="ptab">TABLERO<small>Para el cel: aquí tienes tus fichas</small></button>
       <button id="psolo">JUGAR SOLO CONTRA LA MÁQUINA</button>
+      <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
     </div>
     <div id="sub" hidden>
       <button id="mmode">MODO: PAREJAS (2 CONTRA 2)</button>
@@ -152,7 +205,7 @@ body.mesa #menu>p{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v1.8.0';
+const VERSION='v2.0.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -296,7 +349,7 @@ function landed(){
   if(L){
     const p=L/2; boom(Math.min(1.5,p));
     G.wobT=G.frame; G.wobA=0.45+L*0.3; if(L>=3&&G.fallT<0) G.fallT=G.frame;
-    const L=layoutChain(), q=L[G.chain.indexOf(f.item)];
+    const LC=layoutChain(), q=LC[G.chain.indexOf(f.item)];
     if(q){ const x=VW/2+q.x, y=VH/2-6+q.y, n=Math.round(10+L*18);
       for(let k=0;k<n;k++){ const a=Math.random()*Math.PI*2, sp=(0.6+Math.random()*2.4)*(0.5+L*0.35);
         G.dust.push({x:x+Math.cos(a)*10,y:y+Math.sin(a)*6,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*0.6-0.4,r:2+Math.random()*4,life:1,dec:0.012+Math.random()*0.02}); } }
@@ -709,7 +762,7 @@ function renderHand(){
     tilesEl.appendChild(el); bindTile(el,tw,gap,x0);
   });
   const turn=myTurn();
-  turnmsg.textContent=G.remoteMode?(G.rMsg||'—'):(G.state==='play'?(turn?'TE TOCA: DESLIZA UNA FICHA HACIA ARRIBA':'JUEGA '+G.names[G.turn]):G.msg||'');
+  turnmsg.textContent=G.remoteMode?(G.rMsg||'—'):(G.state==='play'?(turn?'TE TOCA: TOCA UNA FICHA':'JUEGA '+G.names[G.turn]):G.msg||'');
   turnmsg.className=turn?'me':'';
   document.getElementById('myscore').textContent=G.remoteMode?(G.rScore||''):(G.mode==='sencillo'?('TÚ '+G.pscores[0]):(G.scores[0]+' – '+G.scores[1]));
 }
@@ -722,7 +775,7 @@ function bindTile(el,tw,gap,x0){
     if(e.pointerId!==pid) return;
     const dx=e.clientX-sx, dy=e.clientY-sy, now=performance.now();
     if(now>lastT){ vy=(e.clientY-lastY)/(now-lastT)*0.6+vy*0.4; lastY=e.clientY; lastT=now; }
-    if(!mode&&Math.hypot(dx,dy)>10){ clearInterval(holdTm); if(charged&&!(dy<0&&Math.abs(dy)>Math.abs(dx))) setLvl(0); mode=Math.abs(dy)>Math.abs(dx)&&dy<0?'throw':'sort'; moved=true; el.classList.add('drag'); }
+    if(!mode&&Math.hypot(dx,dy)>16){ clearInterval(holdTm); if(charged&&!(dy<0&&Math.abs(dy)>Math.abs(dx))) setLvl(0); mode=Math.abs(dy)>Math.abs(dx)&&dy<0?'throw':'sort'; moved=true; el.classList.add('drag'); }
     if(mode==='throw') el.style.transform='translate('+dx*0.3+'px,'+Math.min(0,dy)+'px) rotate('+dx*0.05+'deg)';
     if(mode==='sort'){ el.style.left=(baseLeft+dx)+'px'; }
   });
@@ -747,10 +800,26 @@ function bindTile(el,tw,gap,x0){
       const h=myHand(); const ni=clamp(Math.round((baseLeft+dx-x0)/(tw+gap)),0,h.length-1);
       const t=h.splice(el._i,1)[0]; h.splice(ni,0,t); renderHand(); return;
     }
-    // toque: seleccionar
-    sel=sel&&same(sel,el._t)?null:el._t; renderHand();
+    if(e.type==='pointercancel') return;
+    // toque (o mantener y soltar): la ficha va a la mesa
+    if(!myTurn()){ flashMsg('Espera tu turno'); return; }
+    const o=myOpts(el._t); if(!o.length){ flashMsg('Esa ficha no casa'); return; }
+    const go=side=>{ el.classList.add('fly'); el.style.transform='translate(0,-'+(tilesEl.clientHeight+200)+'px)'; throwTile(el._t,side,lvl?1:0.55,lvl); try{ navigator.vibrate&&navigator.vibrate(18); }catch(_){} };
+    if(o.length>1) askSide(el._t,lvl,go); else go(o[0]);
   };
   el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up);
+}
+// la ficha casa por los dos lados: ¿a cuál número la pones?
+function askSide(t,lvl,go){
+  const ends=G.remoteMode?G.rEnds:G.ends; if(!ends){ go('L'); return; }
+  const box=document.getElementById('sidebox'); const bl=document.getElementById('sideL'), br=document.getElementById('sideR');
+  const same2=ends[0]===ends[1];
+  bl.textContent='A LOS '+ends[0]+(same2?' (IZQUIERDA)':''); br.textContent='A LOS '+ends[1]+(same2?' (DERECHA)':'');
+  document.getElementById('sidelvl').textContent=lvl?('PINGAZO ×'+lvl):'';
+  box.hidden=false;
+  const done=side=>{ box.hidden=true; bl.onclick=br.onclick=document.getElementById('sideX').onclick=null; if(side) go(side); };
+  const t0=performance.now(), ok=()=>performance.now()-t0>400;   // ignora el toque fantasma del mismo dedo
+  bl.onclick=()=>ok()&&done('L'); br.onclick=()=>ok()&&done('R'); document.getElementById('sideX').onclick=()=>ok()&&done(null);
 }
 function flashMsg(m){ turnmsg.textContent=m; setTimeout(()=>renderHand(),1200); }
 function throwTile(t,side,force,slm){
@@ -792,7 +861,7 @@ function broadcast(){
 }
 function stateFor(s){
   const turn=G.turn===s&&G.state==='play';
-  return {t:'state',seat:s,hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?'TE TOCA: DESLIZA UNA FICHA HACIA ARRIBA':'JUEGA '+G.names[G.turn]):G.msg,
+  return {t:'state',seat:s,hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?'TE TOCA: TOCA UNA FICHA':'JUEGA '+G.names[G.turn]):G.msg,
     score:G.mode==='sencillo'?('TÚ '+G.pscores[s]+' · MÁX '+Math.max(...G.pscores)):(s%2===0?G.scores[0]+' – '+G.scores[1]:G.scores[1]+' – '+G.scores[0])};
 }
 // en la tele: llega un móvil
@@ -893,6 +962,9 @@ function becomeSolo(){
 document.getElementById('pmesa').addEventListener('click',()=>{ initAudio(); becomeTable(); });
 document.getElementById('ptab').addEventListener('click',()=>{ initAudio(); isTV=false; document.getElementById('hand').hidden=false; openProfile(); });
 document.getElementById('psolo').addEventListener('click',()=>{ initAudio(); becomeSolo(); });
+const guide=document.getElementById('guide');
+document.getElementById('pguia').addEventListener('click',()=>{ guide.hidden=false; guide.scrollTop=0; document.getElementById('gclose').classList.add('focus'); });
+document.getElementById('gclose').addEventListener('click',()=>{ guide.hidden=true; });
 function updateTvMenu(){
   if(!isTV) return;
   const n=Object.keys(peers).length;
@@ -918,10 +990,11 @@ function menuBtns(){ return [...menu.querySelectorAll('button')].filter(b=>b.off
 function defId(){ return !lobby.hidden?'lplay':!sub.hidden?'mplay':(tvDevice?'pmesa':'ptab'); }
 function menuMove(d){ const b=menuBtns(); if(!b.length) return; if(mFocus<0) mFocus=Math.max(0,b.indexOf(document.getElementById(defId())))-d; mFocus=(mFocus+d+b.length)%b.length; b.forEach((x,i)=>x.classList.toggle('focus',i===mFocus)); try{ b[mFocus].focus(); }catch(_){} }
 function menuOk(){ const b=menuBtns(); (mFocus>=0&&b[mFocus]?b[mFocus]:document.getElementById(defId())).click(); }
-addEventListener('keydown',e=>{ if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){ menuMove(e.key==='ArrowDown'?1:-1); e.preventDefault(); return; }
+addEventListener('keydown',e=>{ if(!guide.hidden){ if(e.key==='ArrowDown'||e.key==='ArrowUp'){ guide.scrollTop+=(e.key==='ArrowDown'?120:-120); e.preventDefault(); } else if(['Enter','NumpadEnter',' ','Escape'].includes(e.key)){ guide.hidden=true; e.preventDefault(); } return; }
+  if(!menu.hidden&&(e.key==='ArrowDown'||e.key==='ArrowUp')){ menuMove(e.key==='ArrowDown'?1:-1); e.preventDefault(); return; }
   if(['Enter','NumpadEnter',' '].includes(e.key)){ if(!menu.hidden){ menuOk(); e.preventDefault(); } else if(G.state==='handover'&&G.timer<260){ nextHandOrMenu(); e.preventDefault(); } } });
-window.kikoKey=(k,down)=>{ if(down&&(k==='a'||k==='start')){ if(!menu.hidden) menuOk(); else if(G.state==='handover'&&G.timer<260) nextHandOrMenu(); } };
-window.kikoBack=()=>{ if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
+window.kikoKey=(k,down)=>{ if(down&&(k==='a'||k==='start')&&!guide.hidden){ guide.hidden=true; return; } if(down&&(k==='a'||k==='start')){ if(!menu.hidden) menuOk(); else if(G.state==='handover'&&G.timer<260) nextHandOrMenu(); } };
+window.kikoBack=()=>{ if(!guide.hidden){ guide.hidden=true; return true; } if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
 function nextHandOrMenu(){ if(G.over){ G.state='menu'; menu.hidden=false; } else dealHand(); }
 cv.addEventListener('pointerdown',()=>{ initAudio(); if(G.state==='handover'&&G.timer<260) nextHandOrMenu(); });
 
