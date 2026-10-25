@@ -70,7 +70,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             if (sm == null) sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (sm == null) return;
             if (linSensor == null) linSensor = pickSensor();
-            if (on && !tiltOn && linSensor != null) { vel = 0; moveDir = 0; lastNs = 0; cool = false; quiet = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); tiltOn = true;
+            if (on && !tiltOn && linSensor != null) { moveDir = 0; lastNs = 0; cool = false; quiet = 0; cnt = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); tiltOn = true;
                 js("window.kikoMoveInfo&&kikoMoveInfo(" + JSONObject.quote((linReal ? "Sensor de movimiento: " : "Acelerometro: ") + linSensor.getName()) + ")");
                 evCount = 0;
                 // si el sensor de movimiento no manda nada, pasar al acelerómetro normal
@@ -92,25 +92,44 @@ public class MainActivity extends Activity implements SensorEventListener {
         js("window.kikoMove&&kikoMove(" + d + ")");
     }
 
+    // detecta el arranque del movimiento (empujón hacia un lado) y el frenazo al pararlo;
+    // resta el empuje fijo que algunos sensores mandan aunque el móvil esté quieto
+    private float base = 0; private boolean baseSet = false, braked = false;
+    private int cnt = 0, ignDir = 0;
+    private float moving = 0, warm = 0, ign = 0;
+
     @Override
     public void onSensorChanged(SensorEvent e) {
         evCount++;
-        float ax = e.values[0];
-        if (!linReal) { grav = grav * 0.92f + ax * 0.08f; ax = ax - grav; }   // quitar la gravedad
-        if (lastNs == 0) { lastNs = e.timestamp; return; }
+        float a = e.values[0];
+        if (!linReal) { grav = grav * 0.92f + a * 0.08f; a = a - grav; }
+        if (lastNs == 0) { lastNs = e.timestamp; baseSet = false; warm = 0.4f; return; }
         float dt = Math.min(0.05f, (e.timestamp - lastNs) / 1e9f); lastNs = e.timestamp;
-        rawMax = Math.max(rawMax * 0.95f, Math.abs(ax));
-        if (Math.abs(ax) < 0.15f) ax = 0;                       // ignorar temblores pequeños
-        quiet = ax == 0 ? quiet + dt : 0;
-        if (cool) { vel = 0; if (quiet >= 0.12f) cool = false; return; }   // esperar a que el móvil se quede quieto
-        vel = vel * 0.97f + ax * dt;                               // velocidad lateral del móvil
-        final float T = 0.045f;
+        final float A = 1.0f; final int K = 3;
+        if (!baseSet) { base = a; baseSet = true; }
+        if (moveDir == 0 && !cool && Math.abs(a - base) < A) base = base * 0.99f + a * 0.01f;
+        float ax = a - base;
+        rawMax = Math.max(rawMax * 0.9f, Math.abs(ax));
         long nowMs = System.currentTimeMillis();
-        if (nowMs - lastDbg > 100) { lastDbg = nowMs; js("window.kikoMoveVal&&kikoMoveVal(" + String.format(java.util.Locale.US, "%.3f,%.2f", vel, rawMax) + ")"); }
+        if (nowMs - lastDbg > 100) { lastDbg = nowMs; js("window.kikoMoveVal&&kikoMoveVal(" + String.format(java.util.Locale.US, "%.2f,%.2f", ax, base) + ")"); }
+        if (warm > 0) { warm -= dt; return; }
+        quiet = Math.abs(ax) < 0.5f ? quiet + dt : 0;
+        if (ign > 0) ign -= dt;
+        if (cool) { if (quiet >= 0.15f) cool = false; return; }
         if (moveDir == 0) {
-            if (vel < -T) sendMove(-1); else if (vel > T) sendMove(1);
-        } else if (moveDir * vel < T * 0.3f || quiet >= 0.3f) {
-            sendMove(0); cool = true; vel = 0;
+            if (ax < -A) cnt = cnt <= 0 ? cnt - 1 : -1;
+            else if (ax > A) cnt = cnt >= 0 ? cnt + 1 : 1;
+            else cnt = 0;
+            int nd = cnt <= -K ? -1 : cnt >= K ? 1 : 0;
+            if (nd != 0 && ign > 0 && nd == ignDir) { cnt = 0; nd = 0; }
+            if (nd != 0) { sendMove(nd); moving = 0; braked = false; cnt = 0; }
+        } else {
+            moving += dt;
+            if (ax * moveDir < -A) braked = true;
+            if ((braked && quiet >= 0.08f) || (!braked && quiet >= 0.9f) || moving > 2.0f) {
+                if (!braked) { ign = 0.8f; ignDir = -moveDir; }
+                sendMove(0); cool = true;
+            }
         }
     }
 
