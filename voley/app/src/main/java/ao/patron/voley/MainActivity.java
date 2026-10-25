@@ -3,6 +3,10 @@ package ao.patron.voley;
 import android.app.Activity;
 import android.app.UiModeManager;
 import android.content.pm.ActivityInfo;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -39,11 +43,42 @@ import org.json.JSONObject;
 
 import androidx.webkit.WebViewAssetLoader;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements SensorEventListener {
     private WebView web;
     private boolean tv;
     private final ArrayList<Integer> devs = new ArrayList<>();
     private final boolean[][] ax = new boolean[2][4];
+
+    // ===== Inclinación con el acelerómetro (lo tienen todos los móviles) =====
+    private SensorManager sm;
+    private boolean tiltOn = false;
+    private float gx = 0, gy = 9.8f, lastSent = 999;
+    private long lastT = 0;
+
+    private void tilt(boolean on) {
+        runOnUiThread(() -> {
+            if (sm == null) sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sm == null) return;
+            Sensor acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            if (on && !tiltOn && acc != null) { sm.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME); tiltOn = true; }
+            else if (!on && tiltOn) { sm.unregisterListener(this); tiltOn = false; }
+        });
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent e) {
+        gx = gx * 0.7f + e.values[0] * 0.3f;   // suavizado
+        gy = gy * 0.7f + e.values[1] * 0.3f;
+        float deg = (float) Math.toDegrees(Math.atan2(-gx, Math.abs(gy) + 0.001f));
+        long now = System.currentTimeMillis();
+        if (now - lastT > 33 && Math.abs(deg - lastSent) > 0.4f) {
+            lastT = now; lastSent = deg;
+            js("window.kikoTilt&&kikoTilt(" + String.format(java.util.Locale.US, "%.1f", deg) + ")");
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor s, int a) { }
 
     // ===== Móvil como mando por Wi-Fi =====
     private static final int TCP = 47800, UDP = 47801;
@@ -226,6 +261,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setPortrait(boolean p) {
             if (tv) return;
+            tilt(p);
             runOnUiThread(() -> setRequestedOrientation(p ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT : ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE));
         }
     }
@@ -334,6 +370,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        if (tiltOn && sm != null) sm.unregisterListener(this);
         js("window.kikoPause&&kikoPause()");
         if (web != null) web.onPause();
         super.onPause();
@@ -343,6 +380,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (web != null) web.onResume();
+        if (tiltOn && sm != null) { Sensor acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); if (acc != null) sm.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME); }
         pantallaCompleta();
     }
 
