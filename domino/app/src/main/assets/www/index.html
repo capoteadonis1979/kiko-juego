@@ -95,7 +95,8 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 .tile{position:absolute;top:0;touch-action:none;transition:left .18s ease, transform .15s ease, opacity .2s;will-change:transform}
 .tile canvas{display:block;width:100%;height:100%;filter:drop-shadow(0 4px 4px rgba(0,0,0,.45))}
 .tile.sel{transform:translateY(-14px)}
-.tile.no{opacity:.45}
+.tile.hint canvas{filter:drop-shadow(0 0 10px #8aff6a) drop-shadow(0 0 4px #8aff6a);animation:hintb .5s infinite alternate}
+@keyframes hintb{from{transform:translateY(0)}to{transform:translateY(-6px)}}
 .tile.drag{transition:none;z-index:5}
 .tile.charge canvas{filter:drop-shadow(0 0 8px #ffd23a) drop-shadow(0 4px 4px rgba(0,0,0,.45));animation:wig .12s infinite alternate}
 .tile.charge2 canvas{filter:drop-shadow(0 0 12px #ff8a1a) drop-shadow(0 0 4px #ff8a1a);animation:wig .08s infinite alternate}
@@ -120,7 +121,7 @@ body.remote #handbar{background:rgba(30,14,4,.55);height:30px}
 #rack{display:none;position:absolute;left:6px;right:6px;bottom:2px;height:26px;border-radius:6px 6px 10px 10px;pointer-events:none;z-index:6;
   background:linear-gradient(#b0713a,#7a4a20 45%,#4a2a10);box-shadow:0 -3px 0 #d8955a inset,0 6px 10px rgba(0,0,0,.5)}
 body.remote #rack{display:block}
-body.remote .tile.no{opacity:1;filter:brightness(.55)}
+
 #prof{position:absolute;inset:0;z-index:25;background:rgba(6,16,10,.94);display:flex;align-items:center;justify-content:center;gap:24px;padding:16px;box-sizing:border-box;flex-wrap:wrap}
 #prof h2{width:100%;text-align:center;margin:0;color:var(--gold);font-size:22px}
 #pphoto{width:120px;height:120px;border-radius:50%;border:4px solid var(--gold);background:#1d3a52 center/cover no-repeat;display:grid;place-items:center;font-size:13px;text-align:center;color:#cfe;flex:none}
@@ -276,7 +277,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v2.8.1';
+const VERSION='v2.9.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -891,7 +892,7 @@ function renderHand(){
     const el=document.createElement('div'); el.className='tile'; el.style.width=tw+'px'; el.style.height=th+'px'; el.style.left=(x0+i*(tw+gap))+'px'; el.style.top=(G.remoteMode?Math.max(2,H-th-14):Math.max(14,(H-th)/2+6))+'px';
     el.appendChild(tileCanvas(t,tw,th)); el._t=t; el._i=i;
     const opts=myOpts(t);
-    if(myTurn()&&!opts.length) el.classList.add('no');
+    if(myTurn()&&opts.length&&performance.now()<hintUntil) el.classList.add('hint');   // solo se iluminan si tocó una que no casa
     if(sel&&same(sel,t)) el.classList.add('sel');
     tilesEl.appendChild(el); bindTile(el,tw,gap,x0);
   });
@@ -927,7 +928,7 @@ function bindTile(el,tw,gap,x0){
         if(o.length>1) askSide(el._t,pw,go); else go(o[0]);
         sel=null; return;
       }
-      el.style.transform=''; if(dy<-50&&!myTurn()) flashMsg('Espera tu turno'); else if(dy<-50) flashMsg('Esa ficha no casa');
+      el.style.transform=''; if(dy<-50&&!myTurn()) flashMsg('Espera tu turno'); else if(dy<-50) noFit();
       return;
     }
     if(mode==='sort'){
@@ -938,7 +939,7 @@ function bindTile(el,tw,gap,x0){
     if(e.type==='pointercancel') return;
     // toque (o mantener y soltar): la ficha va a la mesa
     if(!myTurn()){ flashMsg('Espera tu turno'); return; }
-    const o=myOpts(el._t); if(!o.length){ flashMsg('Esa ficha no casa'); return; }
+    const o=myOpts(el._t); if(!o.length){ noFit(); return; }
     const go=side=>{ el.classList.add('fly'); el.style.transform='translate(0,-'+(tilesEl.clientHeight+200)+'px)'; throwTile(el._t,side,0.45,0); try{ navigator.vibrate&&navigator.vibrate(18); }catch(_){} };
     if(o.length>1) askSide(el._t,0,go); else go(o[0]);
   };
@@ -956,6 +957,9 @@ function askSide(t,lvl,go){
   const t0=performance.now(), ok=()=>performance.now()-t0>400;   // ignora el toque fantasma del mismo dedo
   bl.onclick=()=>ok()&&done('L'); br.onclick=()=>ok()&&done('R'); document.getElementById('sideX').onclick=()=>ok()&&done(null);
 }
+let hintUntil=0;
+// tocó una ficha que no casa: avisar y enseñar un momento las que sí sirven
+function noFit(){ hintUntil=performance.now()+2600; try{ navigator.vibrate&&navigator.vibrate([60,40,60]); }catch(_){} renderHand(); flashMsg('Esa no casa · mira las que brillan'); setTimeout(renderHand,2700); }
 function flashMsg(m){ turnmsg.textContent=m; setTimeout(()=>renderHand(),1200); }
 function throwTile(t,side,force,slm){
   if(G.remoteMode){ netSend({t:'play',tile:t,side,force,pw:slm}); G.rTurn=false; const h=G.rHand; const i=h.findIndex(x=>same(x,t)); if(i>=0) h.splice(i,1); setTimeout(renderHand,380); return; }
