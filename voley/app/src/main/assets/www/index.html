@@ -34,6 +34,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 [hidden]{display:none!important}
 #pad{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;padding:max(10px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;gap:10px;font:11px var(--pix);color:var(--fg)}
 #padtop{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#padpair{background:#2f7fe0!important;border-color:#1c4c94!important}
 #padtop button{font:10px var(--pix);background:var(--btn);color:var(--fg);border:2px solid #2c4c66;border-radius:10px;padding:10px 12px}
 #padst{flex:1;min-width:0;line-height:1.6}
 #padst.ok{color:#8aff6a} #padst.err{color:#ff9a8a}
@@ -62,7 +63,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
   <button id="pz" hidden aria-label="Pausa">II</button>
 </div>
 <div id="pad" hidden>
-  <div id="padtop"><button id="padexit">SALIR</button><span id="padst">Buscando la tele...</span><div class="padman" hidden><input id="padip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Direccion de la tele"><button id="padgo">CONECTAR</button></div></div>
+  <div id="padtop"><button id="padexit">SALIR</button><button id="padpair">EMPAREJAR</button><span id="padst">Buscando la tele...</span><div class="padman" hidden><input id="padip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Direccion de la tele"><button id="padgo">CONECTAR</button></div></div>
   <div id="padmain">
     <div id="cross"><div data-k="up" class="pk u">&#9650;</div><div data-k="left" class="pk l">&#9664;</div><div data-k="right" class="pk r">&#9654;</div><div data-k="down" class="pk d">&#9660;</div></div>
     <div data-k="start" class="pk st">START</div>
@@ -71,7 +72,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.9.0';
+const VERSION='v1.9.1';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.14;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -175,7 +176,7 @@ const isTouch=!isTV&&((window.matchMedia&&matchMedia('(pointer:coarse)').matches
 const ptr=new Map();
 const inApp=!!window.KikoApp;
 let padOpen=false;
-window.kikoNet=(n,ip)=>{ G.net=n; G.ip=ip||''; };
+window.kikoNet=(n,ip)=>{ if(n>(G.net||0)){ G.pairT=150; try{ S.select(); }catch(_){} } G.net=n; G.ip=ip||''; };
 function zoneAt(x,y){
   const d=dpad.getBoundingClientRect();
   if(x>=d.left-12&&x<=d.right+12&&y>=d.top-24&&y<=d.bottom+24) return x<d.left+d.width/2?'left':'right';
@@ -684,7 +685,7 @@ function drawMenu(){
   txt('VOLEY BOLAS',VW/2,42,'#ffffff','center',24);
   txt('UNO CONTRA UNO EN LA PLAYA',VW/2,78,'#5a2c08','center',8);
   const rows=[['MODO',G.mode===1?'1 JUGADOR':'2 JUGADORES'],['IZQUIERDA',COUNTRY[G.flag[0]].name],[G.mode===1?'MAQUINA':'DERECHA',COUNTRY[G.flag[1]].name],['','JUGAR']];
-  if(canPad) rows.push(['','USAR ESTE MOVIL COMO MANDO']);
+  if(canPad) rows.push(['','EMPAREJAR CON LA TELE (MANDO)']);
   rows.forEach(([a,b],i)=>{ const y=124+i*22, on=G.sel===i; R(VW/2-160,y-6,320,20,on?'rgba(6,18,28,0.88)':'rgba(6,18,28,0.5)');
     if(i>=3){ txt(on?'> '+b+' <':b,VW/2,y,on?'#ffe070':'#ffffff','center',8); return; }
     txt(a,VW/2-150,y,'#9ccaff','left',8);
@@ -706,6 +707,7 @@ function drawOver(){
 function draw(){
   ctx.setTransform(SC,0,0,SC,0,0);
   if(G.state==='menu') drawMenu(); else if(G.state==='over') drawOver(); else drawGame();
+  if(G.pairT>0){ G.pairT--; const ty2=G.state==='menu'?2:38; R(VW/2-110,ty2,220,22,'rgba(20,90,40,0.94)'); txt('MANDO EMPAREJADO ('+G.net+')',VW/2,ty2+7,'#ffffff','center',8); }
   txt(VERSION,VW-4,VH-12,'rgba(255,255,255,0.8)','right',8);
 }
 
@@ -730,6 +732,7 @@ document.querySelectorAll('#pad [data-k]').forEach(el=>{
   el.addEventListener('pointerdown',down); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('lostpointercapture',up);
 });
 document.getElementById('padexit').addEventListener('click',closePad);
+document.getElementById('padpair').addEventListener('click',()=>{ padSt.textContent='Buscando la tele en tu Wi-Fi...'; padSt.className=''; padIp.parentNode.hidden=true; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('padgo').addEventListener('click',()=>{ const ip=padIp.value.trim(); if(!ip) return; padSt.textContent='Conectando a '+ip+'...'; padSt.className=''; try{ KikoApp.ctrlStart(ip); }catch(_){} });
 const kb0=window.kikoBack; window.kikoBack=()=>{ if(padOpen){ closePad(); return true; } return kb0(); };
 
