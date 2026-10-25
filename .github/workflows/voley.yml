@@ -1,0 +1,60 @@
+name: Compilar Voley Bolas
+
+on:
+  push:
+    branches: [main]
+    paths: ['voley/**', '.github/workflows/voley.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Instalar SDK Android 36
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > voley/local.properties
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Llave de firma
+        run: cp keystore/release.jks voley/app/release.jks
+
+      - name: Compilar Voley Bolas firmado
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle -p voley :app:assembleRelease --stacktrace
+
+      - name: Renombrar
+        run: |
+          mkdir -p salida
+          cp voley/app/build/outputs/apk/release/app-release.apk salida/VoleyBolas.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voley
+          path: salida/*
+
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: voley
+          name: Voley Bolas
+          body: |
+            Voley Bolas: voley de bolitas en la playa, uno contra uno, contra la máquina o 2 jugadores.
+            Para tele Android (TCL/Google TV) y móvil. Descarga VoleyBolas.apk e instálalo.
+          files: salida/*
+          make_latest: false

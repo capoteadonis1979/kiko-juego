@@ -3,6 +3,7 @@ name: Compilar APK
 on:
   push:
     branches: [main]
+    paths-ignore: ['voley/**', '.github/workflows/voley.yml']
   workflow_dispatch:
 
 permissions:
