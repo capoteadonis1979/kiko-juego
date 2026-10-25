@@ -39,6 +39,10 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 #tiltbar .tz{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:var(--btn);border:2px solid #2c4c66;font-size:24px;flex:none}
 #tiltbar .tz.on{background:#2fbf71;border-color:#1a7a44}
 #tilthint{flex:1;text-align:center;font:700 13px var(--pix);line-height:1.3}
+#mv{display:flex;flex-direction:column;gap:6px}
+#mvbar{height:12px;border-radius:6px;background:#1d3a52;position:relative;overflow:visible}
+#mvdot{position:absolute;top:-6px;left:50%;width:24px;height:24px;margin-left:-12px;border-radius:50%;background:#ffe070;box-shadow:0 0 0 3px #7a3a00;transition:left .08s linear}
+#mvinfo{font:600 11px var(--pix);color:#9ccaff}
 #tap{flex:1;min-height:120px;border-radius:24px;background:var(--a);border:3px solid #8a2418;display:grid;place-items:center;font:700 22px var(--pix);color:#fff;text-align:center;touch-action:none;user-select:none}
 #tap.on{filter:brightness(1.3)}
 #tiltbtns{display:flex;gap:10px;align-items:center;justify-content:space-between}
@@ -77,6 +81,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
   <div id="padtop"><button id="padexit">SALIR</button><button id="padpair">EMPAREJAR</button><button id="padmode">BOTONES</button><span id="padst">Buscando la tele...</span><div class="padman" hidden><input id="padip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Direccion de la tele"><button id="padgo">CONECTAR</button></div></div>
   <div id="tilt">
     <div id="tiltbar"><div class="tz" id="tzl">&#9664;</div><div id="tilthint">DESLIZA EL MOVIL A LOS LADOS</div><div class="tz" id="tzr">&#9654;</div></div>
+    <div id="mv"><div id="mvbar"><i id="mvdot"></i></div><span id="mvinfo">Esperando el sensor...</span></div>
     <div id="tap" data-k="a">TOCA PARA SALTAR</div>
     <div id="tiltbtns"><div data-k="up" class="pk">&#9650;</div><div data-k="down" class="pk">&#9660;</div><div data-k="start" class="pk">START</div></div>
   </div>
@@ -88,7 +93,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.13.0';
+const VERSION='v1.13.1';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -798,6 +803,9 @@ function setDir(d){
 }
 // la app avisa cuando el móvil se desliza a un lado (-1 izquierda, 1 derecha, 0 quieto)
 window.kikoMove=(d)=>{ if(padOpen&&tiltOn) setDir(d); };
+const mvdot=document.getElementById('mvdot'), mvinfo=document.getElementById('mvinfo');
+window.kikoMoveInfo=(t)=>{ mvinfo.textContent=t; };
+window.kikoMoveVal=(v,mx)=>{ mvdot.style.left=(50+clamp(v/0.3,-1,1)*48)+'%'; };
 function setTilt(on){
   tiltOn=on; setDir(0);
   document.getElementById('tilt').hidden=!on; document.getElementById('padmain').hidden=on;

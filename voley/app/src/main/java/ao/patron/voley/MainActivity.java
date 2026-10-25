@@ -56,7 +56,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float grav = 0, vel = 0;
     private int moveDir = 0;
     private long lastNs = 0;
-    private float quiet = 0; private boolean cool = false;
+    private float quiet = 0, rawMax = 0; private boolean cool = false; private long lastDbg = 0;
 
     private Sensor pickSensor() {
         Sensor l = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -69,7 +69,9 @@ public class MainActivity extends Activity implements SensorEventListener {
             if (sm == null) sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (sm == null) return;
             if (linSensor == null) linSensor = pickSensor();
-            if (on && !tiltOn && linSensor != null) { vel = 0; moveDir = 0; lastNs = 0; cool = false; quiet = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); tiltOn = true; }
+            if (on && !tiltOn && linSensor != null) { vel = 0; moveDir = 0; lastNs = 0; cool = false; quiet = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); tiltOn = true;
+                js("window.kikoMoveInfo&&kikoMoveInfo(" + JSONObject.quote((linReal ? "Sensor de movimiento: " : "Acelerometro: ") + linSensor.getName()) + ")"); }
+            else if (on && linSensor == null) js("window.kikoMoveInfo&&kikoMoveInfo('Este movil no tiene sensor de movimiento')");
             else if (!on && tiltOn) { sm.unregisterListener(this); tiltOn = false; sendMove(0); }
         });
     }
@@ -86,14 +88,17 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (!linReal) { grav = grav * 0.92f + ax * 0.08f; ax = ax - grav; }   // quitar la gravedad
         if (lastNs == 0) { lastNs = e.timestamp; return; }
         float dt = Math.min(0.05f, (e.timestamp - lastNs) / 1e9f); lastNs = e.timestamp;
-        if (Math.abs(ax) < 0.25f) ax = 0;                       // ignorar temblores pequeños
+        rawMax = Math.max(rawMax * 0.95f, Math.abs(ax));
+        if (Math.abs(ax) < 0.15f) ax = 0;                       // ignorar temblores pequeños
         quiet = ax == 0 ? quiet + dt : 0;
         if (cool) { vel = 0; if (quiet >= 0.12f) cool = false; return; }   // esperar a que el móvil se quede quieto
         vel = vel * 0.97f + ax * dt;                               // velocidad lateral del móvil
-        final float T = 0.08f;
+        final float T = 0.045f;
+        long nowMs = System.currentTimeMillis();
+        if (nowMs - lastDbg > 100) { lastDbg = nowMs; js("window.kikoMoveVal&&kikoMoveVal(" + String.format(java.util.Locale.US, "%.3f,%.2f", vel, rawMax) + ")"); }
         if (moveDir == 0) {
             if (vel < -T) sendMove(-1); else if (vel > T) sendMove(1);
-        } else if (moveDir * vel < T * 0.3f || quiet >= 0.25f) {
+        } else if (moveDir * vel < T * 0.3f || quiet >= 0.3f) {
             sendMove(0); cool = true; vel = 0;
         }
     }
