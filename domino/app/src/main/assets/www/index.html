@@ -365,6 +365,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
   <button id="prest">REINICIAR PARTIDA<small>Mismos jugadores · marcador a cero</small></button>
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o modo</small></button>
   <div class="prow"><button id="pmus">MÚSICA: SÍ</button><button id="psnd">SONIDO: SÍ</button></div>
+  <button id="pcan">♪ CANCIÓN ▶</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano → JUGADOR → <b>ESCANEAR QR</b><br>y ocupa el sitio de una máquina.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
 <div id="bnames" class="ov" hidden><div class="ovbox"><h2>NOMBRES DE LAS MÁQUINAS</h2><p>Escribe el nombre de cada máquina (déjalo vacío para "MÁQUINA").</p><div id="bnrows"></div><div class="row"><button id="bnok" class="main">GUARDAR</button><button id="bnno">CANCELAR</button></div></div></div>
@@ -2680,7 +2681,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.6.4';
+const VERSION='v3.6.5';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2764,8 +2765,22 @@ function musStepPlay(t,st){
   if(s16===12) mPluck(t,mNote(nx[0]-24),0.5,0.5,'triangle');
   const k=MONT.indexOf(s16); if(k>=0){ const n=ch[k%3]+(k>3?12:0); mPluck(t,mNote(n+12),0.16,0.08); mPluck(t,mNote(n+24),0.12,0.05,'triangle'); }   // montuno
 }
+/* canciones cubanas de verdad (Suno): suenan por internet; sin internet, sigue el son de la casa */
+const SONGS=[['Pega la ficha, compay','bf9d5828-340a-40a3-a141-4fb00bd028e2'],['Tinajón de mi tierra','a876a9f3-9b6e-4082-be99-21b486f73146'],['Río Yayabo','ce79c4a5-bdea-4e9a-bb90-b62d5e9d1c41'],['Habana de mi Malecón','fa8a2160-026c-4270-9def-4a2396b63c36'],['Cubano en Angola','03289ba7-7a0a-4545-986a-f00e564ae19a']];
+let songIdx=0; try{ songIdx=(parseInt(localStorage.getItem('dominoCancion'))||0)%SONGS.length; }catch(_){}
+let songEl=null, songOK=true, songErr=0, songRetry=0;
+function songWant(){ return MUS&&!G.remoteMode&&!document.hidden&&songOK; }
+function songLoad(){ if(!songEl){ songEl=new Audio(); songEl.volume=0.55; songEl.preload='auto';
+    songEl.addEventListener('ended',()=>songNext(1));
+    songEl.addEventListener('playing',()=>{ songErr=0; });
+    songEl.addEventListener('error',()=>{ if(++songErr>=SONGS.length){ songOK=false; songRetry=Date.now()+90000; } else songNext(1); }); }
+  songEl.src='https://d2lwuy8qc234o3.cloudfront.net/1/clip/'+SONGS[songIdx][1]+'.m4a'; }
+function songNext(d){ songIdx=(songIdx+(d||1)+SONGS.length)%SONGS.length; try{ localStorage.setItem('dominoCancion',songIdx); }catch(_){} if(songEl){ songLoad(); if(songWant()) songEl.play().catch(()=>{}); } musLabel(); broadcast(); }
+function songTick(){ if(!songOK&&Date.now()>songRetry){ songOK=true; songErr=0; }
+  if(songWant()){ if(!songEl) songLoad(); if(songEl.paused) songEl.play().catch(()=>{}); } else if(songEl&&!songEl.paused) songEl.pause(); }
+setInterval(()=>{ try{ songTick(); }catch(_){} },700);
 function musTick(){
-  if(!AC||!MUS||G.remoteMode||document.hidden||AC.state!=='running'){ musNext=0; return; }
+  if(!AC||!MUS||G.remoteMode||document.hidden||AC.state!=='running'||(songOK&&songEl&&!songEl.paused&&!songEl.error)){ musNext=0; return; }
   if(!musG){ musG=AC.createGain(); musG.gain.value=0.3; musG.connect(AC.destination); }
   const now=AC.currentTime; if(musNext<now) musNext=now+0.05;
   while(musNext<now+0.3){ musStepPlay(musNext,musStep); musStep=(musStep+1)%64; musNext+=M16; }
@@ -3806,7 +3821,7 @@ function renderSeatBox(L,me){
 }
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
 function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
@@ -3824,10 +3839,11 @@ document.getElementById('pcont').addEventListener('click',()=>pauseChoose('cont'
 document.getElementById('prest').addEventListener('click',()=>pauseChoose('restart'));
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
 document.getElementById('bmesa').addEventListener('click',()=>openPause());
-function musLabel(){ const m=G.remoteMode?G.rMus!==false:MUS, n=G.remoteMode?G.rSnd!==false:SND; document.getElementById('pmus').textContent='MÚSICA: '+(m?'SÍ':'NO'); document.getElementById('psnd').textContent='SONIDO: '+(n?'SÍ':'NO'); }
+function musLabel(){ const m=G.remoteMode?G.rMus!==false:MUS, n=G.remoteMode?G.rSnd!==false:SND; document.getElementById('pmus').textContent='MÚSICA: '+(m?'SÍ':'NO'); document.getElementById('psnd').textContent='SONIDO: '+(n?'SÍ':'NO'); document.getElementById('pcan').textContent='♪ '+(G.remoteMode?(G.rSong||'CANCIÓN'):SONGS[songIdx][0])+'  ▶'; }
 function setMus(v){ MUS=v; try{ localStorage.setItem('dominoMusica',MUS?'1':'0'); }catch(_){} musLabel(); broadcast(); }
 function setSnd(v){ SND=v; try{ localStorage.setItem('dominoSonido',SND?'1':'0'); }catch(_){} applySnd(); musLabel(); broadcast(); }
 document.getElementById('pmus').addEventListener('click',()=>{ if(G.remoteMode){ G.rMus=!(G.rMus!==false); musLabel(); netSend({t:'ctl',a:'mus',v:G.rMus}); } else setMus(!MUS); });
+document.getElementById('pcan').addEventListener('click',()=>{ if(G.remoteMode) netSend({t:'ctl',a:'song'}); else { if(!MUS) setMus(true); songNext(1); } });
 document.getElementById('psnd').addEventListener('click',()=>{ if(G.remoteMode){ G.rSnd=!(G.rSnd!==false); musLabel(); netSend({t:'ctl',a:'snd',v:G.rSnd}); } else setSnd(!SND); });
 setInterval(()=>{ document.getElementById('bmesa').hidden=!(menu.hidden&&!G.remoteMode&&(G.state==='play'||G.state==='handover')&&pauseEl.hidden); },300);
 // desde el cel: el mismo menú, que lo hace la mesa
@@ -3854,7 +3870,7 @@ function broadcast(){
 function stateFor(s){
   const turn=G.turn===s&&G.state==='play';
   const must=G.state==='play'&&G.turn===s&&!G.fly&&!(G.passT>0)&&!playable(s).length;
-  return {t:'state',seat:s,join:!!(G.joinWait&&G.joinWait[s]===true),mus:MUS,snd:SND,must,over:!!G.over,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
+  return {t:'state',seat:s,join:!!(G.joinWait&&G.joinWait[s]===true),mus:MUS,snd:SND,song:SONGS[songIdx][0],must,over:!!G.over,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
     score:G.mode==='sencillo'?('TÚ '+G.pscores[s]+' · MÁX '+Math.max(...G.pscores)):(s%2===0?G.scores[0]+' – '+G.scores[1]:G.scores[1]+' – '+G.scores[0])};
 }
 // en la tele: llega un móvil
@@ -3880,7 +3896,7 @@ window.kikoMsg=(id,line)=>{
   if(G.joinWait&&G.joinWait[seat]&&(o.t==='play'||o.t==='pass')) return;
   if(o.t==='exp'){ expShow(seat,o.k?1:0); return; }
   if(o.t==='pass'){ doPass(seat,o.n|0,o.st); return; }
-  if(o.t==='ctl'){ if(o.a==='mus'){ setMus(!!o.v); return; } if(o.a==='snd'){ setSnd(!!o.v); return; } if(o.a==='pause'){ G.paused=true; G.pausedBy=seat; say(G.names[seat]+' PUSO PAUSA',99999); return; } if(o.a==='resume'){ if(pauseEl.hidden){ G.paused=false; } G.msgT=0; return; }
+  if(o.t==='ctl'){ if(o.a==='song'){ if(!MUS) setMus(true); songNext(1); return; } if(o.a==='mus'){ setMus(!!o.v); return; } if(o.a==='snd'){ setSnd(!!o.v); return; } if(o.a==='pause'){ G.paused=true; G.pausedBy=seat; say(G.names[seat]+' PUSO PAUSA',99999); return; } if(o.a==='resume'){ if(pauseEl.hidden){ G.paused=false; } G.msgT=0; return; }
     if(o.a==='restart'||o.a==='new') gameAction(o.a); else if(o.a==='next'&&G.state==='handover'&&G.cnt&&G.cnt.done) nextHandOrMenu(); return; }
   if(o.t==='seat'){ if(G.state==='menu'&&isTV){ const to=o.s|0, from=peers[id]; if(to>=0&&to<4&&to!==from&&isAct(to)) swapSeats(from,to); } return; }
   if(o.t==='say'){ if((o.type==='f'||o.type==='c')&&Number.isInteger(o.i)) sayShow(seat,o.type,o.i); return; }
@@ -3899,7 +3915,7 @@ window.kikoFromTV=(line)=>{
     if(o.lib){ G.rLib=o.lib; if(!libEl.hidden) renderLibreta(); }
     if(o.hand&&G.rHand&&o.hand.length===10&&G.rHand.length<10) libEl.hidden=true;
     G.rMust=!!o.must; G.rOver=!!o.over; setTimeout(checkPassBox,0);
-    document.getElementById('joinbox').hidden=!o.join; G.rMus=o.mus!==false; G.rSnd=o.snd!==false;
+    document.getElementById('joinbox').hidden=!o.join; G.rMus=o.mus!==false; G.rSnd=o.snd!==false; if(o.song&&o.song!==G.rSong){ G.rSong=o.song; if(!pauseEl.hidden) musLabel(); }
     if(o.lobby&&G.remoteMode){ renderSeatBox(o.lobby,o.seat); seatbox.hidden=false; } else seatbox.hidden=true;
     if(o.cntDone&&!G.rCntDone) setTimeout(()=>openLibreta(true),400); G.rCntDone=!!o.cntDone;
     G.rEnergy=+o.energy||0; G.rEnds=o.ends; G.rTurn=o.turn; G.rMsg=o.msg; G.rScore=o.score;
