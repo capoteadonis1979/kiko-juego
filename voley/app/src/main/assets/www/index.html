@@ -101,7 +101,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.16.1';
+const VERSION='v1.17.0';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -724,6 +724,7 @@ function drawGame(){
   if(G.state==='point'){ R(0,58,VW,24,'rgba(6,18,28,0.6)'); txt(G.msg,VW/2,66,'#ffffff','center',8); }
   if(G.paused){ R(0,0,VW,VH,'rgba(0,0,0,0.55)'); txt('PAUSA',VW/2,120,'#fff','center',16); }
 }
+const QRIMG=new Image(); QRIMG.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AQAAAAAVtjufAAABxElEQVR4nNWYMa4sNwwES4ufN2+w9z/W3qB1gnIw68Dwg4NvBraSARjUaFotsjFHflr39WMZ/nv1c86cy7nD5cxwzplFfpS+j3wmI5fo6nedAZw3Hy4fhjPbus0dPm+OM+2/4Px9/fo+PxPgXplVPkaTJpYYajTd4h8P5C+lC/ns7V81NYixUXVt/y+GOcy90OHQcw57/kfRxpg2kMKi/i+OnPc99/IGZMzd9A+1tS00lMii/r8gd7zj9YLHuf4G5x/0T2rbgkY03dMflZjURGkbssmvNERSU0i76B8UQ+ARqKbt3vkitC2V2sf/q/oQkhJM06R0lf80UCEm0eCqf6DJ41OI6rL+UtOotQSy658mJpIANbirP5FIQ+O2/493nvn1YcJnOl6ylt+wtiCmleeybfZ/7kykp+E00O7mKyKQzk245+b+JufHJSU0j0qtZXO+YxIpaRsM6bL/KW0KbUKeibPJR6kUTG035y8S4+PTpN93rs5HjQmxaXii0Gb/JCk18OcZbPKjqai0PvlnlU+SoE2psKx/SL7CU74GWub7vblPiNjszy+wEIZLM1Mui/n2xT2H+UwG3rTAm67xz//8/8Afq62flkNp8fgAAAAASUVORK5CYII=';
 function drawMenu(){
   if(!bgCanvas||bgCanvas.sc!==SC) buildBG();
   ctx.drawImage(bgCanvas,0,0,VW,VH); drawNet();
@@ -740,6 +741,8 @@ function drawMenu(){
   const ty=canPad?236:214;
   txt(isTouch?'B BAJA   FLECHAS CAMBIAN   A ELIGE  (O TOCA LA FILA)':'ARRIBA/ABAJO O B ELIGE   IZQ/DER CAMBIA   A JUGAR',VW/2,ty,'#ffffff','center',6);
   txt('SALTA CON A - MAXIMO 3 TOQUES - GANA EL PRIMERO A 15',VW/2,ty+11,'#ffffff','center',6);
+  if(inApp&&!canPad&&QRIMG.complete){ R(6,124,70,96,'rgba(6,18,28,0.85)'); ctx.imageSmoothingEnabled=false; ctx.drawImage(QRIMG,10,128,62,62); ctx.imageSmoothingEnabled=true;
+    txt('ESCANEA Y BAJA',41,195,'#ffe070','center',5); txt('EL MANDO EN',41,203,'#ffffff','center',5); txt('TU MOVIL',41,211,'#ffffff','center',5); }
   if(inApp&&!canPad){ R(VW/2-200,238,400,14,'rgba(6,18,28,0.7)');
     txt(G.net>0?('MOVILES CONECTADOS COMO MANDO: '+G.net):('MANDO CON EL MOVIL - DIRECCION DE ESTA TELE: '+(G.ip||'...')),VW/2,242,G.net>0?'#8aff6a':'#ffffff','center',6); }
 }
