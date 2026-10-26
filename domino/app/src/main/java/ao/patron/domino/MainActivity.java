@@ -160,7 +160,23 @@ public class MainActivity extends Activity {
         notifyNet();
     }
 
-    private void notifyNet() { js("window.kikoNet&&kikoNet(" + clients.size() + ",'" + myIp() + "')"); }
+    private void notifyNet() { js("window.kikoNet&&kikoNet(" + clients.size() + ",'" + myIp() + "','" + allIps() + "')"); }
+
+    // todas las direcciones de este aparato en la red local (para el QR de conectar)
+    private String allIps() {
+        StringBuilder sb = new StringBuilder(myIp());
+        try {
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!ni.isUp() || ni.isLoopback()) continue;
+                for (InetAddress a : Collections.list(ni.getInetAddresses())) {
+                    if (!(a instanceof Inet4Address) || !a.isSiteLocalAddress()) continue;
+                    String h = a.getHostAddress();
+                    if (sb.indexOf(h) < 0) { if (sb.length() > 0) sb.append(','); sb.append(h); }
+                }
+            }
+        } catch (Exception ignored) { }
+        return sb.toString();
+    }
 
     private String myIp() {
         String best = "", any = "";
@@ -265,9 +281,16 @@ public class MainActivity extends Activity {
                     }
                     if (gen != ctrlGen) return;
                     if (ip.isEmpty()) throw new Exception("sin tele");
-                    ctrlStatus("Conectando a " + ip + "...");
-                    Socket s2 = new Socket();
-                    s2.connect(new InetSocketAddress(ip, TCP), 5000);
+                    Socket s2 = null;
+                    for (String one : ip.split(",")) {          // el QR puede traer varias direcciones: se prueba cada una
+                        one = one.trim(); if (one.isEmpty()) continue;
+                        ctrlStatus("Conectando a " + one + "...");
+                        Socket t = new Socket();
+                        try { t.connect(new InetSocketAddress(one, TCP), 4000); s2 = t; ip = one; break; }
+                        catch (Exception x) { try { t.close(); } catch (Exception ignored) { } }
+                        if (gen != ctrlGen) return;
+                    }
+                    if (s2 == null) throw new Exception("no conecta");
                     s2.setTcpNoDelay(true);
                     if (gen != ctrlGen) { s2.close(); return; }
                     ctrl = s2; ctrlOut = s2.getOutputStream();
@@ -279,7 +302,7 @@ public class MainActivity extends Activity {
                     } catch (Exception ignored) { }
                     if (gen == ctrlGen) ctrlStatus("ERR:Se perdió la conexión con la tele. Pulsa EMPAREJAR.");
                 } catch (Exception e) {
-                    if (gen == ctrlGen) ctrlStatus("ERR:No encuentro la mesa. Abre Dominó Cubano en la tele o tablet y elige MESA, usa la misma Wi-Fi o escribe la dirección que sale en la mesa.");
+                    if (gen == ctrlGen) ctrlStatus("ERR:No encuentro la mesa. La mesa y este cel tienen que estar en la MISMA red Wi-Fi. Toca ESCANEAR QR y apunta al QR CONECTAR A LA MESA.");
                 } finally { if (lock != null) try { lock.release(); } catch (Exception ignored) { } }
             }).start();
         }
@@ -293,6 +316,21 @@ public class MainActivity extends Activity {
                 if (o == null) return;
                 try { o.write(data); o.flush(); }
                 catch (Exception e) { ctrlOut = null; ctrlStatus("ERR:Se perdió la conexión con la tele. Pulsa EMPAREJAR."); }
+            });
+        }
+
+        // escáner de QR (el de Google, sin pedir permiso de cámara)
+        @JavascriptInterface
+        public void scanQR() {
+            runOnUiThread(() -> {
+                try {
+                    com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions o = new com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(com.google.mlkit.vision.barcode.common.Barcode.FORMAT_QR_CODE).build();
+                    com.google.mlkit.vision.codescanner.GmsBarcodeScanning.getClient(MainActivity.this, o).startScan()
+                            .addOnSuccessListener(bc -> js("window.kikoQR&&kikoQR(" + JSONObject.quote(bc.getRawValue() == null ? "" : bc.getRawValue()) + ")"))
+                            .addOnCanceledListener(() -> js("window.kikoQR&&kikoQR('')"))
+                            .addOnFailureListener(e -> js("window.kikoQR&&kikoQR('ERR')"));
+                } catch (Throwable e) { js("window.kikoQR&&kikoQR('ERR')"); }
             });
         }
 
@@ -324,11 +362,25 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setPortrait(boolean p) {
             if (tv) return;
-            runOnUiThread(() -> setRequestedOrientation(p ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT : ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE));
+            runOnUiThread(() -> { setRequestedOrientation(p ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT : ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE); pantallaCompleta(); web.postDelayed(MainActivity.this::pantallaCompleta, 600); });
         }
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration c) { super.onConfigurationChanged(c); pantallaCompleta(); if (web != null) web.postDelayed(this::pantallaCompleta, 500); }
+
+    // pantalla completa: sin barra de notificaciones arriba ni botones abajo (también en Android 11 o más nuevo)
     private void pantallaCompleta() {
+        if (Build.VERSION.SDK_INT >= 30) {
+            try {
+                getWindow().setDecorFitsSystemWindows(false);
+                android.view.WindowInsetsController ic = getWindow().getInsetsController();
+                if (ic != null) {
+                    ic.hide(android.view.WindowInsets.Type.statusBars() | android.view.WindowInsets.Type.navigationBars());
+                    ic.setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                }
+            } catch (Exception ignored) { }
+        }
         View d = getWindow().getDecorView();
         d.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
