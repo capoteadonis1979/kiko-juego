@@ -2680,7 +2680,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.6.3';
+const VERSION='v3.6.4';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3085,7 +3085,7 @@ function passDur(f){ const st=f.st||'toque'; return st==='palma'?32:st==='senala
 function drawFist(){
   const f=G.fist; if(!f) return; if(!PI_.fist||!PI_.palm||!PI_.point) return drawFistV();
   const st=f.st||'toque', t=G.frame-f.t, hitEnd=passDur(f), dur=hitEnd+14; if(t>dur){ G.fist=null; return; }
-  const E=[{x:VW/2+70,y:VH+40},{x:VW+40,y:VH/2+50},{x:VW/2-70,y:-40},{x:-40,y:VH/2-50}][f.seat];
+  const E=seatE(f.seat);
   const T=f.tg||{x:VW/2,y:VH/2}, dx=T.x-E.x, dy=T.y-E.y, dl=Math.hypot(dx,dy), ux=dx/dl, uy=dy/dl, ang=Math.atan2(uy,ux), rot0=ang+Math.PI/2;
   let k; if(t<10) k=1-Math.pow(1-t/10,3); else if(t<=hitEnd) k=1; else k=1-Math.pow((t-hitEnd)/14,2);
   const at=(e,kk)=>({x:e.x+(T.x-e.x)*kk,y:e.y+(T.y-e.y)*kk});
@@ -3337,17 +3337,23 @@ function doPass(seat,n,st){
   if(G.passes>=ACT().length){ G.passT=99999; setTimeout(()=>{ if(G.state==='play') endHand(-1,true); },ms); broadcast(); return true; }
   G.passT=Math.round(ms/16.7); broadcast(); return true;
 }
+// el brazo sale por la derecha de las fichas del jugador (la mano derecha), nunca por encima de ellas
+function seatE(seat){ const sp=seatPos(seat), cx=VW/2-sp.x, cy=VH/2-sp.y, cl=Math.hypot(cx,cy), vx=cx/cl, vy=cy/cl, off=seat%2===0?150:115;
+  return {x:sp.x-vx*90-vy*off, y:sp.y-vy*90+vx*off}; }
+function rackRect(s){ const n=Math.max(1,(G.hands[s]||[]).length);
+  if(s%2===0){ const h=n*11+14; return s===0?[VW/2-h,VH-62,VW/2+h,VH+60]:[VW/2-h,-60,VW/2+h,62]; }
+  const h=n*8+14; return s===1?[VW-62,VH/2-h,VW+60,VH/2+h]:[-60,VH/2-h,62,VH/2+h]; }
 // sitio limpio (sin fichas) donde baja el puño, lo más cerca posible del jugador
 function fistTarget(seat){
-  const E=[{x:VW/2+70,y:VH+40},{x:VW+40,y:VH/2+50},{x:VW/2-70,y:-40},{x:-40,y:VH/2-50}][seat];
-  const dx=VW/2-E.x, dy=VH/2-E.y, dl=Math.hypot(dx,dy), ux=dx/dl, uy=dy/dl;
+  const E=seatE(seat), sp=seatPos(seat);
+  const dx=VW/2-sp.x, dy=VH/2-sp.y, dl=Math.hypot(dx,dy), ux=dx/dl, uy=dy/dl;   // entra derecho hacia la mesa, al lado de sus fichas
   const L=layoutChain(), ox=VW/2, oy=VH/2-6, R=[];
   L.forEach(p=>{ if(!p) return; const hor=Math.abs(Math.cos(p.ang))>0.5, a=hor?TL:TW, b=hor?TW:TL; R.push([ox+p.x-a/2,oy+p.y-b/2,ox+p.x+a/2,oy+p.y+b/2]); });
   // botella y cenicero: la mano no cae encima ni el brazo pasa por arriba
-  const P=[[40,385,215,505],[730,415,925,505]];
-  const free=(x,y)=>{ const q=[x-40,y-40,x+40,y+40]; return !R.concat(P).some(t=>q[0]<t[2]&&q[2]>t[0]&&q[1]<t[3]&&q[3]>t[1]); };
-  const armOK=(x,y)=>{ for(let k=0.1;k<=1;k+=0.05){ const px=E.x+(x-E.x)*k, py=E.y+(y-E.y)*k; if(P.some(t=>px>t[0]-18&&px<t[2]+18&&py>t[1]-18&&py<t[3]+18)) return false; } return true; };
-  const min=seat%2===0?110:150;
+  const P=[[40,385,215,505],[730,415,925,505]].concat([0,1,2,3].map(rackRect));   // vaso, cenicero y las fichas de los jugadores
+  const free=(x,y)=>{ const q=[x-32,y-32,x+32,y+32]; return !R.concat(P).some(t=>q[0]<t[2]&&q[2]>t[0]&&q[1]<t[3]&&q[3]>t[1]); };
+  const armOK=(x,y)=>{ for(let k=0.1;k<=1;k+=0.05){ const px=E.x+(x-E.x)*k, py=E.y+(y-E.y)*k; if(P.some(t=>px>t[0]-12&&px<t[2]+12&&py>t[1]-12&&py<t[3]+12)) return false; } return true; };
+  const min=seat%2===0?150:150;   // siempre en el paño, por delante de sus fichas, nunca encima
   // lo más cerca posible del jugador: primero alcances cortos
   for(let reach=min;reach<=min+260;reach+=30) for(const side of [0,60,-60,120,-120,180,-180]){
     const x=E.x+ux*reach-uy*side, y=E.y+uy*reach+ux*side;
