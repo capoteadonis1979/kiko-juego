@@ -376,6 +376,9 @@ public class MainActivity extends Activity {
         public String songsReady() { return cancionesListas(); }
 
         @JavascriptInterface
+        public void exitApp() { runOnUiThread(() -> { if (Build.VERSION.SDK_INT >= 21) finishAndRemoveTask(); else finish(); }); }
+
+        @JavascriptInterface
         public void fetchSongs(String lista) { bajarMusica(lista); }
 
         @JavascriptInterface

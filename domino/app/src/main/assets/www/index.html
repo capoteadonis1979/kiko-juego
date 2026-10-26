@@ -323,6 +323,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
       <button id="psolo">JUGAR SOLO CONTRA LA MÁQUINA</button>
       <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
       <button id="pact">ACTIVAR / COMPRAR</button>
+      <button id="psalir">SALIR</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
           <g clip-path="url(#fw)"><rect width="150" height="80" fill="#fff"/>
@@ -364,6 +365,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
   <button id="pcont" class="main">SEGUIR JUGANDO</button>
   <button id="prest">REINICIAR PARTIDA<small>Mismos jugadores · marcador a cero</small></button>
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o modo</small></button>
+  <button id="pexit">SALIR DEL JUEGO</button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano → JUGADOR → <b>ESCANEAR QR</b><br>y ocupa el sitio de una máquina.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
@@ -2682,7 +2684,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.6.8';
+const VERSION='v3.6.9';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3831,7 +3833,7 @@ function renderSeatBox(L,me){
 }
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pexit','pmus','psnd','pcan'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
 function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
@@ -3842,12 +3844,16 @@ function gameAction(a){
   else if(a==='new'){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } else { showSub(); } broadcast(); }
 }
 function pauseChoose(a){ if(a==='cont'){ closePause(); return; }
-  if(pPending!==a){ pPending=a; const c=document.getElementById('pconf'); c.hidden=false; c.textContent=a==='restart'?'¿Seguro? Toca otra vez REINICIAR PARTIDA para confirmar':'¿Seguro? Toca otra vez NUEVA PARTIDA para confirmar'; return; }
+  if(pPending!==a){ pPending=a; const c=document.getElementById('pconf'); c.hidden=false; c.textContent=a==='restart'?'¿Seguro? Toca otra vez REINICIAR PARTIDA para confirmar':a==='exit'?'¿Seguro? Toca otra vez SALIR DEL JUEGO para cerrar':'¿Seguro? Toca otra vez NUEVA PARTIDA para confirmar'; return; }
+  if(a==='exit'){ salirApp(); return; }
   if(G.remoteMode){ netSend({t:'ctl',a}); pauseEl.hidden=true; pPending=null; return; }
   gameAction(a); }
 document.getElementById('pcont').addEventListener('click',()=>pauseChoose('cont'));
 document.getElementById('prest').addEventListener('click',()=>pauseChoose('restart'));
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
+document.getElementById('pexit').addEventListener('click',()=>pauseChoose('exit'));
+function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
+document.getElementById('psalir').addEventListener('click',salirApp);
 document.getElementById('bmesa').addEventListener('click',()=>openPause());
 function volTxt(v){ return v>0?'●'.repeat(v)+'○'.repeat(5-v):'NO'; }
 function musLabel(){ const m=G.remoteMode?(G.rMusV!=null?G.rMusV:(G.rMus!==false?4:0)):MUSV, n=G.remoteMode?(G.rSndV!=null?G.rSndV:(G.rSnd!==false?5:0)):SNDV; document.getElementById('pmus').textContent='MÚSICA '+volTxt(m); document.getElementById('psnd').textContent='EFECTOS '+volTxt(n); document.getElementById('pcan').textContent='♪ '+(G.remoteMode?(G.rSong||'CANCIÓN'):SONGS[songIdx][0])+'  ▶'; }
