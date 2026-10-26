@@ -318,6 +318,28 @@ public class MainActivity extends Activity {
 
         // abre el teclado de la tele / el cel para escribir en un cuadro de texto
         @JavascriptInterface
+        public void askText(String title, String value, String tag) {
+            // cuadro nativo de Android para escribir (el teclado del TV funciona bien aquí)
+            runOnUiThread(() -> {
+                try {
+                    final android.widget.EditText et = new android.widget.EditText(MainActivity.this);
+                    et.setText(value == null ? "" : value); et.setSingleLine(true); et.setSelectAllOnFocus(true);
+                    et.setFilters(new android.text.InputFilter[]{ new android.text.InputFilter.LengthFilter(14) });
+                    et.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
+                    android.widget.FrameLayout box = new android.widget.FrameLayout(MainActivity.this);
+                    int p = (int) (20 * getResources().getDisplayMetrics().density); box.setPadding(p, p / 2, p, 0); box.addView(et);
+                    final AlertDialog d = new AlertDialog.Builder(MainActivity.this).setTitle(title).setView(box)
+                        .setPositiveButton("GUARDAR", (x, w) -> js("window.kikoText&&kikoText(" + JSONObject.quote(tag) + "," + JSONObject.quote(et.getText().toString()) + ")"))
+                        .setNegativeButton("CANCELAR", null).create();
+                    et.setOnEditorActionListener((v, id, ev) -> { if (id == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) { d.getButton(AlertDialog.BUTTON_POSITIVE).performClick(); return true; } return false; });
+                    if (d.getWindow() != null) d.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                    d.setOnShowListener(x -> { et.requestFocus(); et.selectAll(); });
+                    d.show();
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
         public void showKeyboard() {
             runOnUiThread(() -> { try { web.requestFocus(); android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE); if (im != null) im.showSoftInput(web, 0); } catch (Exception ignored) {} });
         }
