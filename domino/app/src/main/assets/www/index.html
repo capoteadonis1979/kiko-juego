@@ -179,6 +179,11 @@ body.mesa #menu .lseat{padding:4px 8px}
 .ovbox .focus{outline:4px solid var(--gold);outline-offset:3px}
 .ovbox .code{font:700 28px var(--font);letter-spacing:3px;color:var(--gold);background:rgba(255,255,255,.08);padding:4px 14px;border-radius:10px}
 .ovbox .msg{min-height:20px;font-weight:700;color:#ffb0a0}
+.ovbox button small{display:block;font:500 12px var(--font);opacity:.85}
+.ovbox .code.sm{font-size:18px;letter-spacing:1px;word-break:break-all;padding:4px 10px}
+.ovbox .small{font-size:14px;color:#d8e8dc}
+.ovbox details summary{cursor:pointer;color:#d8e8dc;font-size:14px;margin:4px 0}
+.ovbox .row button{min-width:150px}
 #lbtns button.on{background:#2fbf71!important;border-color:#fff!important;color:#fff;box-shadow:0 0 0 4px #2fbf71,0 0 18px #2fbf71}
 #lbtns button.dim{opacity:.45}
 #lbtns button.dis{opacity:.25;pointer-events:none}
@@ -288,7 +293,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
       <ul>
         <li>En la sala de la MESA sale un <b>código QR</b>: escanéalo con el cel y se baja la app.</li>
         <li>La primera <b>semana es gratis</b> y sin límite. Después: <b>3 partidas gratis al día</b>, o cómprala por <b>5 USD al mes</b> o <b>20 USD para siempre</b>.</li>
-        <li>Para comprar toca <b>ACTIVAR / COMPRAR</b>, manda el código de tu equipo a <b>capoteapps@gmail.com</b> y escribe el código de activación que te llega. Solo hace falta en la tele o el cel donde se pone la mesa; los que juegan con el cel como JUGADOR no pagan.</li>
+        <li>Para comprar toca <b>ACTIVAR / COMPRAR</b>, elige el plan y paga con <b>PayPal</b>, <b>USDT</b> o <b>transferencia BAI</b> (Angola). Con PayPal y USDT la app se activa sola en un par de minutos; con el BAI, manda el comprobante a <b>capoteapps@gmail.com</b> y se activa en cuanto lo aprobemos. Solo hace falta en la tele o el cel donde se pone la mesa; los que juegan con el cel como JUGADOR no pagan.</li>
       </ul>
       <button id="gclose">ENTENDIDO</button>
     </div>
@@ -347,12 +352,19 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
   <button id="pmus">MÚSICA: SÍ</button>
   <p id="pconf" hidden></p></div></div>
 <div id="bnames" class="ov" hidden><div class="ovbox"><h2>NOMBRES DE LAS MÁQUINAS</h2><p>Escribe el nombre de cada máquina (déjalo vacío para "MÁQUINA").</p><div id="bnrows"></div><div class="row"><button id="bnok" class="main">GUARDAR</button><button id="bnno">CANCELAR</button></div></div></div>
-<div id="paywall" class="ov" hidden><div class="ovbox"><h2 id="pwt">DOMINÓ CUBANO</h2><p id="pwp"></p><p>Precio: <b>5 USD al mes</b> o <b>20 USD para siempre</b>.<br>Escribe a <b>capoteapps@gmail.com</b> con el código de tu equipo y te mandamos el código de activación.</p><div>CÓDIGO DE TU EQUIPO</div><div class="code" id="pwdev">····-····</div><div class="row"><input id="pwin" maxlength="20" placeholder="CÓDIGO DE ACTIVACIÓN" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="pwok" class="main">ACTIVAR</button></div><div class="msg" id="pwmsg"></div><button id="pwno">CERRAR</button></div></div>
+<div id="paywall" class="ov" hidden><div class="ovbox"><h2 id="pwt">DOMINÓ CUBANO</h2><p id="pwp"></p>
+<div class="small">CÓDIGO DE TU EQUIPO: <b class="code sm" id="pwdev">····-····</b></div>
+<div id="pwstep1"><p>1 · Elige tu plan</p><div class="row"><button class="pwplan main" data-plan="M">1 MES<small>5 USD</small></button><button class="pwplan main" data-plan="P">PARA SIEMPRE<small>20 USD</small></button></div></div>
+<div id="pwstep2" hidden><p>2 · ¿Cómo pagas? <span id="pwplanname"></span></p><div class="row"><button class="pwmet" data-met="pp">PayPal</button><button class="pwmet" data-met="usdt">USDT</button><button class="pwmet" data-met="bai">Transferencia BAI<small>Angola</small></button></div><button id="pwback1">VOLVER</button></div>
+<div id="pwstep3" hidden><p id="pwhow"></p><div class="code" id="pwamt"></div><div class="row"><div class="code sm" id="pwto"></div><button id="pwcopy">COPIAR</button></div><p class="small" id="pwtit"></p><p class="small" id="pwwait"></p><div class="row"><button id="pwpaid" class="main">YA PAGUÉ</button><button id="pwback2">VOLVER</button></div></div>
+<div class="msg" id="pwmsg"></div>
+<details id="pwhave"><summary>¿Ya tienes un código de activación?</summary><div class="row"><input id="pwin" maxlength="20" placeholder="CÓDIGO DE ACTIVACIÓN" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="pwok" class="main">ACTIVAR</button></div></details>
+<button id="pwno">CERRAR</button></div></div>
 <button id="bmesa" hidden>☰ MENÚ</button>
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v3.2.0';
+const VERSION='v3.3.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -1625,14 +1637,44 @@ function licInfo(){ if(licOK()) return LIC.perm?'✔ ACTIVADA PARA SIEMPRE':'✔
 function updLic(){ document.getElementById('lic').textContent=licInfo(); }
 function canStart(){ if(licOK()||trialDays()>0) return true; const u=usedToday(); if(u<3){ try{ localStorage.setItem('dominoHoy',JSON.stringify({d:today(),n:u+1})); }catch(_){} updLic(); return true; }
   showPay('SE ACABARON LAS 3 PARTIDAS GRATIS DE HOY'); return false; }
-function showPay(title){ document.getElementById('pwt').textContent=title; document.getElementById('pwp').textContent=licInfo(); document.getElementById('pwdev').textContent=DEV;
-  document.getElementById('pwin').value=''; document.getElementById('pwmsg').textContent=''; document.getElementById('pwmsg').style.color=''; payEl.hidden=false; ovFoc(payEl,0); }
+// --- compra con el secretario de Capote Apps (PayPal, USDT o transferencia BAI) ---
+const SALES_URL='';   // URL del secretario (Google Apps Script). Vacío = solo código a mano
+let PW={plan:null,met:null,poll:null};
+const pwEl=id=>document.getElementById(id);
+function pwStep(n){ ['pwstep1','pwstep2','pwstep3'].forEach((id,i)=>pwEl(id).hidden=i!==n-1); setTimeout(()=>ovFoc(payEl,0),0); }
+function pwMsg(t,ok){ const m=pwEl('pwmsg'); m.style.color=ok?'#7dffa8':'#ffb0a0'; m.textContent=t||''; }
+function showPay(title){ pwEl('pwt').textContent=title; pwEl('pwp').textContent=licInfo(); pwEl('pwdev').textContent=DEV;
+  pwEl('pwin').value=''; pwMsg('');
+  if(!SALES_URL){ pwEl('pwstep1').hidden=pwEl('pwstep2').hidden=pwEl('pwstep3').hidden=true; pwEl('pwhave').open=true; pwMsg('Para comprar escribe a capoteapps@gmail.com con el código de tu equipo.',true); }
+  else { pwEl('pwhave').open=false; let o=null; try{ o=JSON.parse(localStorage.getItem('dominoOrder')||'null'); }catch(_){} if(o&&o.plan&&o.met&&o.r&&Date.now()-o.t<48*3600e3){ PW.plan=o.plan; PW.met=o.met; pwShow(o.r); } else pwStep(1); }
+  payEl.hidden=false; ovFoc(payEl,0); }
+async function salesGet(q){ const u=SALES_URL+'?'+Object.entries(Object.assign({app:'domino',id:DEV},q)).map(([a,b])=>a+'='+encodeURIComponent(b)).join('&');
+  const r=await fetch(u,{redirect:'follow'}); return await r.json(); }
+document.querySelectorAll('.pwplan').forEach(b=>b.addEventListener('click',()=>{ PW.plan=b.dataset.plan; pwEl('pwplanname').textContent='('+(PW.plan==='P'?'para siempre':'1 mes')+')'; pwMsg(''); pwStep(2); }));
+document.querySelectorAll('.pwmet').forEach(b=>b.addEventListener('click',async()=>{ PW.met=b.dataset.met; pwMsg('Preparando tu pedido…',true);
+  try{ const r=await salesGet({a:'new',plan:PW.plan,met:PW.met}); if(!r.ok) throw new Error(r.err||'x');
+    try{ localStorage.setItem('dominoOrder',JSON.stringify({plan:PW.plan,met:PW.met,r,t:Date.now()})); }catch(_){}
+    pwMsg(''); pwShow(r); }
+  catch(e){ pwMsg('No se pudo conectar. Revisa el internet y prueba otra vez.'); } }));
+function pwShow(r){ pwEl('pwhow').textContent=r.nota; pwEl('pwamt').textContent=r.importe; pwEl('pwto').textContent=r.a; pwEl('pwtit').textContent=r.titular?('Titular: '+r.titular+' · Banco BAI'):'';
+  pwEl('pwwait').textContent=PW.met==='bai'?'Cuando aprobemos tu comprobante, la app se activa sola.':'Esperando el pago… la app se activa sola en cuanto llegue.';
+  pwStep(3); pwPoll(); }
+async function pwCheck(now){ try{ const r=await salesGet({a:now?'paid':'st'}); if(r.ok&&r.est==='pagado'&&r.code){ const c=checkCode(r.code); if(c){ LIC=c; try{ localStorage.setItem('dominoLic',c.code); localStorage.removeItem('dominoOrder'); }catch(_){} updLic(); clearInterval(PW.poll); PW.poll=null;
+      if(!payEl.hidden){ pwMsg('¡ACTIVADA! '+licInfo(),true); setTimeout(()=>{ payEl.hidden=true; },2500); } return true; } }
+    if(now) pwMsg('Todavía no ha llegado el pago. Espera un minuto y vuelve a tocar.'); }catch(e){ if(now) pwMsg('No se pudo conectar. Revisa el internet.'); } return false; }
+function pwPoll(){ if(PW.poll) return; PW.poll=setInterval(()=>{ if(payEl.hidden||licOK()){ clearInterval(PW.poll); PW.poll=null; return; } pwCheck(false); },15000); }
+pwEl('pwpaid').addEventListener('click',()=>{ pwMsg('Revisando…',true); pwCheck(true); });
+pwEl('pwcopy').addEventListener('click',()=>{ const t=pwEl('pwto').textContent; try{ navigator.clipboard.writeText(t).then(()=>pwMsg('Copiado ✓',true),()=>pwMsg('Cópialo a mano: '+t,true)); }catch(_){ pwMsg('Cópialo a mano: '+t,true); } });
+pwEl('pwback1').addEventListener('click',()=>pwStep(1));
+pwEl('pwback2').addEventListener('click',()=>{ try{ localStorage.removeItem('dominoOrder'); }catch(_){} pwStep(2); });
+// al abrir la app: si había un pedido pendiente, mira si ya se pagó
+setTimeout(()=>{ try{ if(SALES_URL&&!licOK()&&localStorage.getItem('dominoOrder')) pwCheck(false); }catch(_){} },3000);
 document.getElementById('pact').addEventListener('click',()=>showPay('ACTIVAR DOMINÓ CUBANO'));
 document.getElementById('pwno').addEventListener('click',()=>{ payEl.hidden=true; });
 document.getElementById('pwok').addEventListener('click',()=>{ const r=checkCode(document.getElementById('pwin').value), m=document.getElementById('pwmsg');
   if(!r){ m.style.color='#ffb0a0'; m.textContent='CÓDIGO NO VÁLIDO: revísalo y escríbelo otra vez'; return; }
   if(r.until&&Date.now()>r.until){ m.style.color='#ffb0a0'; m.textContent='ESE CÓDIGO YA VENCIÓ'; return; }
-  LIC=r; try{ localStorage.setItem('dominoLic',r.code); }catch(_){} m.style.color='#7dffa8'; m.textContent='¡ACTIVADA! '+licInfo(); updLic(); setTimeout(()=>{ payEl.hidden=true; },1500); });
+  LIC=r; try{ localStorage.setItem('dominoLic',r.code); localStorage.removeItem('dominoOrder'); }catch(_){} m.style.color='#7dffa8'; m.textContent='¡ACTIVADA! '+licInfo(); updLic(); setTimeout(()=>{ payEl.hidden=true; },1500); });
 updLic(); setInterval(updLic,60000);
 
 /* ================= BUCLE ================= */
