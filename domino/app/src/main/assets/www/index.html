@@ -122,6 +122,14 @@ body.remote #handbar{background:rgba(30,14,4,.55);height:30px}
 #rack{display:none;position:absolute;left:6px;right:6px;bottom:2px;height:26px;border-radius:6px 6px 10px 10px;pointer-events:none;z-index:6;
   background:linear-gradient(#b0713a,#7a4a20 45%,#4a2a10);box-shadow:0 -3px 0 #d8955a inset,0 6px 10px rgba(0,0,0,.5)}
 body.remote #rack{display:block}
+body.remote #tiles{left:6px!important;right:6px}
+body.remote #power{left:12px;right:12px;top:34px;bottom:auto;width:auto;height:20px;flex-direction:row;gap:8px}
+body.remote #powlbl{font-size:11px}
+body.remote #powtrack{flex:1;width:auto;height:14px;border-radius:8px;border-width:2px}
+body.remote #powfill{top:0;bottom:0;right:auto;height:auto!important;width:0;border-radius:6px;transition:width .25s;background:linear-gradient(90deg,#2fbf71,#ffd23a 55%,#ff2a1a)}
+body.remote #powcap{top:0;bottom:0;right:auto;height:auto!important;width:0;border-top:0;border-right:2px dashed #ffe9a8}
+body.remote #powtrack::after{background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(0,0,0,.55) calc(10% - 2px) 10%)}
+body.remote #powpct{font-size:12px;white-space:nowrap;min-width:58px;text-align:right}
 
 #prof{position:absolute;inset:0;z-index:25;background:rgba(6,16,10,.94);display:flex;align-items:center;justify-content:center;gap:24px;padding:16px;box-sizing:border-box;flex-wrap:wrap}
 #prof h2{width:100%;text-align:center;margin:0;color:var(--gold);font-size:22px}
@@ -344,7 +352,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v3.1.1';
+const VERSION='v3.2.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -439,10 +447,24 @@ const PIPC=Array(10).fill('#141414');   // todos los puntos negros, como el domi
 const PIPS={0:[],1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],4:[[0,0],[2,0],[0,2],[2,2]],5:[[0,0],[2,0],[1,1],[0,2],[2,2]],
   6:[[0,0],[1,0],[2,0],[0,2],[1,2],[2,2]],7:[[0,0],[1,0],[2,0],[1,1],[0,2],[1,2],[2,2]],8:[[0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2]],9:[[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]]};
 // dibuja una ficha centrada en (0,0) a lo largo del eje x: medio "a" a la izquierda, "b" a la derecha
+// sombra de la ficha: siempre hacia el mismo lado de la pantalla, gire como gire la ficha
+let TILE_NOSH=false; const TSPR=new Map();
+function tileShadow(c,L,W){ const m=c.getTransform(), th=Math.atan2(m.b,m.a), dx=1.5, dy=2.5, lx=dx*Math.cos(th)+dy*Math.sin(th), ly=-dx*Math.sin(th)+dy*Math.cos(th);
+  c.fillStyle='rgba(0,0,0,0.35)'; rr(c,-L/2+lx,-W/2+ly,L,W,W*0.16); c.fill(); }
+// cada ficha se dibuja una vez y se guarda: después solo se pega la imagen (la tele trabaja mucho menos, se ve igual)
 function drawTile(c,a,b,L,W,face=true,glow=null){
+  if(!TILE_NOSH) tileShadow(c,L,W);
+  if(glow) return drawTileBody(c,a,b,L,W,face,glow);
+  const m=c.getTransform(), ds=Math.hypot(m.a,m.b)||1, px=Math.max(12,Math.ceil(W*ds*1.25/6)*6);
+  const key=(face?a+','+b:'x')+'|'+(L/W).toFixed(2)+'|'+px;
+  let sp=TSPR.get(key);
+  if(!sp){ sp=document.createElement('canvas'); const k=px/W; sp.width=Math.ceil((L+2)*k); sp.height=Math.ceil((W+2)*k); sp._l=L; sp._w=W;
+    const g=sp.getContext('2d'); g.scale(k,k); g.translate((L+2)/2,(W+2)/2); drawTileBody(g,a,b,L,W,face,null); if(TSPR.size>800) TSPR.clear(); TSPR.set(key,sp); }
+  const f=W/sp._w; c.drawImage(sp,-(sp._l+2)/2*f,-(sp._w+2)/2*f,(sp._l+2)*f,(sp._w+2)*f);
+}
+function drawTileBody(c,a,b,L,W,face=true,glow=null){
   const r=W*0.16;
   c.save();
-  c.fillStyle='rgba(0,0,0,0.35)'; rr(c,-L/2+1.5,-W/2+2.5,L,W,r); c.fill();
   const g=c.createLinearGradient(0,-W/2,0,W/2);
   if(face){ g.addColorStop(0,'#fffaf0'); g.addColorStop(0.6,'#f1e9d6'); g.addColorStop(1,'#d9cfb6'); }
   else { g.addColorStop(0,'#3a5fa0'); g.addColorStop(1,'#203a6a'); }
@@ -484,7 +506,7 @@ const TEAMN=()=>isTV?['ROJOS','AZULES']:['NOSOTROS','ELLOS'];
 let BOTN=['','','','']; try{ const a=JSON.parse(localStorage.getItem('dominoBots')||'[]'); if(Array.isArray(a)) BOTN=[0,1,2,3].map(i=>String(a[i]||'').toUpperCase().slice(0,14)); }catch(_){}
 function botName(s){ return BOTN[s]||('MÁQUINA '+(isTV?s+1:s)); }
 const G=window.__D={state:'menu',hands:[[],[],[],[]],chain:[],ends:null,turn:0,passes:0,log:[],wins:[0,0,0,0],countMode:'todas',cnt:null,matchNo:0,nPlayers:4,energy:[0,0,0,0],scores:[0,0],pscores:[0,0,0,0],mode:'parejas',handNo:0,starter:0,lastWinner:-1,msg:'',msgT:0,
-  human:[true,false,false,false],names:['TÚ','MÁQUINA 1','MÁQUINA 2','MÁQUINA 3'],aiT:0,anim:[],shake:0,fist:null,dust:[],exps:[],says:[],fallT:-1,fallHold:false,megaT:-1,wobT:-999,wobA:0,photos:[null,null,null,null],fly:null,frame:0,remote:[null,null,null,null],over:false,target:100,rum:1,burn:0,ash:0,drink:null,lastDrink:0,drops:[],ashp:[],pc:[0,0,0,0],ashDrop:false,spilled:false,puddle:0};
+  human:[true,false,false,false],names:['TÚ','MÁQUINA 1','MÁQUINA 2','MÁQUINA 3'],aiT:0,anim:[],shake:0,fist:null,dust:[],exps:[],says:[],fallT:-1,fallHold:false,megaT:-1,wobT:-999,wobA:0,photos:[null,null,null,null],fly:null,frame:0,remote:[null,null,null,null],over:false,target:100,rum:1,burn:0,ash:0,drink:null,lastDrink:0,drops:[],ashp:[],puffs:[],smoke:null,lastSmoke:600,pc:[0,0,0,0],ashDrop:false,spilled:false,puddle:0};
 function newDeck(){ const d=[]; for(let a=0;a<=9;a++) for(let b=a;b<=9;b++) d.push([a,b]); for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; } return d; }
 function canPlay(t){ if(!G.ends) return ['L']; const s=[]; if(t[0]===G.ends[0]||t[1]===G.ends[0]) s.push('L'); if(t[0]===G.ends[1]||t[1]===G.ends[1]) s.push('R'); return s; }
 function playable(seat){ return G.hands[seat].filter(t=>canPlay(t).length); }
@@ -492,7 +514,7 @@ function startMatch(){ G.rum=1; G.burn=0; G.ash=0; G.log=[]; G.matchNo=(G.matchN
 function dealHand(){
   try{ if(!G.remoteMode) libEl.hidden=true; }catch(_){}
   const d=newDeck(), A=ACT(); for(let s=0;s<4;s++){ const k=A.indexOf(s); G.hands[s]=k<0?[]:d.slice(k*10,k*10+10); }
-  G.passT=0; G.fist=null; G.cnt=null; G.pc=[0,0,0,0]; G.drink=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
+  G.passT=0; G.fist=null; G.cnt=null; G.pc=[0,0,0,0]; G.drink=null; G.smoke=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
   G.chain=[]; G.ends=null; G.passes=0; G.handNo++; G.anim=[]; G.fly=null; G.fallT=-1; G.energy=[0,0,0,0]; G.fallHold=false; G.megaT=-1;   // se recogen la botella y el tabaco
   if(G.lastWinner<0){
     // primera mano: sale quien tenga el doble más alto
@@ -625,7 +647,7 @@ function drawExps(){
 }
 // tabaco: se va consumiendo con el tiempo; la ceniza crece y se cae con los golpes. Devuelve la x de la punta.
 function drawCigar(c){
-  const L0=-60+Math.min(1,G.burn)*62, AL=G.ash*18;
+  const L0=-60+Math.min(1,G.burn)*47, AL=G.ash*18;   // se achica hasta quedar a la mitad
   const tg=c.createLinearGradient(0,-7,0,7); tg.addColorStop(0,'#8a5a30'); tg.addColorStop(0.5,'#6a3c1c'); tg.addColorStop(1,'#3a1e0a');
   c.fillStyle=tg; c.beginPath(); c.moveTo(L0,-6); c.lineTo(34,-6); c.quadraticCurveTo(40,0,34,6); c.lineTo(L0,6); c.closePath(); c.fill();
   c.fillStyle='#c9a24a'; c.fillRect(14,-6,9,12); c.fillStyle='#8a1e1e'; c.fillRect(16,-6,5,12);
@@ -635,7 +657,7 @@ function drawCigar(c){
   return L0-3-AL;
 }
 // vaso de ron con hielo: origen = centro del fondo. level 0..1; sTilt = inclinación de la superficie del ron
-const GX=62, GY=440, GS=0.9;
+const GX=91, GY=482, GS=0.9;   // dentro de la línea blanca, a una ficha de ancho del borde
 function drawGlass(c,level,sTilt){
   const W1=36,W2=31,H=80;
   const hw=yy=>W2+(W1-W2)*(-yy/H);
@@ -670,10 +692,17 @@ function stepProps(){
   if(G.drops.length) G.drops=G.drops.filter(d=>d.lt<0||G.frame-d.lt<420);
   for(const d of G.ashp){ if(d.lt<0){ d.x+=d.vx; d.y+=d.vy; d.vy+=0.12; d.vx*=0.98; if(d.vy>0&&d.y>=d.land){ d.y=d.land; d.lt=G.frame; } } }
   if(G.ashp.length) G.ashp=G.ashp.filter(d=>d.lt<0||G.frame-d.lt<600);
-  if(G.state==='play'){ G.burn=Math.min(1,G.burn+1/(60*600)); G.ash=Math.min(1,G.ash+1/(60*45)); if(G.ash>=1) G.ashDrop=true;   // el tabaco se consume en ~10 min
+  if(G.state==='play'){ G.burn=Math.min(1,G.burn+1/(60*1200)); G.ash=Math.min(1,G.ash+1/(60*45)); if(G.ash>=1) G.ashDrop=true;   // el tabaco se consume en ~10 min
     // la mano del jugador de abajo coge el vaso y le da un trago de vez en cuando
     if(!G.drink&&!G.fist&&!G.fly&&G.fallT<0&&G.rum>0.12&&G.turn!==0&&G.frame-G.lastDrink>1500&&Math.random()<0.004) G.drink={t:G.frame}; }
   if(G.drink){ const t=G.frame-G.drink.t; if(t===100){ G.rum=Math.max(0,G.rum-0.16); gulp(); } if(t>=190){ G.drink=null; G.lastDrink=G.frame; } }
+  // el de la derecha coge el tabaco, fuma, echa el humo hacia la mesa y lo vuelve a poner (un poco más corto)
+  if(G.state==='play'&&!G.smoke&&!G.drink&&!G.fist&&!G.fly&&G.fallT<0&&G.burn<1&&G.turn!==1&&G.frame-G.lastSmoke>1300&&Math.random()<0.004) G.smoke={t:G.frame};
+  if(G.smoke){ const t=G.frame-G.smoke.t;
+    if(t>=110&&t<140&&t%3===0) for(let q=0;q<3;q++) G.puffs.push({x:VW-28,y:372,vx:-(1.6+Math.random()*1.6),vy:0.3+Math.random()*0.9,r:5+Math.random()*4,life:1});
+    if(t===120){ G.burn=Math.min(1,G.burn+0.08); G.ash=0; }
+    if(t>=190){ G.smoke=null; G.lastSmoke=G.frame; } }
+  for(const f of G.puffs){ f.x+=f.vx; f.y+=f.vy; f.vx*=0.975; f.vy*=0.975; f.r+=0.45; f.life-=0.008; } if(G.puffs.length) G.puffs=G.puffs.filter(f=>f.life>0);
 }
 /* ===== vaso de ron y tabaco encima de la mesa ===== */
 function drawProps(){
@@ -697,7 +726,7 @@ function drawProps(){
     c.save(); c.translate(GX+piv,GY); c.rotate(ang); c.translate(-piv,0); c.scale(GS,GS); drawGlass(c,G.rum,-ang); c.restore();
   }
   // cenicero con tabaco encendido (abajo a la derecha, fuera de la zona de las fichas)
-  const AX=VW-70, AY=488;
+  const AX=VW-108, AY=460;   // dentro de la línea blanca, a una ficha de ancho del borde
   const hop=wt>=0&&wt<40?Math.abs(Math.sin(wt*0.35))*Math.exp(-wt/10)*G.wobA*7:0;
   c.save(); c.translate(AX,AY+(wt>=0&&wt<20?Math.sin(wt*1.3)*G.wobA*1.5*Math.exp(-wt/6):0));
   c.fillStyle='rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(4,6,46,16,0,0,7); c.fill();
@@ -707,9 +736,10 @@ function drawProps(){
   c.restore();
   let cx0, cy0, ca;
   if(ff<0){ cx0=AX; cy0=AY-hop; ca=-0.22+(hop?Math.sin(wt*0.8)*0.06*G.wobA:0); }
-  else { const k=Math.min(1,ff/22)*re; cx0=AX+(VW-190-AX)*k; cy0=AY+(500-AY)*k-Math.sin(k*Math.PI)*60; ca=-0.22+k*2.9;
+  else { const k=Math.min(1,ff/22)*re; cx0=AX+(VW-200-AX)*k; cy0=AY+(472-AY)*k-Math.sin(k*Math.PI)*60; ca=-0.22+k*2.9;
     c.fillStyle='rgba(0,0,0,'+(0.25*k)+')'; c.beginPath(); c.ellipse(cx0,cy0+10,52,6,0,0,7); c.fill(); }
-  c.save(); c.translate(cx0,cy0); c.rotate(ca); const tip=drawCigar(c); c.restore();
+  const sk=G.smoke?G.frame-G.smoke.t:-1, cHeld=sk>=35&&sk<150;
+  let tip=-60; if(!cHeld){ c.save(); c.translate(cx0,cy0); c.rotate(ca); tip=drawCigar(c); c.restore(); }
   const smx=cx0+Math.cos(ca)*tip, smy=cy0+Math.sin(ca)*tip;
   // con el golpe se cae la ceniza
   if(G.ashDrop){ G.ashDrop=false; if(G.ash>0.12){ const n=3+Math.round(G.ash*6), land=Math.min(VH-20,smy+10);   // la ceniza cae a la mesa, debajo de la punta
@@ -717,8 +747,37 @@ function drawProps(){
     G.ash=0; } }
   for(const d of G.ashp){ const a=d.lt<0?1:1-(G.frame-d.lt)/600; c.fillStyle='rgba(150,150,145,'+(0.95*a)+')'; c.fillRect(d.x-d.s/2,d.y-d.s/3,d.s,d.s*0.66); }
   // humo
-  if(G.burn<1){ c.save(); for(let i=0;i<5;i++){ const t=((G.frame*0.6+i*40)%200)/200; const x=smx+Math.sin(t*6+i)*10*t, y=smy-t*110;
+  if(G.burn<1&&!cHeld){ c.save(); for(let i=0;i<5;i++){ const t=((G.frame*0.6+i*40)%200)/200; const x=smx+Math.sin(t*6+i)*10*t, y=smy-t*110;
     c.fillStyle='rgba(230,230,230,'+(0.22*(1-t))+')'; c.beginPath(); c.arc(x,y,4+t*12,0,7); c.fill(); } c.restore(); }
+}
+// el brazo del de la derecha: coge el tabaco del cenicero, fuma, sopla el humo hacia la mesa y lo vuelve a poner
+function drawSmoke(){
+  for(const f of G.puffs){ ctx.fillStyle='rgba(235,235,235,'+(0.35*f.life)+')'; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,7); ctx.fill(); }
+  const sm=G.smoke; if(!sm) return; const t=G.frame-sm.t;
+  const ez=u=>u<=0?0:u>=1?1:u*u*(3-2*u), lp=(a,b,k)=>({x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k});
+  const AX=VW-108, AY=460, E={x:VW+90,y:420}, C0={x:AX,y:AY,a:-0.22}, M={x:VW-14,y:376,a:0.35};
+  let cp={x:C0.x,y:C0.y}, ang=C0.a;
+  if(t>=40&&t<70){ const k=ez((t-40)/30); cp=lp(C0,M,k); ang=C0.a+(M.a-C0.a)*k; }
+  else if(t>=70&&t<120){ cp=M; ang=M.a; }
+  else if(t>=120&&t<150){ const k=ez((t-120)/30); cp=lp(M,C0,k); ang=M.a+(C0.a-M.a)*k; }
+  const grip=(p,a)=>({x:p.x+Math.cos(a)*12,y:p.y+Math.sin(a)*12});
+  const g0=grip(C0,C0.a); let H;
+  if(t<35) H=lp(E,g0,ez(t/35)); else if(t<150) H=grip(cp,ang); else H=lp(g0,E,ez((t-150)/40));
+  const holding=t>=35&&t<150;
+  if(holding){ ctx.save(); ctx.translate(cp.x,cp.y); ctx.rotate(ang); const tp=drawCigar(ctx); ctx.restore();
+    if(t>=70&&t<110&&t%4===0){ const bx=cp.x+Math.cos(ang)*tp, by=cp.y+Math.sin(ang)*tp; ctx.fillStyle='rgba(255,140,40,.6)'; ctx.beginPath(); ctx.arc(bx,by,4,0,7); ctx.fill(); } }   // la brasa se aviva al chupar
+  const ux=H.x-E.x, uy=H.y-E.y, dl=Math.hypot(ux,uy)||1, nx=ux/dl, ny=uy/dl, Mx=E.x+ux*0.5, My=E.y+uy*0.5;
+  ctx.save(); ctx.lineCap='round';
+  ctx.strokeStyle='#b0763e'; ctx.lineWidth=26; ctx.beginPath(); ctx.moveTo(Mx,My); ctx.lineTo(H.x-nx*8,H.y-ny*8); ctx.stroke();
+  ctx.strokeStyle='#c98a52'; ctx.lineWidth=18; ctx.beginPath(); ctx.moveTo(Mx,My); ctx.lineTo(H.x-nx*8,H.y-ny*8); ctx.stroke();
+  ctx.strokeStyle='#8a2a2a'; ctx.lineWidth=36; ctx.beginPath(); ctx.moveTo(E.x-nx*40,E.y-ny*40); ctx.lineTo(Mx,My); ctx.stroke();   // manga
+  // mano: dedos que pinzan el tabaco
+  ctx.translate(H.x,H.y); ctx.rotate((holding?ang:C0.a));
+  const sk=ctx.createLinearGradient(-12,-14,12,14); sk.addColorStop(0,'#e0a46a'); sk.addColorStop(1,'#a8693a');
+  ctx.fillStyle=sk; ctx.strokeStyle='#7a4a24'; ctx.lineWidth=1.5;
+  rr(ctx,-2,-14,24,26,9); ctx.fill(); ctx.stroke();
+  rr(ctx,-8,-9,16,7,3.5); ctx.fill(); ctx.stroke(); rr(ctx,-8,2,16,7,3.5); ctx.fill(); ctx.stroke();
+  ctx.restore();
 }
 // la mano del jugador de abajo coge el vaso, se da un trago y lo vuelve a poner
 function drawDrink(){
@@ -803,7 +862,7 @@ function fistTarget(seat){
   const L=layoutChain(), ox=VW/2, oy=VH/2-6, R=[];
   L.forEach(p=>{ if(!p) return; const hor=Math.abs(Math.cos(p.ang))>0.5, a=hor?TL:TW, b=hor?TW:TL; R.push([ox+p.x-a/2,oy+p.y-b/2,ox+p.x+a/2,oy+p.y+b/2]); });
   // botella y cenicero: la mano no cae encima ni el brazo pasa por arriba
-  const P=[[16,350,190,520],[740,440,950,520]];
+  const P=[[40,385,215,505],[730,415,925,505]];
   const free=(x,y)=>{ const q=[x-40,y-40,x+40,y+40]; return !R.concat(P).some(t=>q[0]<t[2]&&q[2]>t[0]&&q[1]<t[3]&&q[3]>t[1]); };
   const armOK=(x,y)=>{ for(let k=0.1;k<=1;k+=0.05){ const px=E.x+(x-E.x)*k, py=E.y+(y-E.y)*k; if(P.some(t=>px>t[0]-18&&px<t[2]+18&&py>t[1]-18&&py<t[3]+18)) return false; } return true; };
   const min=seat%2===0?110:150;
@@ -914,7 +973,7 @@ function layoutChain(){
   // vueltecita de dos fichas de pie al llegar cerca del borde. Los dobles van cruzados y nunca hacen esquina;
   // tras un doble la línea sigue recta. Las fichas puestas no se mueven nunca.
   const res=[]; const idx0=G.chain.findIndex(i=>i.side==='C'); if(idx0<0) return res;
-  const LIMX=380, TOP=-186, BOT=198, H=Math.PI/2;
+  const LIMX=380, TOP=-170, BOT=182, H=Math.PI/2;
   const BXN=LIMX-2*(TW+TL)-TW;          // margen para un doble + ficha recta dos veces + la esquina
   const c0=G.chain[idx0];
   res[idx0]={x:0,y:0,ang:c0.dbl?H:0,a:c0.a,b:c0.b};
@@ -922,7 +981,7 @@ function layoutChain(){
     const V=dirSide==='R'?1:-1, LY=V>0?BOT:-TOP;
     let mode='h', dx=dirSide==='R'?1:-1, x=dx*(c0.dbl?TW:TL)/2, y=0, cx=0, yv=0, vcount=0, lastHalfW=TW/2, prevDbl=!!c0.dbl;
     const list=[]; if(dirSide==='R') for(let i=idx0+1;i<G.chain.length;i++) list.push(i); else for(let i=idx0-1;i>=0;i--) list.push(i);
-    const rowFits=()=>Math.abs(y)+3*TW+TW/2+TW<=LY;   // cabe otra fila (con margen por si un doble alarga la vuelta)
+    const rowFits=()=>Math.abs(y)+3*TW+TW/2<=LY;   // cabe otra fila (con margen por si un doble alarga la vuelta)
     for(const i of list){
       const it=G.chain[i];
       if(mode==='h'){
@@ -991,6 +1050,7 @@ function drawTable(){
   drawExps();
   drawFist();
   drawDrink();
+  drawSmoke();
   drawChainLayer();
   drawCounting();
   // mensaje: siempre encima y en un hueco sin fichas
@@ -1008,6 +1068,7 @@ function freeSpot(w,h){
   return {x:VW/2,y:VH/2-150};
 }
 // las fichas de la mesa se dibujan siempre encima de todo: nada tapa sus números
+const DRAWQ=[];
 function drawChainLayer(){
   // cadena
   const sx=G.shake>0?(Math.random()-0.5)*G.shake:0, sy=G.shake>0?(Math.random()-0.5)*G.shake:0;
@@ -1028,8 +1089,10 @@ function drawChainLayer(){
     let X=ox+p.x*fit+jx, Y=oy+p.y*fit+bump+jy+hop, A=p.ang+jr, S=1;
     const g=G.cnt&&G.state==='handover'?clamp((G.frame-G.cnt.t0-70)/40,0,1):0;
     if(g>0){ const e=g*g*(3-2*g), tx=48+(i%12)*26, ty=86+Math.floor(i/12)*16; X+=(tx-X)*e; Y+=(ty-Y)*e; A=A*(1-e); S=1-0.45*e; }   // se recogen ordenadas en una esquina
-    ctx.save(); ctx.translate(X,Y); ctx.rotate(A); drawTile(ctx,p.a,p.b,TL*fit*S,TW*fit*S,true); ctx.restore();
+    DRAWQ.push([X,Y,A,p,S]);
   });
+  for(const q of DRAWQ){ ctx.save(); ctx.translate(q[0],q[1]); ctx.rotate(q[2]); tileShadow(ctx,TL*q[4],TW*q[4]); ctx.restore(); }
+  TILE_NOSH=true; for(const q of DRAWQ){ ctx.save(); ctx.translate(q[0],q[1]); ctx.rotate(q[2]); drawTile(ctx,q[3].a,q[3].b,TL*q[4],TW*q[4],true); ctx.restore(); } TILE_NOSH=false; DRAWQ.length=0;
 
   // ficha volando
   if(G.fly){
@@ -1041,7 +1104,7 @@ function drawChainLayer(){
     ctx.save(); ctx.translate(x,y); ctx.rotate(p.ang+(1-e)*(f.seat%2?2.4:-2.4)); drawTile(ctx,p.a,p.b,TL*fit*sc,TW*fit*sc,true); ctx.restore();
   }
 }
-function seatPos(s){ return [{x:VW/2,y:VH-20},{x:VW-40,y:VH/2},{x:VW/2,y:20},{x:40,y:VH/2}][s]; }
+function seatPos(s){ return [{x:VW/2,y:VH-36},{x:VW-40,y:VH/2},{x:VW/2,y:36},{x:40,y:VH/2}][s]; }   // todas las fichas desde la línea blanca hacia dentro
 function drawSeat(s){
   const font=getComputedStyle(document.body).fontFamily, n=G.hands[s].length, me=G.turn===s&&G.state==='play';
   const pos=seatPos(s);
@@ -1058,18 +1121,23 @@ function drawSeat(s){
       if(up){ const t=G.hands[s][i]; drawTile(ctx,t[0],t[1],40,20,true); } else drawTile(ctx,0,0,36,18,false); ctx.restore();
     }
   }
-  // nombre
-  const label=G.names[s];
-  ctx.font='700 15px '+font; const w=ctx.measureText(label).width+22;
-  let lx=pos.x, ly=pos.y; if(s===0||s===2){ ly=pos.y+(s===0?-18:18); lx=VW/2-128-w/2; } else { ly=VH/2-118; lx=s===1?Math.min(VW-w/2-4,VW-54):Math.max(w/2+26,54); }
-  if(s===0&&showLocalHand()){ ly=VH-26; lx=VW/2; }
-  ctx.fillStyle=me?'#ffd23a':'rgba(0,0,0,0.5)'; rr(ctx,lx-w/2,ly-13,w,26,13); ctx.fill();
-  { const dx=lx-w/2-12; ctx.fillStyle=seatColor(s); ctx.beginPath(); ctx.arc(dx,ly,9,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke(); }   // punto de color del jugador
-  ctx.fillStyle=me?'#3a2600':'#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label,lx,ly+1);
-  const ph=G.photos[s];
-  if(ph){ const R=(s===0||s===2)?20:26, ax=(s===0||s===2)?lx-w/2-26:lx, ay=(s===0||s===2)?ly:ly-42;
-    ctx.save(); ctx.beginPath(); ctx.arc(ax,ay,R,0,7); ctx.closePath(); ctx.fillStyle='#000'; ctx.fill(); ctx.clip(); ctx.drawImage(ph,ax-R,ay-R,R*2,R*2); ctx.restore();
-    ctx.strokeStyle=me?'#ffd23a':'#fff'; ctx.lineWidth=me?4:2.5; ctx.beginPath(); ctx.arc(ax,ay,R,0,7); ctx.stroke(); }
+  // nombre en el borde de madera, pegado a las fichas: arriba y abajo en horizontal, a los lados en vertical (letra debajo de letra)
+  const label=G.names[s], ph=G.photos[s], DR=7, PR=10;
+  ctx.font='700 14px '+font; ctx.textBaseline='middle'; ctx.lineJoin='round';
+  const txt=(t,x,y)=>{ if(me){ ctx.fillStyle='#3a2600'; ctx.fillText(t,x,y); } else { ctx.lineWidth=3; ctx.strokeStyle='rgba(30,14,4,.85)'; ctx.strokeText(t,x,y); ctx.fillStyle='#fff6e0'; ctx.fillText(t,x,y); } };
+  const dot=(x,y)=>{ ctx.fillStyle=seatColor(s); ctx.beginPath(); ctx.arc(x,y,DR,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); };
+  const pic=(x,y)=>{ ctx.save(); ctx.beginPath(); ctx.arc(x,y,PR,0,7); ctx.clip(); ctx.drawImage(ph,x-PR,y-PR,PR*2,PR*2); ctx.restore(); ctx.strokeStyle=me?'#3a2600':'#fff'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,PR,0,7); ctx.stroke(); };
+  if(s===0||s===2){
+    const y=s===0?VH-13:13, tw=ctx.measureText(label).width, W=DR*2+6+(ph?PR*2+6:0)+tw; let x=VW/2-W/2;
+    if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,x-8,y-11,W+16,22,11); ctx.fill(); }
+    dot(x+DR,y); x+=DR*2+6; if(ph){ pic(x+PR,y); x+=PR*2+6; }
+    ctx.textAlign='left'; txt(label,x,y+1);
+  } else {
+    const x=s===1?VW-13:13, L=[...label], step=c=>c===' '?8:15, th=L.reduce((n,c)=>n+step(c),0), H=DR*2+6+(ph?PR*2+6:0)+th; let y=VH/2-H/2;
+    if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,x-11,y-8,22,H+16,11); ctx.fill(); }
+    dot(x,y+DR); y+=DR*2+6; if(ph){ pic(x,y+PR); y+=PR*2+6; }
+    ctx.textAlign='center'; for(const c of L){ const h=step(c); if(c!==' ') txt(c,x,y+h/2+1); y+=h; }
+  }
   ctx.restore();
 }
 function showLocalHand(){ return !isTV; }
@@ -1087,11 +1155,11 @@ function tileCanvas(t,w,h){
 function renderHand(){
   const h=myHand(); tilesEl.innerHTML='';
   const H=tilesEl.clientHeight||150; let th=Math.min(H-18,120), tw=th/2;
-  if(G.remoteMode){ const n=Math.max(1,h.length); tw=Math.min((H-22)/2,(tilesEl.clientWidth-12-(n-1)*4)/n); th=tw*2; }
+  if(G.remoteMode){ const n=Math.max(1,h.length); tw=Math.min((H-52)/2,(tilesEl.clientWidth-8-(n-1)*4)/n); th=tw*2; }   // deja sitio arriba para la FUERZA y abajo para el borde del atril
   const gap=G.remoteMode?4:Math.min(10,Math.max(-tw*0.45,(tilesEl.clientWidth-24-h.length*tw)/Math.max(1,h.length-1)));
   const total=h.length*tw+(h.length-1)*gap, x0=(tilesEl.clientWidth-total)/2;
   h.forEach((t,i)=>{
-    const el=document.createElement('div'); el.className='tile'; el.style.width=tw+'px'; el.style.height=th+'px'; el.style.left=(x0+i*(tw+gap))+'px'; el.style.top=(G.remoteMode?Math.max(2,H-th-14):Math.max(14,(H-th)/2+6))+'px';
+    const el=document.createElement('div'); el.className='tile'; el.style.width=tw+'px'; el.style.height=th+'px'; el.style.left=(x0+i*(tw+gap))+'px'; el.style.top=(G.remoteMode?Math.max(26,H-th-25):Math.max(14,(H-th)/2+6))+'px';
     el.appendChild(tileCanvas(t,tw,th)); el._t=t; el._i=i;
     const opts=myOpts(t);
     if(myTurn()&&opts.length&&performance.now()<hintUntil) el.classList.add('hint');   // solo se iluminan si tocó una que no casa
@@ -1174,7 +1242,8 @@ function myEnergy(){ return G.remoteMode?(G.rEnergy||0):(G.energy?G.energy[0]:0)
 function effPower(){ return myEnergy(); }
 window.showPower=showPower;
 function showPower(){ const e=myEnergy(), v=effPower();
-  document.getElementById('powcap').style.height=Math.round(e*100)+'%'; document.getElementById('powfill').style.height=Math.round(v*100)+'%';
+  const pr=G.remoteMode?'width':'height', o=G.remoteMode?'height':'width';   // en el cel del jugador la barra va acostada arriba
+  const pc=document.getElementById('powcap').style, pf=document.getElementById('powfill').style; pc[o]=''; pf[o]=''; pc[pr]=Math.round(e*100)+'%'; pf[pr]=Math.round(v*100)+'%';
   document.getElementById('powpct').textContent='NIVEL '+Math.round(e*10); powEl.classList.toggle('full',e>=0.999); }
 function setPowerFromY(y){ const b=powTrack.getBoundingClientRect(); POWER=clamp(1-(y-b.top)/b.height,0,1); POWER=POWER>0.97?1:Math.round(POWER*20)/20; showPower(); try{ localStorage.setItem('dominoFuerza',String(POWER)); }catch(_){} }
 let powId=null;
@@ -1576,7 +1645,7 @@ function update(){
   if(G.fly){ G.fly.t++; if(G.fly.t>=G.fly.dur) landed(); return; }
   if(G.state==='play'){
     if(G.passT>0){ G.passT--; if(G.passT===0) nextTurn(); return; }
-    if(!G.human[G.turn]&&!(G.turn===0&&G.drink)){ if(--G.aiT<=0){ const c=aiChoose(G.turn); if(c) doPlay(G.turn,c.t,c.side,0.3+Math.random()*0.5); else doPass(G.turn,Math.random()<0.4?2:1); } }
+    if(!G.human[G.turn]&&!(G.turn===0&&G.drink)&&!(G.turn===1&&G.smoke)){ if(--G.aiT<=0){ const c=aiChoose(G.turn); if(c) doPlay(G.turn,c.t,c.side,0.3+Math.random()*0.5); else doPass(G.turn,Math.random()<0.4?2:1); } }
   } else if(G.state==='handover'){
     const c=G.cnt; if(c&&!c.done){ const hs=G.frame-c.t0;
       while(c.next<c.list.length&&hs>=130+c.next*28+16){ c.sum+=pips(c.list[c.next].t); c.next++; clack(0.45); }
