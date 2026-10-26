@@ -1,0 +1,33 @@
+name: Subir música del Dominó
+
+on:
+  workflow_dispatch:
+    inputs:
+      lista:
+        description: "NN URL separados por ;"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  musica:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Descargar canciones
+        env:
+          LISTA: ${{ inputs.lista }}
+        run: |
+          mkdir -p salida
+          echo "$LISTA" | tr ';' '\n' | while read -r n u; do
+            [ -z "$n" ] && continue
+            curl -sSfL --retry 3 -o "salida/$n.mp3" "$u" && echo "ok $n $(stat -c%s salida/$n.mp3)"
+          done
+          ls -la salida
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: musica
+          name: Música del Dominó Cubano
+          body: Canciones del juego (Suno Pro, uso comercial).
+          files: salida/*.mp3
+          make_latest: false
