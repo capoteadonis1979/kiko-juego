@@ -8,7 +8,7 @@ android {
         minSdk 21
         targetSdk 36
         versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
-        versionName '3.6.0'
+        versionName '3.6.1'
     }
     signingConfigs {
         release {
@@ -33,5 +33,6 @@ android {
 
 dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.13.1'
     implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
 }

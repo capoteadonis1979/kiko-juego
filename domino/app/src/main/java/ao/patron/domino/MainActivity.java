@@ -1,6 +1,15 @@
 package ao.patron.domino;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.net.Uri;
+import android.provider.Settings;
+import androidx.core.content.FileProvider;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
@@ -98,11 +107,93 @@ public class MainActivity extends Activity {
                 return loader.shouldInterceptRequest(r.getUrl());
             }
             @Override
-            public void onPageFinished(WebView v, String url) { notifyNet(); }
+            public void onPageFinished(WebView v, String url) { notifyNet(); buscarActualizacion(); }
         });
         setContentView(web);
         pantallaCompleta();
         web.loadUrl("https://appassets.androidplatform.net/assets/www/index.html" + (tv ? "?tv=1" : ""));
+    }
+
+    // ================= ACTUALIZAR =================
+    // al abrir, mira en GitHub si hay versión nueva; si la hay, pregunta, la descarga y abre el instalador
+    private static final String UPD = "https://github.com/capoteadonis1979/kiko-juego/releases/download/domino/";
+    private File apkNueva = null;
+    private boolean esperaPermiso = false, yaBuscado = false;
+
+    private String miVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "0"; } }
+    private static int num(String t) { try { return Integer.parseInt(t.replaceAll("[^0-9]", "")); } catch (Exception e) { return 0; } }
+    private static int compara(String a, String b) {
+        String[] x = a.trim().split("\\."), y = b.trim().split("\\.");
+        for (int i = 0; i < Math.max(x.length, y.length); i++) { int p = i < x.length ? num(x[i]) : 0, q = i < y.length ? num(y[i]) : 0; if (p != q) return p < q ? -1 : 1; }
+        return 0;
+    }
+    private void buscarActualizacion() {
+        if (yaBuscado) return; yaBuscado = true;
+        new Thread(() -> {
+            try {
+                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "version.txt").openConnection();
+                c.setConnectTimeout(8000); c.setReadTimeout(8000); c.setUseCaches(false); c.setInstanceFollowRedirects(true);
+                if (c.getResponseCode() != 200) return;
+                BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                String v = r.readLine(); r.close();
+                if (v == null) return; final String nv = v.trim();
+                if (nv.length() > 0 && compara(nv, miVersion()) > 0) runOnUiThread(() -> ofrecer(nv));
+            } catch (Exception ignored) { }
+        }).start();
+    }
+    private void ofrecer(String v) {
+        if (isFinishing()) return;
+        new AlertDialog.Builder(this)
+            .setTitle("Versión nueva " + v)
+            .setMessage("Hay una versión nueva del Dominó Cubano (tienes la " + miVersion() + ").\n¿La instalo ahora?")
+            .setPositiveButton("ACTUALIZAR", (d, w) -> descargar())
+            .setNegativeButton("DESPUÉS", null)
+            .show();
+    }
+    private void descargar() {
+        final AlertDialog dlg = new AlertDialog.Builder(this).setTitle("Actualizando").setMessage("Descargando… 0%").setCancelable(false).create();
+        dlg.show();
+        new Thread(() -> {
+            try {
+                File dir = new File(getCacheDir(), "upd"); dir.mkdirs();
+                File f = new File(dir, "DominoCubano.apk");
+                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "DominoCubano.apk").openConnection();
+                c.setConnectTimeout(15000); c.setReadTimeout(30000); c.setInstanceFollowRedirects(true);
+                int total = c.getContentLength(), hecho = 0, ult = -1;
+                try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(f)) {
+                    byte[] buf = new byte[32768]; int n;
+                    while ((n = in.read(buf)) > 0) { out.write(buf, 0, n); hecho += n;
+                        if (total > 0) { final int pc = (int) (hecho * 100L / total); if (pc != ult) { ult = pc; runOnUiThread(() -> dlg.setMessage("Descargando… " + pc + "%")); } } }
+                }
+                runOnUiThread(() -> { dlg.dismiss(); apkNueva = f; instalar(); });
+            } catch (Exception e) {
+                runOnUiThread(() -> { dlg.dismiss(); new AlertDialog.Builder(this).setMessage("No se pudo descargar la versión nueva. Revisa el internet y vuelve a abrir el juego.").setPositiveButton("OK", null).show(); });
+            }
+        }).start();
+    }
+    private void instalar() {
+        if (apkNueva == null) return;
+        if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+            esperaPermiso = true;
+            new AlertDialog.Builder(this)
+                .setMessage("Para actualizar, activa \"Permitir de esta fuente\" (instalar apps desconocidas) para Dominó Cubano y vuelve atrás.")
+                .setPositiveButton("ABRIR AJUSTES", (d, w) -> {
+                    try { startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()))); }
+                    catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS)); } catch (Exception ignored) { } }
+                })
+                .setNegativeButton("DESPUÉS", (d, w) -> esperaPermiso = false)
+                .show();
+            return;
+        }
+        try {
+            Uri u = FileProvider.getUriForFile(this, getPackageName() + ".files", apkNueva);
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setDataAndType(u, "application/vnd.android.package-archive");
+            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+        } catch (Exception e) {
+            new AlertDialog.Builder(this).setMessage("No se pudo abrir el instalador.").setPositiveButton("OK", null).show();
+        }
     }
 
     private void js(String code) { runOnUiThread(() -> { if (web != null) web.evaluateJavascript(code, null); }); }
@@ -444,7 +535,8 @@ public class MainActivity extends Activity {
     protected void onPause() { if (web != null) web.onPause(); super.onPause(); }
 
     @Override
-    protected void onResume() { super.onResume(); if (web != null) web.onResume(); pantallaCompleta(); }
+    protected void onResume() { super.onResume(); if (web != null) web.onResume(); pantallaCompleta();
+        if (esperaPermiso && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) { esperaPermiso = false; instalar(); } }
 
     @Override
     protected void onDestroy() {
