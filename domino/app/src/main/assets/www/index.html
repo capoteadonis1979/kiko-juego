@@ -2682,7 +2682,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.6.7';
+const VERSION='v3.6.8';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2768,19 +2768,26 @@ function musStepPlay(t,st){
   if(s16===12) mPluck(t,mNote(nx[0]-24),0.5,0.5,'triangle');
   const k=MONT.indexOf(s16); if(k>=0){ const n=ch[k%3]+(k>3?12:0); mPluck(t,mNote(n+12),0.16,0.08); mPluck(t,mNote(n+24),0.12,0.05,'triangle'); }   // montuno
 }
-/* canciones cubanas de verdad (Suno): suenan por internet; sin internet, sigue el son de la casa */
-const SONGS=[['Pega la ficha, compay','a0686fab-a21e-496b-bf97-7e79babfed4a'],['Río Yayabo','e4ac2aca-aa93-4610-8117-f1dc74df4478'],['Tinajón de mi tierra','8512a60f-0f3a-4a14-8278-1ca29188c36a'],['Habana de mi Malecón','134e65e4-f543-4508-8ab2-049cd5c2e549'],['Cubano en Angola','03289ba7-7a0a-4545-986a-f00e564ae19a']];
+/* canciones cubanas (Suno Pro): se bajan una vez y quedan guardadas en el aparato; mientras tanto suena el son de la casa */
+const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['Lechón, congrí y carnaval','07.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3']];
+const NATIVE_MUS=!!(window.KikoApp&&KikoApp.songsReady);
 let songIdx=0; try{ songIdx=(parseInt(localStorage.getItem('dominoCancion'))||0)%SONGS.length; }catch(_){}
-let songEl=null, songOK=true, songErr=0, songRetry=0;
-function songWant(){ return MUS&&!G.remoteMode&&!document.hidden&&songOK; }
+let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songAsked=false, songReadyT=0;
+function songRefresh(){ if(!NATIVE_MUS){ SONGS.forEach(x=>songReady.add(x[1])); return; } try{ String(KikoApp.songsReady()||'').split(',').filter(Boolean).forEach(f=>songReady.add(f)); }catch(_){} }
+window.kikoSong=f=>{ songReady.add(f); };
+function songSrc(k){ const f=SONGS[k][1]; return NATIVE_MUS?'https://appassets.androidplatform.net/music/'+f:'https://github.com/capoteadonis1979/kiko-juego/releases/download/musica/'+f; }
+function songWant(){ return MUS&&!G.remoteMode&&!document.hidden&&songOK&&songReady.size>0; }
+function songPick(){ for(let n=0;n<SONGS.length;n++){ if(songReady.has(SONGS[songIdx][1])) return true; songIdx=(songIdx+1)%SONGS.length; } return false; }
 function songLoad(){ if(!songEl){ songEl=new Audio(); songEl.volume=0.6*MUSV/5; songEl.preload='auto';
     songEl.addEventListener('ended',()=>songNext(1));
     songEl.addEventListener('playing',()=>{ songErr=0; });
     songEl.addEventListener('error',()=>{ if(++songErr>=SONGS.length){ songOK=false; songRetry=Date.now()+90000; } else songNext(1); }); }
-  songEl.src='https://d2lwuy8qc234o3.cloudfront.net/1/clip/'+SONGS[songIdx][1]+'.m4a'; }
-function songNext(d){ songIdx=(songIdx+(d||1)+SONGS.length)%SONGS.length; try{ localStorage.setItem('dominoCancion',songIdx); }catch(_){} if(songEl){ songLoad(); if(songWant()) songEl.play().catch(()=>{}); } musLabel(); broadcast(); }
+  if(!songPick()) return; songEl.src=songSrc(songIdx); }
+function songNext(d){ songIdx=(songIdx+(d||1)+SONGS.length)%SONGS.length; songPick(); try{ localStorage.setItem('dominoCancion',songIdx); }catch(_){} if(songEl){ songLoad(); if(songWant()) songEl.play().catch(()=>{}); } musLabel(); broadcast(); }
 function songTick(){ if(!songOK&&Date.now()>songRetry){ songOK=true; songErr=0; } if(songEl) songEl.volume=Math.min(1,0.6*MUSV/5);
-  if(songWant()){ if(!songEl) songLoad(); if(songEl.paused) songEl.play().catch(()=>{}); } else if(songEl&&!songEl.paused) songEl.pause(); }
+  if(Date.now()-songReadyT>8000){ songReadyT=Date.now(); songRefresh(); }
+  if(MUS&&!G.remoteMode&&!songAsked&&NATIVE_MUS&&songReady.size<SONGS.length){ songAsked=true; try{ KikoApp.fetchSongs(SONGS.map(x=>x[1]).join(',')); }catch(_){} }
+  if(songWant()){ if(!songEl) songLoad(); if(songEl.paused&&songEl.src) songEl.play().catch(()=>{}); } else if(songEl&&!songEl.paused) songEl.pause(); }
 setInterval(()=>{ try{ songTick(); }catch(_){} },700);
 function musTick(){
   if(!AC||!MUS||G.remoteMode||document.hidden||AC.state!=='running'||(songOK&&songEl&&!songEl.paused&&!songEl.error)){ musNext=0; return; }

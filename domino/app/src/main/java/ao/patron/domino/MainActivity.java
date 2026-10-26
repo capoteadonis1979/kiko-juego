@@ -90,6 +90,7 @@ public class MainActivity extends Activity {
 
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/music/", new WebViewAssetLoader.InternalStoragePathHandler(this, musicDir()))
                 .build();
 
         web = new WebView(this);
@@ -111,6 +112,38 @@ public class MainActivity extends Activity {
         setContentView(web);
         pantallaCompleta();
         web.loadUrl("https://appassets.androidplatform.net/assets/www/index.html" + (tv ? "?tv=1" : ""));
+    }
+
+    // ================= MÚSICA =================
+    // las canciones se bajan una sola vez de GitHub y quedan guardadas en el aparato
+    private static final String MUS_URL = "https://github.com/capoteadonis1979/kiko-juego/releases/download/musica/";
+    private volatile boolean bajandoMusica = false;
+    private File musicDir() { File d = new File(getFilesDir(), "music"); d.mkdirs(); return d; }
+    private String cancionesListas() {
+        StringBuilder sb = new StringBuilder(); File[] fs = musicDir().listFiles();
+        if (fs != null) for (File f : fs) if (f.getName().endsWith(".mp3") && f.length() > 100000) { if (sb.length() > 0) sb.append(','); sb.append(f.getName()); }
+        return sb.toString();
+    }
+    private void bajarMusica(String lista) {
+        if (bajandoMusica || lista == null) return; bajandoMusica = true;
+        new Thread(() -> {
+            try {
+                for (String n : lista.split(",")) {
+                    n = n.trim(); if (!n.matches("[0-9A-Za-z_-]+\\.mp3")) continue;
+                    File f = new File(musicDir(), n); if (f.exists() && f.length() > 100000) continue;
+                    File tmp = new File(musicDir(), n + ".part");
+                    try {
+                        HttpURLConnection c = (HttpURLConnection) new URL(MUS_URL + n).openConnection();
+                        c.setConnectTimeout(15000); c.setReadTimeout(30000); c.setInstanceFollowRedirects(true);
+                        if (c.getResponseCode() != 200) continue;
+                        try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(tmp)) {
+                            byte[] buf = new byte[65536]; int k; while ((k = in.read(buf)) > 0) out.write(buf, 0, k);
+                        }
+                        if (tmp.length() > 100000 && tmp.renameTo(f)) js("window.kikoSong&&kikoSong(" + JSONObject.quote(n) + ")");
+                    } catch (Exception e) { tmp.delete(); }
+                }
+            } finally { bajandoMusica = false; }
+        }).start();
     }
 
     // ================= ACTUALIZAR =================
@@ -338,6 +371,12 @@ public class MainActivity extends Activity {
                 } catch (Exception ignored) { }
             });
         }
+
+        @JavascriptInterface
+        public String songsReady() { return cancionesListas(); }
+
+        @JavascriptInterface
+        public void fetchSongs(String lista) { bajarMusica(lista); }
 
         @JavascriptInterface
         public void showKeyboard() {
