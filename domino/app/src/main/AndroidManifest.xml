@@ -19,12 +19,10 @@
         android:hardwareAccelerated="true">
         <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
         <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="ao.patron.domino.files"
+            android:name=".ApkProvider"
+            android:authorities="ao.patron.domino.apk"
             android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/rutas" />
-        </provider>
+            android:grantUriPermissions="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

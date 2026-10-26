@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.net.Uri;
 import android.provider.Settings;
-import androidx.core.content.FileProvider;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -186,7 +185,7 @@ public class MainActivity extends Activity {
             return;
         }
         try {
-            Uri u = FileProvider.getUriForFile(this, getPackageName() + ".files", apkNueva);
+            Uri u = Uri.parse("content://ao.patron.domino.apk/DominoCubano.apk");
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setDataAndType(u, "application/vnd.android.package-archive");
             i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
