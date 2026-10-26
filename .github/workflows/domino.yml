@@ -36,7 +36,9 @@ jobs:
       - name: Compilar Dominó Cubano firmado
         env:
           VERSION_CODE: ${{ github.run_number }}
-        run: gradle -p domino :app:assembleRelease --stacktrace
+        run: |
+          set -o pipefail
+          gradle -p domino :app:assembleRelease 2>&1 | tee build.log || { grep -E "error:|e: |What went wrong|^\* What|Execution failed|> " build.log | head -25 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
 
       - name: Renombrar
         run: |
