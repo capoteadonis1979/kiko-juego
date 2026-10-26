@@ -117,7 +117,8 @@ public class MainActivity extends Activity {
     // al abrir, mira en GitHub si hay versión nueva; si la hay, pregunta, la descarga y abre el instalador
     private static final String UPD = "https://github.com/capoteadonis1979/kiko-juego/releases/download/domino/";
     private File apkNueva = null;
-    private boolean esperaPermiso = false, yaBuscado = false;
+    private boolean esperaPermiso = false, avisando = false;
+    private long ultBusqueda = 0;
 
     private String miVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "0"; } }
     private static int num(String t) { try { return Integer.parseInt(t.replaceAll("[^0-9]", "")); } catch (Exception e) { return 0; } }
@@ -127,7 +128,7 @@ public class MainActivity extends Activity {
         return 0;
     }
     private void buscarActualizacion() {
-        if (yaBuscado) return; yaBuscado = true;
+        long ahora = System.currentTimeMillis(); if (avisando || ahora - ultBusqueda < 10 * 60 * 1000L) return; ultBusqueda = ahora;
         new Thread(() -> {
             try {
                 HttpURLConnection c = (HttpURLConnection) new URL(UPD + "version.txt").openConnection();
@@ -141,12 +142,13 @@ public class MainActivity extends Activity {
         }).start();
     }
     private void ofrecer(String v) {
-        if (isFinishing()) return;
+        if (isFinishing() || avisando) return; avisando = true;
         new AlertDialog.Builder(this)
             .setTitle("Versión nueva " + v)
             .setMessage("Hay una versión nueva del Dominó Cubano (tienes la " + miVersion() + ").\n¿La instalo ahora?")
             .setPositiveButton("ACTUALIZAR", (d, w) -> descargar())
             .setNegativeButton("DESPUÉS", null)
+            .setOnDismissListener(d -> avisando = false)
             .show();
     }
     private void descargar() {
@@ -535,7 +537,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() { super.onResume(); if (web != null) web.onResume(); pantallaCompleta();
-        if (esperaPermiso && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) { esperaPermiso = false; instalar(); } }
+        if (esperaPermiso && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) { esperaPermiso = false; instalar(); }
+        else if (!esperaPermiso && web != null && web.getProgress() >= 100) buscarActualizacion(); }
 
     @Override
     protected void onDestroy() {

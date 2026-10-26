@@ -261,7 +261,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano de la máquina o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
-    <div id="passbox" hidden><b>NO LLEVAS FICHA · ¿CÓMO PASAS?</b><div id="pbtns"><button data-st="toque">👊 TOQUE<small>1 o 2 toques</small></button><button data-st="palma">✋ PALMA<small>¡Pa' ti!</small></button><button data-st="senalar">👉 SEÑALAR<small>¡Juega tú!</small></button><button data-st="bum">😡 ¡BUM!<small>las dos manos</small></button></div><i id="passn"></i></div>
+    <div id="passbox" hidden><b>NO LLEVAS FICHA · ¿CÓMO PASAS?</b><div id="pbtns"><button data-st="toque">👊 TOQUE<small>1 o 2 toques</small></button><button data-st="palma">✋ PALMA<small>¡Pa' ti!</small></button><button data-st="senalar">👉 SEÑALAR<small>¡Juega tú!</small></button><button data-st="bum">😡 TA-TA-TÁ<small>las dos manos</small></button></div><i id="passn"></i></div>
     <div id="seatbox" hidden><b>ELIGE TU SILLA</b><div id="seatgrid"></div><small>Tu pareja es siempre el de enfrente</small></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
     <div id="libreta" hidden><div id="libpage"></div><button id="libx">✕</button><button id="libnext" hidden>SIGUIENTE MANO ▶</button></div>
@@ -2680,7 +2680,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.6.2';
+const VERSION='v3.6.3';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3081,7 +3081,7 @@ function drawSmoke(){
     if(t>=70&&t<110&&t%4===0){ const bx=x+Math.cos(a)*tp, by=y+Math.sin(a)*tp; ctx.fillStyle='rgba(255,140,40,.6)'; ctx.beginPath(); ctx.arc(bx,by,4,0,7); ctx.fill(); } }
 }
 
-function passDur(f){ const st=f.st||'toque'; return st==='palma'?32:st==='senalar'?72:st==='bum'?52:12+f.n*16; }
+function passDur(f){ const st=f.st||'toque'; return st==='palma'?32:st==='senalar'?72:st==='bum'?60:12+f.n*16; }
 function drawFist(){
   const f=G.fist; if(!f) return; if(!PI_.fist||!PI_.palm||!PI_.point) return drawFistV();
   const st=f.st||'toque', t=G.frame-f.t, hitEnd=passDur(f), dur=hitEnd+14; if(t>dur){ G.fist=null; return; }
@@ -3108,17 +3108,17 @@ function drawFist(){
     const tw=t<10?0:t<20?(t-10)/10:t<=hitEnd?1:1-(t-hitEnd)/14, e=tw*tw*(3-2*tw);
     const wag=t>=20&&t<hitEnd?Math.sin((t-20)*0.45)*0.07:0;
     handArm('point',P.x,P.y,rot0+dr*e+wag,1.08,E,{lift:0.25});
-  } else {   // ¡BUM! con las dos manos
-    const px=-uy, py=ux, H=[[14,38],[26,50]];
-    for(let h=0;h<2;h++){ const sg=h?1:-1, Eh={x:E.x+px*48*sg,y:E.y+py*48*sg}, Th={x:T.x+px*34*sg,y:T.y+py*34*sg};
-      const P={x:Eh.x+(Th.x-Eh.x)*k,y:Eh.y+(Th.y-Eh.y)*k};
-      let lift=1; for(const hh of H[h]) lift=Math.min(lift,Math.min(1,Math.abs(t-hh)/12)); if(t<6) lift=1;
-      handArm('fist',P.x,P.y,rot0+sg*0.12,1.12*(1+0.35*lift),Eh,{lift,flip:h===0});
-      if(H[h].includes(t)) dust(P.x,P.y,20,2.2); }
-    const C={x:T.x-ux*20,y:T.y-uy*20}, hit=[14,26,38,50].find(h=>t>=h&&t<h+12);
-    if(hit!==undefined){ const e=(t-hit)/12; ltxt('¡BUM!',C.x+ux*70,C.y+uy*70-10,34+14*(1-e),'#ffd23a'); }
-    if(t>4&&t<hitEnd+8){ ctx.save(); ctx.font='40px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; const j=t%4<2?2:-2; ctx.fillText('😡',T.x+ux*120+j,T.y+uy*120-30); ctx.restore();
-      ltxt('¡#@%&!',T.x+ux*120+44,T.y+uy*120-62,20,'#ff3b2f'); }
+  } else {   // las dos manos, una a cada lado de sus fichas, tamborileando en la mesa: ta-ta-ta-ta
+    const sp=seatPos(f.seat), cx=VW/2-sp.x, cy=VH/2-sp.y, cl=Math.hypot(cx,cy), vx=cx/cl, vy=cy/cl, lx=vy, ly=-vx;
+    const off=f.seat%2===0?150:115, inw=f.seat%2===0?75:90;
+    for(let h=0;h<2;h++){ const sg=h?-1:1;   // h=0: mano izquierda del jugador
+      const Th={x:sp.x+vx*inw+lx*off*sg,y:sp.y+vy*inw+ly*off*sg}, Eh={x:sp.x-vx*90+lx*off*sg,y:sp.y-vy*90+ly*off*sg};
+      const P={x:Eh.x+(Th.x-Eh.x)*k,y:Eh.y+(Th.y-Eh.y)*k}, r=Math.atan2(Th.y-Eh.y,Th.x-Eh.x)+Math.PI/2;
+      let lift=t<10?0.6:0; if(t>=10&&t<hitEnd){ const u=((t-10+h*4)%8)/8; lift=0.55*Math.abs(Math.sin(u*Math.PI)); }
+      handArm('fist',P.x,P.y,r,1.0+0.25*lift,Eh,{lift,flip:h===0});
+      if(t>=10&&t<hitEnd&&((t-10+h*4)%8)===0) dust(P.x,P.y,4,0.8); }
+    if(t>4&&t<hitEnd+8){ const ex=sp.x+vx*175, ey=sp.y+vy*175; ctx.save(); ctx.font='40px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; const j=t%4<2?2:-2; ctx.fillText('😡',ex+j,ey); ctx.restore();
+      ltxt('¡#@%&!',ex+46,ey-32,20,'#ff3b2f'); }
   }
 }
 
@@ -3331,9 +3331,9 @@ function doPass(seat,n,st){
   const hitH=(p,sh)=>{ knock1(p); G.shake=Math.max(G.shake,sh); jolt(Math.min(1.1,sh/20)); };
   if(st==='toque') for(let k=0;k<n;k++) setTimeout(()=>{ if(hard){ knockHard(); G.shake=Math.max(G.shake,24); jolt(1.1); } else { knock1(1); G.shake=Math.max(G.shake,6); G.ashDrop=true; } },200+k*267);
   else if(st==='palma') setTimeout(()=>{ hitH(1.7,12); burst(AC?AC.currentTime:0,0.05,2600,1.2,1.2); },400);
-  else if(st==='bum'){ [233,433,633].forEach(ms=>setTimeout(()=>hitH(1.6,14),ms)); setTimeout(()=>{ knockHard(); G.shake=Math.max(G.shake,26); jolt(1.1); },833); }
-  const ms=st==='toque'?380+n*270:st==='palma'?700:st==='senalar'?1250:1100;
-  say(G.names[seat]+': '+(st==='palma'?'¡PA\' TI!':st==='senalar'?'¡JUEGA TÚ!':st==='bum'?'¡#@%&! ¡BUM!':(n>1?'¡PASO, PASO!':'PASO')),st==='bum'?110:80);
+  else if(st==='bum'){ for(let q=0;q<12;q++) setTimeout(()=>{ knock1(0.75+0.2*(q%2)); G.shake=Math.max(G.shake,4); if(q%4===0) jolt(0.3); },167+q*67); }
+  const ms=st==='toque'?380+n*270:st==='palma'?700:st==='senalar'?1250:1250;
+  say(G.names[seat]+': '+(st==='palma'?'¡PA\' TI!':st==='senalar'?'¡JUEGA TÚ!':st==='bum'?'¡#@%&!':(n>1?'¡PASO, PASO!':'PASO')),st==='bum'?110:80);
   if(G.passes>=ACT().length){ G.passT=99999; setTimeout(()=>{ if(G.state==='play') endHand(-1,true); },ms); broadcast(); return true; }
   G.passT=Math.round(ms/16.7); broadcast(); return true;
 }
