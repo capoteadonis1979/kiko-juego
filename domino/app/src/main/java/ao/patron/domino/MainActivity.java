@@ -208,6 +208,12 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isTV() { return tv; }
 
+        // abre el teclado de la tele / el cel para escribir en un cuadro de texto
+        @JavascriptInterface
+        public void showKeyboard() {
+            runOnUiThread(() -> { try { web.requestFocus(); android.view.inputmethod.InputMethodManager im = (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE); if (im != null) im.showSoftInput(web, 0); } catch (Exception ignored) {} });
+        }
+
         // identificador fijo del aparato (para el código de activación)
         @JavascriptInterface
         public String deviceId() {
@@ -371,6 +377,12 @@ public class MainActivity extends Activity {
         }
         if (c == KeyEvent.KEYCODE_DPAD_CENTER || c == KeyEvent.KEYCODE_ENTER || c == KeyEvent.KEYCODE_BUTTON_A || c == KeyEvent.KEYCODE_BUTTON_START) {
             if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) js("window.kikoKey&&kikoKey('a',true)");
+            return true;
+        }
+        // flechas del mando: las maneja el juego (así van siempre al botón de ese lado)
+        String dir = c == KeyEvent.KEYCODE_DPAD_LEFT ? "left" : c == KeyEvent.KEYCODE_DPAD_RIGHT ? "right" : c == KeyEvent.KEYCODE_DPAD_UP ? "up" : c == KeyEvent.KEYCODE_DPAD_DOWN ? "down" : null;
+        if (dir != null) {
+            if (e.getAction() == KeyEvent.ACTION_DOWN) js("window.kikoKey&&kikoKey('" + dir + "',true)");
             return true;
         }
         return super.dispatchKeyEvent(e);
