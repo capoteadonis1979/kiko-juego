@@ -209,6 +209,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 @media (max-height:460px){#cuba .flag{width:70px;height:36px} #cuba .tinajon{width:70px;height:51px} #cuba .cmg span{font-size:18px}}
 #pick{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:680px}
 #pick button{min-width:300px}
+#pick #psolo{flex:1 1 100%;max-width:624px}
 #menu{overflow-y:auto}
 @media (max-height:460px){#menu h1{font-size:28px} #menu>p{display:none} #menu button.big{font-size:20px;padding:8px 14px} #menu button{font-size:15px;padding:8px 12px;min-width:240px} #pick button{min-width:280px}}
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
@@ -343,7 +344,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="ver"></div>
 <script>
 (()=>{
-const VERSION='v3.1.0';
+const VERSION='v3.1.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -1451,9 +1452,13 @@ function setFocusBtn(el){ const b=menuBtns(); mFocus=b.indexOf(el); b.forEach(x=
 // mueve el resaltado al botón más cercano en la dirección de la flecha
 function menuMove(d,dir){ const b=menuBtns(); if(!b.length) return; const c=curBtn(); if(!c||c.offsetParent===null){ setFocusBtn(document.getElementById(defId())||b[0]); return; }
   dir=dir||(d>0?'down':'up'); const rc=c.getBoundingClientRect(), cx=rc.left+rc.width/2, cy=rc.top+rc.height/2; let best=null, bs=1e9;
-  for(const x of b){ if(x===c) continue; const q=x.getBoundingClientRect(), qx=q.left+q.width/2, qy=q.top+q.height/2, dx=qx-cx, dy=qy-cy;
-    const ok=dir==='down'?dy>8:dir==='up'?dy<-8:dir==='right'?dx>8:dx<-8; if(!ok) continue;
-    const main=(dir==='down'||dir==='up')?Math.abs(dy):Math.abs(dx), side=(dir==='down'||dir==='up')?Math.abs(dx):Math.abs(dy); const sc=main+side*2.2; if(sc<bs){ bs=sc; best=x; } }
+  const vert=dir==='down'||dir==='up';
+  for(const pass of [true,false]){   // primero los que están en la misma fila (o columna); si no hay, el más cercano
+    for(const x of b){ if(x===c) continue; const q=x.getBoundingClientRect(), qx=q.left+q.width/2, qy=q.top+q.height/2, dx=qx-cx, dy=qy-cy;
+      const ok=dir==='down'?dy>8:dir==='up'?dy<-8:dir==='right'?dx>8:dx<-8; if(!ok) continue;
+      const aligned=vert?(q.left<rc.right&&q.right>rc.left):(q.top<rc.bottom&&q.bottom>rc.top); if(pass&&!aligned) continue;
+      const main=vert?Math.max(0,dy>0?q.top-rc.bottom:rc.top-q.bottom):Math.max(0,dx>0?q.left-rc.right:rc.left-q.right), side=vert?Math.max(0,q.left-rc.right,rc.left-q.right):Math.max(0,q.top-rc.bottom,rc.top-q.bottom); const sc=main+side*2.2+(vert?Math.abs(dx):Math.abs(dy))*0.01; if(sc<bs){ bs=sc; best=x; } }
+    if(best) break; }
   if(best) setFocusBtn(best); else setFocusBtn(c); }
 function menuOk(){ const c=curBtn(); if(c) c.click(); }
 menu.addEventListener('focusin',e=>{ if(e.target.tagName==='BUTTON') menuBtns().forEach(x=>x.classList.toggle('focus',x===e.target)); });   // pulsa justo el botón resaltado
