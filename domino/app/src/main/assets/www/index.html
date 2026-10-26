@@ -67,7 +67,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #seatgrid button.me{background:#2fbf71;color:#fff;border-color:#1a7a44}
 #seatgrid button.pA{box-shadow:0 0 0 3px #e8403a inset}
 #seatgrid button.pB{box-shadow:0 0 0 3px #3a8ae8 inset}
-#pause{position:fixed;inset:0;z-index:45;background:rgba(6,16,10,.88);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
+#pause{position:fixed;inset:0;z-index:45;background:radial-gradient(ellipse at center,#17432b,#0b1a12 75%);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
 #pbox{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
 #pbox h2{margin:0 0 6px;color:var(--gold);font-size:24px}
 #pbox button{font:700 19px var(--font);min-width:320px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg);display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -156,7 +156,7 @@ body.remote #hand{flex:1;height:auto}
 .ipbox{display:flex;gap:8px;width:100%}
 .ipbox input{flex:1;min-width:0;font:15px var(--font);padding:8px;border-radius:8px;border:2px solid #2c4c66;background:#0e2a3e;color:var(--fg)}
 .ipbox button{font:700 13px var(--font);background:#2f7fe0;color:#fff;border:2px solid #1c4c94;border-radius:10px;padding:8px 10px}
-#menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(6,16,10,.82);z-index:20;padding:16px;box-sizing:border-box;text-align:center}
+#menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(ellipse at center,#17432b,#0b1a12 75%);z-index:20;padding:16px;box-sizing:border-box;text-align:center}
 #menu h1{margin:0;font-size:clamp(30px,6vw,52px);color:var(--gold);text-shadow:0 3px 0 #5e3214}
 #menu p{margin:0;max-width:34em;line-height:1.4;color:#d8e8dc;font-size:15px}
 #menu button{font:700 18px var(--font);min-width:260px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg)}
@@ -176,7 +176,7 @@ body.mesa #menu .lseat{padding:4px 8px}
 #lqr{grid-area:q;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--gold);line-height:1.15}
 #lqr svg{width:96px;height:96px;border-radius:6px}
 #lic{font-size:14px;color:#ffe9a8;font-weight:700;text-align:center}
-.ov{position:fixed;inset:0;z-index:46;background:rgba(6,16,10,.93);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;overflow-y:auto}
+.ov{position:fixed;inset:0;z-index:46;background:radial-gradient(ellipse at center,#17432b,#0b1a12 75%);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;overflow-y:auto}
 .ovbox{display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;max-width:600px;color:var(--fg)}
 .ovbox h2{margin:0;color:var(--gold);font-size:24px}
 .ovbox p{margin:0;line-height:1.4;font-size:16px}
@@ -2676,7 +2676,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.5.0';
+const VERSION='v3.5.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
