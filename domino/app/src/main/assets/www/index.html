@@ -341,7 +341,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #menu #pmesa{background:#7b3fc4;border-color:#4a2380}   /* TV en morado: el rojo es solo para salir */   /* empezar = verde (el rojo es solo para salir) */
 #menu button:focus{outline:none}
 #menu button.focus,#menu button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
-#ver{position:fixed;right:8px;bottom:4px;font-size:11px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
+#ver{position:fixed;right:max(28px,calc(env(safe-area-inset-right,0px) + 20px));bottom:max(8px,calc(env(safe-area-inset-bottom,0px) + 6px));font-size:12px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
 </style>
 <div id="app">
   <div id="tablebox">
@@ -2822,7 +2822,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.10';
+const VERSION='v3.9.11';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3958,7 +3958,13 @@ document.querySelectorAll('#pbtns button').forEach(b=>b.addEventListener('pointe
   passTaps=Math.min(2,passTaps+1); document.getElementById('passn').textContent='✊'.repeat(passTaps); clearTimeout(passTm);
   passTm=setTimeout(()=>{ const n=passTaps; passTaps=0; if(n) sendPass(n,'toque'); },650); }));
 // tocar en cualquier parte de la pantalla también pasa (no solo el botón)
-passbox.addEventListener('pointerdown',e=>{ e.preventDefault(); if(!mustPass()) return; initAudio(); try{ navigator.vibrate&&navigator.vibrate(40); }catch(_){} clearTimeout(passTm); passTaps=0; const r=Math.random(); sendPass(Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); });
+document.body.appendChild(passbox);   // fuera de cualquier caja: tapa la pantalla entera
+function passAnywhere(e){ if(passbox.hidden||!mustPass()) return; if(e.target&&e.target.closest&&e.target.closest('#pbtns')) return;
+  e.preventDefault(); e.stopPropagation(); passBlock=performance.now()+700; initAudio(); try{ navigator.vibrate&&navigator.vibrate(40); }catch(_){} clearTimeout(passTm); passTaps=0; const r=Math.random(); sendPass(Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); }
+// tocar en cualquier parte de la pantalla pasa (también con dedo: touchstart por si el teléfono no manda pointerdown)
+let passBlock=0;   // el mismo toque no puede pulsar además lo que hay debajo (MENÚ, fichas...)
+['click','pointerup','touchend','mouseup'].forEach(t=>document.addEventListener(t,e=>{ if(performance.now()<passBlock){ e.preventDefault(); e.stopPropagation(); } },true));
+document.addEventListener('pointerdown',passAnywhere,true); document.addEventListener('touchstart',passAnywhere,{capture:true,passive:false});
 setInterval(()=>{ if(!G.remoteMode&&!isTV) checkPassBox(); },200);
 // ---- elegir silla desde el cel (en la sala) ----
 const seatbox=document.getElementById('seatbox');
