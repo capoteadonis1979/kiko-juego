@@ -2900,7 +2900,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.3.4';
+const VERSION='v1.3.5';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3073,7 +3073,7 @@ function optsFor(k,tok){
   for(let i=0;i<4;i++){ let m=null;
     if(tok.kind==='sum'){ const a=G.toks.find(t=>t.id==='a'), b=G.toks.find(t=>t.id==='b'); if(!a||!b) break;
       if(G.pos[k][i]===CASA){ if(a.v+b.v===5) m=tryMove(k,i,5,true); }
-      else { const m1=tryMove(k,i,a.v,false); if(m1){ const save=G.pos[k][i]; G.pos[k][i]=m1.to; const m2=m1.to<META?tryMove(k,i,b.v,false):null; G.pos[k][i]=save; if(m2&&!m1.eat) m=Object.assign({},m2,{from:save,path:m1.path.concat(m2.path),eat:m2.eat}); } } }
+      else { const m1=tryMove(k,i,a.v,false); if(m1){ const save=G.pos[k][i]; G.pos[k][i]=m1.to; const m2=m1.to<META?tryMove(k,i,b.v,false):null; G.pos[k][i]=save; if(m2&&!m1.eat) m=Object.assign({},m2,{from:save,path:m1.path.concat(m2.path),eat:m2.eat,split:m1.path.length}); } } }
     else if(G.pos[k][i]===CASA){ if(tok.v===5&&tok.kind==='die') m=tryMove(k,i,5,true); }
     else m=tryMove(k,i,tok.v,false);
     r.push(m); }
@@ -3251,6 +3251,20 @@ function throwDice(k,vals,pw,aim,spin){ aim=clamp(+aim||0,-1,1); spin=clamp(+spi
     return {x:x0,y:y0,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,a:Math.random()*6,va:(Math.random()-0.5)*(0.6+spin*0.5),v,face:1+Math.floor(Math.random()*6),z:0.6,vz:0.05}; });
   G.dAnim={k,D,t:0,done:false,vals}; diceThrowSound(pw);
 }
+// los dos dados se pueden tocar pero nunca montarse uno encima del otro:
+// se mide el borde real de cada dado (girado y también cuando va en el aire) y se separan lo justo
+const DS=46;
+function sepDice(p,q,L,R,T,B,bounce){
+  for(let it=0;it<4;it++){
+    const py=p.y-p.z*DS*0.8, qy=q.y-q.z*DS*0.8; let dx=q.x-p.x, dy=qy-py, dd=Math.hypot(dx,dy);
+    if(dd<0.001){ dx=1; dy=0; dd=1; q.x+=0.5; }
+    const th=Math.atan2(dy,dx), half=d=>DS/2*(Math.abs(Math.cos(d.a-th))+Math.abs(Math.sin(d.a-th))), min=half(p)+half(q)+1;
+    if(dd>=min) return;
+    const nx=dx/dd, ny=dy/dd, ov=(min-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
+    if(bounce&&it===0){ const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny; if(rv<0){ p.vx+=rv*nx; p.vy+=rv*ny; q.vx-=rv*nx; q.vy-=rv*ny; diceHit(Math.min(1,-rv/8)); } }
+    for(const d of [p,q]){ d.x=clamp(d.x,L,R); d.y=clamp(d.y,T,B); }   // si la pared no deja, se empuja el otro en la próxima vuelta
+  }
+}
 function stepDice(){ const A=G.dAnim; if(!A||A.done) return; A.t++;
   const Ln=diceLane(DCORNER[A.k][0]), L=Ln.L, R=Ln.R, T=Ln.T, B=Ln.B; let moving=false;
   A.D.forEach(d=>{ d.x+=d.vx; d.y+=d.vy; d.a+=d.va; d.vz-=0.012; d.z+=d.vz; if(d.z<0){ d.z=0; if(Math.abs(d.vz)>0.03){ d.vz=-d.vz*0.45; diceHit(Math.hypot(d.vx,d.vy)/14); } else d.vz=0; }
@@ -3258,9 +3272,8 @@ function stepDice(){ const A=G.dAnim; if(!A||A.done) return; A.t++;
     if(d.y<T){ d.y=T; d.vy=-d.vy*0.6; diceHit(Math.abs(d.vy)/12); } if(d.y>B){ d.y=B; d.vy=-d.vy*0.6; diceHit(Math.abs(d.vy)/12); }
     const f=d.z>0?0.992:0.955; d.vx*=f; d.vy*=f; d.va*=0.96;
     const sp=Math.hypot(d.vx,d.vy); if(sp>1.2||d.z>0){ moving=true; if(A.t%3===0) d.face=1+Math.floor(Math.random()*6); } else { d.vx=d.vy=0; d.face=d.v; } });
-  if(A.D.length===2){ const [p,q]=A.D, dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), min=46; if(dd<min&&dd>0){ const nx=dx/dd, ny=dy/dd, ov=(min-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
-    const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny; if(rv<0){ p.vx+=rv*nx; p.vy+=rv*ny; q.vx-=rv*nx; q.vy-=rv*ny; diceHit(Math.min(1,-rv/8)); } } }
-  if(!moving||A.t>240){ A.D.forEach(d=>{ d.face=d.v; d.z=0; }); A.done=true; A.doneT=G.frame; }
+  if(A.D.length===2) sepDice(A.D[0],A.D[1],L,R,T,B,true);
+  if(!moving||A.t>240){ A.D.forEach(d=>{ d.face=d.v; d.z=0; }); if(A.D.length===2) for(let i=0;i<8;i++) sepDice(A.D[0],A.D[1],L,R,T,B,false); A.done=true; A.doneT=G.frame; }
 }
 /* ================= DIBUJO ================= */
 const cv=document.getElementById('t'), ctx=cv.getContext('2d'); let SC=1;
@@ -3318,7 +3331,9 @@ function drawTable(){
     c.beginPath(); c.arc(hx,hy,W*0.36,0,7); c.stroke(); c.restore(); }
   // fichas (la que se mueve, aparte)
   const list=[]; for(const q of ACT()) for(let i=0;i<4;i++){ if(G.anim&&G.anim.m.k===q&&G.anim.m.i===i) continue; if(G.fx.some(f=>f.t==='casa'&&f.k===q&&f.i===i&&G.frame-f.f<(f.life||40))) continue; let [x,y]=pieceXY(q,i,G.pos[q][i]); const pk=G.fx.find(f=>f.t==='patada'&&f.k===q&&f.i===i); if(pk){ const u=(G.frame-pk.f)/pk.life, b=u<0.6?Math.sin(u/0.6*Math.PI):0; x+=(pk.to[0]-x)*0.55*b; y+=(pk.to[1]-y)*0.55*b; } list.push([y,x,q,i]); }
-  for(const f of G.fx){ if(f.t!=='rastro') continue; const a=1-(G.frame-f.f)/f.life; if(a<=0) continue; c.save(); c.globalAlpha=0.45*a; c.fillStyle=COL[f.k].c; c.beginPath(); c.arc(f.x,f.y,pr*0.9,0,7); c.fill(); c.restore(); }
+  for(const f of G.fx){ if(f.t!=='rastro') continue; const a=1-(G.frame-f.f)/f.life; if(a<=0) continue; c.save(); c.globalAlpha=0.45*a; c.fillStyle=COL[f.k].c; c.beginPath(); c.arc(f.x,f.y,pr*0.9,0,7); c.fill();
+    if(f.n){ c.globalAlpha=Math.min(1,a*1.6); c.font='700 '+Math.round(pr*1.15)+'px Fredoka, sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.lineJoin='round'; c.lineWidth=Math.max(2,pr*0.22); c.strokeStyle='rgba(0,0,0,.75)'; c.strokeText(String(f.n),f.x,f.y+pr*0.06); c.fillStyle='#fff'; c.fillText(String(f.n),f.x,f.y+pr*0.06); }   // número derecho, siempre de pie
+    c.restore(); }
   list.sort((a,b)=>a[0]-b[0]).forEach(([y,x,q,i])=>drawPiece(c,x,y,pr,q,String(i+1)));
   // ficha que se está moviendo: salta de casilla en casilla
   if(G.anim){ const A=G.anim, m=A.m; let x,y,lift;
@@ -3975,7 +3990,7 @@ function update(){
   stepDice();
   const A=G.dAnim; if(G.phase==='rolling'&&A&&A.done&&G.frame-A.doneT>18){ rolled(A.vals); }
   if(G.anim){ const a=G.anim; a.t++;
-    if(a.m.from!==CASA&&a.t%STEPF===0&&a.t<=a.m.path.length*STEPF){ hopSound(); const st=a.t/STEPF, p0=st===1?a.m.from:a.m.path[st-2]; const [tx,ty]=pieceXYp(a.m.k,a.m.i,p0); G.fx.push({t:'rastro',k:a.m.k,x:tx,y:ty,f:G.frame,life:150}); }   // sombrita en cada casilla que pisa
+    if(a.m.from!==CASA&&a.t%STEPF===0&&a.t<=a.m.path.length*STEPF){ hopSound(); const st=a.t/STEPF, p0=st===1?a.m.from:a.m.path[st-2]; const [tx,ty]=pieceXYp(a.m.k,a.m.i,p0); const n=st<2?0:(a.m.split&&st-1>a.m.split?st-1-a.m.split:st-1); G.fx.push({t:'rastro',k:a.m.k,x:tx,y:ty,f:G.frame,life:150,n}); }   // sombrita en cada casilla que pisa, con el número del paso (cada dado se cuenta aparte)
     if(a.m.from===CASA&&a.t===a.dur) diceHit(0.4);
     const end=a.m.from===CASA?a.dur:a.m.path.length*STEPF; if(a.t>=end) landedMove(); return; }
   if(G.phase==='wait'){ if(--G.waitT<=0) endTurnStep(); return; }
