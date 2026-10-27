@@ -361,7 +361,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #drtxt{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 #drtxt b{font-size:clamp(16px,3.4vw,24px);color:#ffd23a;text-shadow:0 2px 0 #000;line-height:1.2}
 #drtxt small{color:#ffe9a8}
-#btirar{font:800 18px var(--font);background:#c62828;color:#fff;border:3px solid #ff8a80;border-radius:14px;padding:10px 22px}
+#btirar{font:800 18px var(--font);background:#22a04a;color:#fff;border:3px solid #7ee29b;border-radius:14px;padding:10px 22px}
 .die{position:relative;display:inline-block;width:var(--s);height:var(--s);border-radius:18%;background:linear-gradient(135deg,var(--d1),var(--d2));box-shadow:2px 4px 0 rgba(0,0,0,.35);flex:0 0 auto}
 .die i{position:absolute;width:19%;height:19%;border-radius:50%;background:var(--dp);transform:translate(-50%,-50%)} .die i.r{width:24%;height:24%}
 #dcup .die{background:linear-gradient(135deg,var(--d1),var(--d2))}
@@ -387,6 +387,25 @@ body.solo #tablebox{flex:1}
 @media (orientation:portrait){ body.solo #app{flex-direction:column} body.solo #hand{flex:0 0 46vh;border-left:0;border-top:3px solid #8a5a2a} }
 body.remote #hand{flex:1}
 body.remote #dpanel{padding-bottom:46px}
+@media (orientation:portrait){
+  body.remote #droll{flex-direction:column;gap:16px}
+  body.remote #dcup{width:min(92vw,calc((100vh - 300px)*0.78));aspect-ratio:.78;border-width:7px}
+  body.remote #dcup .die{--s:min(19vw,calc((100vh - 300px)*0.15))}
+  body.remote #btirar{font-size:20px;padding:12px 34px}
+  body.remote #dmove{display:flex;flex-direction:column;gap:12px}
+  body.remote #dmove h4{font-size:17px}
+  body.remote .dtok{height:72px}
+  body.remote #dfichas{grid-template-columns:1fr 1fr;gap:12px}
+  body.remote .dfich{height:min(100px,12vh);font-size:32px}
+  body.remote .dfich small{font-size:13px}
+  body.remote #remotebar{flex-direction:column!important;align-items:stretch!important;gap:4px!important;padding:6px 10px!important}
+  body.remote #rb1{flex-wrap:nowrap;gap:6px}
+  body.remote #rb1 button{padding:6px 7px;font-size:11px;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  body.remote #rends{flex:1;text-align:center;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.remote #rst{max-width:none!important}
+  body.remote #pmenm{font-size:15px}
+  body.remote #pmeta{font-size:14px}
+}
 #lseats .lseat.c0 i{border-color:#f6c514!important} #lseats .lseat.c1 i{border-color:#2f7de1!important} #lseats .lseat.c2 i{border-color:#e23b30!important} #lseats .lseat.c3 i{border-color:#22a24a!important}
 .gintro{font-size:17px;line-height:1.45;color:#eef6f0;text-align:center}
 #lbtns{grid-template-columns:repeat(3,1fr)!important}
@@ -461,7 +480,7 @@ body.solo #drtxt small{font-size:12px}
       </ul>
       <h3>5 · Reglas: dobles, meta y ganar</h3>
       <ul>
-        <li><b>Dobles</b> (o 6 con un dado): <b>vuelves a tirar</b>. Con <b>tres dobles seguidos</b>, la última ficha que moviste <b>vuelve a casa</b> (si no está en el pasillo) y pierdes el turno.</li>
+        <li><b>Dobles</b> (o 6 con un dado): <b>vuelves a tirar</b>. Al <b>tercer doble seguido</b>, tu ficha <b>más avanzada entra directa a la meta</b> y pasa el turno.</li>
         <li>Con un dado: si tienes las 4 fichas fuera de casa, <b>el 6 vale 7</b>.</li>
         <li>Al final de la vuelta entras por <b>tu pasillo</b> (de tu color) hasta la <b>meta</b> (la estrella). Hay que llegar con la <b>cuenta exacta</b>. Cada ficha que llega <b>cuenta 10</b>.</li>
         <li>Si no puedes usar un número (ni el 20 ni el 10), se pierde.</li>
@@ -2880,7 +2899,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.10';
+const VERSION='v1.3.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3078,9 +3097,11 @@ function rolled(vals){
   const k=G.turn; G.dice=vals.slice(); G.toks=[];
   const two=G.nDice===2, doble=two?vals[0]===vals[1]:vals[0]===6;
   if(doble){ G.dbl++; }
-  if(doble&&G.dbl>=3){   // tres veces seguidas: la última ficha movida se va a casa
-    const L=G.last; if(L&&L.k===k&&G.pos[k][L.i]>=0&&G.pos[k][L.i]<=ULTCALLE){ const fr=pieceXY(k,L.i,G.pos[k][L.i]); G.pos[k][L.i]=CASA; G.fx.push({t:'casa',k,i:L.i,f:G.frame,fr}); say('¡TRES '+(two?'DOBLES':'SEISES')+'! LA FICHA '+(L.i+1)+' DE '+G.names[k]+' A CASA',160); boomCasa(); }
-    else say('¡TRES '+(two?'DOBLES':'SEISES')+'! PIERDE EL TURNO',140);
+  if(doble&&G.dbl>=3){   // tercer doble seguido: la ficha más avanzada entra directa a la meta
+    let bi=-1; G.pos[k].forEach((p,i)=>{ if(p>=0&&p<META&&(bi<0||p>G.pos[k][bi])) bi=i; });
+    if(bi>=0){ G.pos[k][bi]=META; G.last={k,i:bi}; say('¡TRES '+(two?'DOBLES':'SEISES')+'! LA FICHA '+(bi+1)+' DE '+G.names[k]+' ENTRA A LA META',160); metaSound();
+      if(G.pos[k].every(p=>p===META)){ G.order.push(k); G.winner=k; G.state='over'; G.phase='over'; say('¡GANA '+G.names[k]+'!',99999); chime(true); try{ histSave(); }catch(_){} broadcast(); return; } }
+    else say('¡TRES '+(two?'DOBLES':'SEISES')+'! NO TIENE FICHAS FUERA',140);
     G.doble=false; G.phase='wait'; G.waitT=150; broadcast(); return; }
   G.doble=doble; G.mustOpen=doble;
   if(two){ G.toks.push({id:'a',v:vals[0],kind:'die'},{id:'b',v:vals[1],kind:'die'}); }
@@ -3394,10 +3415,14 @@ function cupLoop(t){ requestAnimationFrame(cupLoop);
   const on=!document.getElementById('droll').hidden&&!handEl.hidden; if(!on){ cupWas=false; return; }
   if(!cupWas){ cupWas=true; cupReset(); cupLast=t; }
   const dt=Math.min(0.033,(t-cupLast)/1000||0.016); cupLast=t;
-  const W=CUP.clientWidth, H=CUP.clientHeight, s=CD[0].el.offsetWidth||50, r=s/2, K=90; let hits=0;
+  const W=CUP.clientWidth, H=CUP.clientHeight, s=CD[0].el.offsetWidth||50, r=s/2; let hits=0;
+  // física real: al mover el teléfono, los dados se quedan atrás (inercia) y chocan; inclinarlo los hace rodar
+  const KL=W*9, KG=W*1.6;
+  const tg=toScreen(-(SEN.grav?SEN.grav[0]:0),-(SEN.grav?SEN.grav[1]:0)), tm=Math.hypot(tg[0],tg[1]), tk=tm>1.2?(tm-1.2)/tm:0;
+  const ln=toScreen(-SEN.lin[0],-SEN.lin[1]), ax=tg[0]*tk*KG+ln[0]*KL, ay=tg[1]*tk*KG+ln[1]*KL, spinT=-(SEN.rot||0)*Math.PI/180;
   CD.forEach(d=>{
-    if(!d.out){ d.vx+=SEN.f[0]*K*dt; d.vy+=SEN.f[1]*K*dt; d.va+=-SEN.rot*0.004*dt*60*0.2;
-      const fr=Math.pow(0.25,dt); d.vx*=fr; d.vy*=fr; d.va*=Math.pow(0.15,dt); }
+    if(!d.out){ d.vx+=ax*dt; d.vy+=ay*dt; d.va+=(spinT-d.va)*Math.min(1,dt*4);
+      const fr=Math.pow(0.4,dt); d.vx*=fr; d.vy*=fr; const vm=Math.hypot(d.vx,d.vy), cap=W*12; if(vm>cap){ d.vx*=cap/vm; d.vy*=cap/vm; } }
     d.x+=d.vx*dt; d.y+=d.vy*dt; d.a+=d.va*dt;
     if(!d.out){ const m=r*(0.95+0.45*Math.abs(Math.sin(2*d.a))), L=m, R=W-m, T=m, B=H-m;
       if(d.x<L){ hits=Math.max(hits,Math.abs(d.vx)); d.x=L; d.vx=-d.vx*0.55; d.va+=d.vy*0.01; }
@@ -3410,7 +3435,7 @@ function cupLoop(t){ requestAnimationFrame(cupLoop);
   const [p,q]=CD; if(!p.out){ const dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), mn=s*1.05; if(dd<mn&&dd>0){ const nx=dx/dd, ny=dy/dd, ov=(mn-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
     const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny; if(rv<0){ p.vx+=rv*nx*0.9; p.vy+=rv*ny*0.9; q.vx-=rv*nx*0.9; q.vy-=rv*ny*0.9; hits=Math.max(hits,-rv); p.va+=rv*0.01; q.va-=rv*0.01; } } }
   // sonido y vibración según la fuerza del golpe: más fuerte agitas, más suenan
-  if(hits>70&&t-SH.lastHit>40){ SH.lastHit=t; diceHit(Math.min(1,hits/700)); if(hits>250) try{ navigator.vibrate&&navigator.vibrate(Math.min(35,8+hits/40|0)); }catch(_){} }
+  if(hits>W*0.4&&t-SH.lastHit>40){ SH.lastHit=t; diceHit(Math.min(1,hits/(W*5))); if(hits>W*1.5) try{ navigator.vibrate&&navigator.vibrate(Math.min(40,10+hits/(W*0.3)|0)); }catch(_){} }
   CD.forEach(d=>{ setFace(d,d.face); d.el.style.transform='translate('+(d.x-r)+'px,'+(d.y-r)+'px) rotate('+d.a+'rad)'; const ca=Math.cos(-d.a), sa=Math.sin(-d.a), ox=3, oy=5; d.el.style.boxShadow=(ox*ca-oy*sa).toFixed(1)+'px '+(ox*sa+oy*ca).toFixed(1)+'px 0 rgba(0,0,0,.35)'; d.el.style.opacity=d.out&&d.y<-s?0:1; });
 }
 requestAnimationFrame(cupLoop);
@@ -3592,7 +3617,7 @@ document.getElementById('pgo').addEventListener('click',()=>{
 function startRemote(){
   G.remoteMode=true; document.body.classList.add('remote'); document.getElementById('menu').hidden=true; handEl.hidden=false;
   PV={seat:0,color:0,name:PR.name,meta:0,phase:'wait',turn:false,dice:[],toks:[],opts:{},who:'',whoC:0,msg:'',over:false,state:'menu'}; renderPanel();
-  try{ KikoApp.setPortrait(false); }catch(_){}
+  try{ KikoApp.setPortrait(true); }catch(_){}   // el jugador juega con el teléfono en vertical
   try{ KikoApp.ctrlStart(''); }catch(_){} layout(); }
 document.getElementById('rscan').addEventListener('click',()=>{ const st=document.getElementById('rst');
   if(window.KikoApp&&KikoApp.scanQR){ st.textContent='Apunta al QR que dice "OCUPAR SILLA"...'; try{ KikoApp.scanQR(); }catch(_){} } else st.textContent='Actualiza la app para usar el escáner.'; });
