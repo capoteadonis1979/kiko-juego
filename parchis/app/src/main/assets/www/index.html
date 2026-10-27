@@ -249,7 +249,8 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #cfg .row button{width:15em;min-width:0}
 #pbox .prow button{width:155px;min-width:0}
 /* SALIR siempre abajo, en rojo, en todas las pantallas */
-#gsalir{position:fixed;left:8px;bottom:6px;z-index:80;font:800 14px var(--font);background:#c62828;color:#fff;border:2px solid #ff8a80;border-radius:10px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#gsalir{position:fixed;right:10px;top:8px;z-index:80;font:800 14px var(--font);background:#c62828;color:#fff;border:2px solid #ff8a80;border-radius:10px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#gsalir[hidden]{display:none}
 #gsalir.focus,#gsalir:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #power{bottom:46px!important}
 body.remote #power{bottom:auto!important}
@@ -389,6 +390,7 @@ body.solo #dcup .die{--s:min(9vh + 14px,50px)}
 body.solo #drtxt{gap:5px}
 body.solo #drtxt b{font-size:clamp(13px,2.1vw,18px)}
 body.solo #drtxt small{font-size:12px}
+.dfich.on{outline:4px solid #fff;outline-offset:-2px}
 
 </style></head><body>
 <div id="app">
@@ -2866,7 +2868,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.1.1';
+const VERSION='v1.2.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3301,11 +3303,11 @@ function renderPanel(force){
     const tb=document.getElementById('dtoks'); tb.innerHTML='';
     v.toks.forEach(t=>{ const b=document.createElement('button'); b.className='dtok'+(t.id===selTok?' on':'')+(t.any?'':' no');
       b.innerHTML=t.kind==='die'?dieHTML(Math.min(6,t.v),46)+'<b>'+t.v+'</b>':t.kind==='sum'?'<b>∑ '+t.v+'</b><small>los dos juntos</small>':'<b>+'+t.v+'</b><small>'+(t.v===20?'por comer':'por llegar')+'</small>';
-      b.addEventListener('click',()=>{ if(!t.any) return; selTok=t.id; act({t:'sel',tok:t.id}); renderPanel(true); }); tb.appendChild(b); });
+      b.addEventListener('pointerdown',e=>{ e.preventDefault(); if(!t.any) return; selTok=t.id; act({t:'sel',tok:t.id}); renderPanel(true); }); tb.appendChild(b); });
     const t=v.toks.find(x=>x.id===selTok); document.getElementById('dh2').textContent='2 · ELIGE LA FICHA'+(t?' (avanza '+t.v+')':'');
     const fb=document.getElementById('dfichas'); fb.innerHTML=''; const O=v.opts[selTok]||[];
     for(let i=0;i<4;i++){ const o=O[i]||{ok:0,l:''}; const b=document.createElement('button'); b.className='dfich'+(o.ok?'':' no'); b.innerHTML='<b>'+(i+1)+'</b><small>'+(o.ok?'→ ':'')+o.l+'</small>';
-      b.addEventListener('click',()=>{ if(!o.ok) return; act({t:'move',tok:selTok,i}); try{ navigator.vibrate&&navigator.vibrate(30); }catch(_){} }); fb.appendChild(b); }
+      b.addEventListener('pointerdown',e=>{ e.preventDefault(); if(!o.ok||b.dataset.go) return; b.dataset.go=1; b.classList.add('on'); act({t:'move',tok:selTok,i}); try{ navigator.vibrate&&navigator.vibrate(30); }catch(_){} }); fb.appendChild(b); }
   }
   if(!wt.hidden){ document.getElementById('dwmsg').textContent=v.over?(v.winner===v.seat?'¡GANASTE! 🏆':'GANA '+(G.remoteMode?(v.who||''):G.names[v.winner])):v.state==='menu'?'Esperando a que empiece la partida…':v.turn?(v.phase==='rolling'?'Rodando los dados…':'…'):'Juega '+v.who;
     document.getElementById('dwmsg').style.color=v.over?'#ffd23a':COL[v.whoC]?COL[v.whoC].l:'#fff';
@@ -3354,6 +3356,10 @@ document.getElementById('prest').addEventListener('click',()=>pauseChoose('resta
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
 function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
 document.getElementById('gsalir').addEventListener('click',salirApp);
+// SALIR solo en la pantalla de inicio, arriba a la derecha
+setInterval(()=>{ const $=i=>document.getElementById(i), g=$('gsalir'); const vis=e=>e&&!e.hidden;
+  const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','paywall'].some(i=>vis($(i)));
+  if(g.hidden===ini){ g.hidden=!ini; if(!ini) g.classList.remove('focus'); } },120);
 // ===== historial de partidas: se guarda en el aparato (no se borra al actualizar) =====
 const HKEY='parchisHistorial', HPP=4; let HP=0;
 function histLoad(){ try{ return JSON.parse(localStorage.getItem(HKEY)||'[]')||[]; }catch(_){ return []; } }
@@ -3622,7 +3628,7 @@ function connQR(){ const el=document.getElementById('lqr2svg'); if(!el) return; 
 isTV=false;   // hasta que se elija MESA
 // mando a distancia de la tele: OK empieza / sigue
 let mFocus=-1;
-function menuBtns(){ return [...menu.querySelectorAll('button'),document.getElementById('gsalir')].filter(b=>b.offsetParent!==null||b.id==='gsalir'); }
+function menuBtns(){ return [...menu.querySelectorAll('button'),document.getElementById('gsalir')].filter(b=>b.offsetParent!==null||(b.id==='gsalir'&&!b.hidden)); }
 function defId(){ return !lobby.hidden?'lplay':!sub.hidden?'mplay':(tvDevice?'pmesa':'ptab'); }
 function curBtn(){ const b=menuBtns(); const a=document.activeElement; if(a&&b.includes(a)) return a; if(mFocus>=0&&b[mFocus]) return b[mFocus]; return document.getElementById(defId()); }
 function setFocusBtn(el){ const b=menuBtns(); mFocus=b.indexOf(el); b.forEach(x=>x.classList.toggle('focus',x===el)); try{ el.focus({preventScroll:true}); }catch(_){} }
@@ -3653,7 +3659,7 @@ function navKey(k){
     if(k==='ok'){ if(cur) cur.click(); return true; }
     const n=cur&&geoBest(b,cur,k); if(n) pfoc(b.indexOf(n)); return true; }
   if(!vidov.hidden){ if(k==='ok'){ if(videl.paused) videl.play().catch(()=>{}); else videl.pause(); } else if(k==='left'||k==='right'){ try{ videl.currentTime=Math.max(0,videl.currentTime+(k==='right'?10:-10)); }catch(_){} } return true; }
-  if(!guide.hidden){ const gs=document.getElementById('gsalir'); if(k==='down'){ gs.classList.add('focus'); return true; } if(gs.classList.contains('focus')){ if(k==='ok') salirApp(); else if(k==='up') gs.classList.remove('focus'); return true; } if(k==='right') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0&&gvb) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
+  if(!guide.hidden){ const gs=document.getElementById('gsalir'); if(k==='down'&&!gs.hidden){ gs.classList.add('focus'); return true; } if(gs.classList.contains('focus')){ if(k==='ok') salirApp(); else if(k==='up') gs.classList.remove('focus'); return true; } if(k==='right') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0&&gvb) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
   if(!menu.hidden){ if(k==='ok') menuOk(); else menuMove(0,k); return true; }
   const bm=document.getElementById('bmesa');
   if(!bm.hidden){ if(k==='ok'&&bm.classList.contains('focus')){ openPause(); return true; } if(k!=='ok'){ bm.classList.add('focus'); return true; } }
@@ -3678,7 +3684,7 @@ cv.addEventListener('pointerdown',()=>{ initAudio(); if(G.state==='over') toLobb
 const bnEl=document.getElementById('bnames'), payEl=document.getElementById('paywall');
 const soEl=document.getElementById('seatop'); let soSeat=0;
 function openOv(){ return [payEl,bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
-function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>x.offsetParent!==null||x.id==='gsalir'); }
+function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>x.offsetParent!==null||(x.id==='gsalir'&&!x.hidden)); }
 let ovFocus=0;
 function ovFoc(el,i){ const b=ovEls(el); if(!b.length) return; ovFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===ovFocus)); try{ b[ovFocus].focus({preventScroll:true}); }catch(_){} }
 ['bnames','paywall','seatop'].forEach(id=>document.getElementById(id).addEventListener('focusin',e=>{ const el=document.getElementById(id), b=ovEls(el), i=b.indexOf(e.target); if(i>=0){ ovFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } }));

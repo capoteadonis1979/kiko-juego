@@ -69,6 +69,19 @@ public class MainActivity extends Activity {
     private WebView web;
     private boolean tv;
     private volatile boolean running = true;
+    // Wi-Fi sin ahorro de energía mientras se juega: evita que los toques lleguen tarde a la tele
+    private WifiManager.WifiLock wlock;
+    private void wifiRapido() {
+        try {
+            if (wlock == null) {
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wm == null) return;
+                wlock = wm.createWifiLock(Build.VERSION.SDK_INT >= 29 ? 4 : 3, "juego");
+                wlock.setReferenceCounted(false);
+            }
+            if (!wlock.isHeld()) wlock.acquire();
+        } catch (Exception ignored) { }
+    }
 
     // ----- tele: servidor -----
     private ServerSocket server;
@@ -307,6 +320,7 @@ public class MainActivity extends Activity {
     private synchronized void startHost() {
         if (hosting) return;
         hosting = true;
+        wifiRapido();
         new Thread(() -> {
             try {
                 server = new ServerSocket(TCP);
@@ -527,6 +541,7 @@ public class MainActivity extends Activity {
                     s2.setTcpNoDelay(true);
                     if (gen != ctrlGen) { s2.close(); return; }
                     ctrl = s2; ctrlOut = s2.getOutputStream();
+                    wifiRapido();
                     ctrlStatus("OK:" + ip);
                     // escuchar lo que manda la tele
                     try (BufferedReader r = new BufferedReader(new InputStreamReader(s2.getInputStream(), StandardCharsets.UTF_8))) {
@@ -697,6 +712,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        try { if (wlock != null && wlock.isHeld()) wlock.release(); } catch (Exception ignored) { }
         running = false;
         try { if (server != null) server.close(); } catch (Exception ignored) { }
         closeCtrl();
