@@ -3359,7 +3359,7 @@ function cupLoop(t){ requestAnimationFrame(cupLoop);
     if(!d.out){ d.vx+=SEN.f[0]*K*dt; d.vy+=SEN.f[1]*K*dt; d.va+=-SEN.rot*0.004*dt*60*0.2;
       const fr=Math.pow(0.25,dt); d.vx*=fr; d.vy*=fr; d.va*=Math.pow(0.15,dt); }
     d.x+=d.vx*dt; d.y+=d.vy*dt; d.a+=d.va*dt;
-    if(!d.out){ const L=r, R=W-r, T=r, B=H-r;
+    if(!d.out){ const m=r*(0.95+0.45*Math.abs(Math.sin(2*d.a))), L=m, R=W-m, T=m, B=H-m;
       if(d.x<L){ hits=Math.max(hits,Math.abs(d.vx)); d.x=L; d.vx=-d.vx*0.55; d.va+=d.vy*0.01; }
       if(d.x>R){ hits=Math.max(hits,Math.abs(d.vx)); d.x=R; d.vx=-d.vx*0.55; d.va-=d.vy*0.01; }
       if(d.y<T){ hits=Math.max(hits,Math.abs(d.vy)); d.y=T; d.vy=-d.vy*0.55; d.va-=d.vx*0.01; }
