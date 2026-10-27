@@ -76,6 +76,8 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #pbox h2{margin:0 0 6px;color:var(--gold);font-size:24px}
 #pbox button{font:700 19px var(--font);min-width:320px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg);display:flex;flex-direction:column;align-items:center;gap:2px}
 #pbox button.main{background:#2fbf71;border-color:#1a7a44}
+#pbox button.pred,#exyes{background:#c62828!important;border-color:#ff8a80!important;color:#fff!important}
+#exitask{z-index:90}
 #pbox button small{font:500 12px var(--font);opacity:.85}
 #pbox button.focus{outline:3px solid var(--gold);outline-offset:3px}
 #pbox .prow{display:flex;gap:10px} #pbox .prow button{min-width:155px}
@@ -488,8 +490,10 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o modo</small></button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
+  <button id="pexit" class="pred">✕ SALIR DEL JUEGO</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano TV → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
+<div id="exitask" class="ov" hidden><div class="ovbox"><h2>¿DESEA SALIR DEL JUEGO?</h2><div class="row"><button id="exno">CANCELAR</button><button id="exyes">CONFIRMAR</button></div></div></div>
 <div id="cfg" class="ov" hidden><div class="ovbox"><h2>⚙️ CONFIGURACIÓN</h2>
 <div class="row"><button id="mmus">🎵 MÚSICA ●●●●○</button><button id="msnd">🔊 EFECTOS ●●●●●</button></div>
 <p class="small">Canción que suena</p>
@@ -2817,7 +2821,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.5';
+const VERSION='v3.9.6';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3258,11 +3262,7 @@ function drawFist(){
     if(f.n&&t>=12&&t<hitEnd&&((t-12)%16)===0) dust(P.x,P.y,f.hard?28:10,f.hard?2.6:1.2);
   } else if(st==='palma'){
     let lift=t<10?0.6:t<20?0.6+0.4*(t-10)/10:t<24?1-(t-20)/4:0;
-    let P=at(E,k), rr=rot0, E2=E, ff=false;
-    if(f.seat===1){ // el de la derecha: palmada con la mano izquierda, en el hueco entre sus fichas y el tabaco (no encima de su foto)
-      const sp=seatPos(1); E2={x:sp.x+90,y:VH/2+142}; const T2={x:VW-92,y:VH/2+142};
-      P={x:E2.x+(T2.x-E2.x)*k,y:E2.y+(T2.y-E2.y)*k}; rr=Math.atan2(T2.y-E2.y,T2.x-E2.x)+Math.PI/2; ff=false; }
-    handArm('palm',P.x,P.y,rr,(f.hard?1.2:1)*(1+0.3*lift),E2,{lift,flip:ff});
+    const P=at(E,k); handArm('palm',P.x,P.y,rot0,(f.hard?1.2:1)*(1+0.3*lift),E,{lift});   // todos con la mano derecha
     if(t>=24&&t<34){ const e=(t-24)/10; ctx.save(); ctx.strokeStyle='rgba(255,255,255,'+(0.9*(1-e))+')'; ctx.lineWidth=3; ctx.lineCap='round';
       for(let q=0;q<8;q++){ const a=q/8*6.283+0.2, r0=52+e*26, r1=r0+16; ctx.beginPath(); ctx.moveTo(P.x+Math.cos(a)*r0,P.y+Math.sin(a)*r0*0.75); ctx.lineTo(P.x+Math.cos(a)*r1,P.y+Math.sin(a)*r1*0.75); ctx.stroke(); } ctx.restore(); }
     if(t===24) dust(P.x,P.y,18,2);
@@ -3681,22 +3681,22 @@ function drawTable(){
   drawProps();
   // extremos abiertos
   if(G.ends&&G.state==='play'){ ctx.font='700 18px '+getComputedStyle(document.body).fontFamily; ctx.fillStyle='rgba(255,240,200,0.85)'; ctx.textAlign='left';
-    ctx.fillText('A LOS '+G.ends[0]+'   ·   A LOS '+G.ends[1],52,52); }
+    ctx.textAlign='right'; ctx.fillText('A LOS '+G.ends[0]+'   ·   A LOS '+G.ends[1],VW-52,52); }
   // jugadores
   for(let s=0;s<4;s++) if(G.state==='menu'||isAct(s)) drawSeat(s);
   // marcador
   const font=getComputedStyle(document.body).fontFamily;
   if(G.mode==='sencillo'){
-    ctx.fillStyle='#2b1a0d'; rr(ctx,VW-196,10,186,96,12); ctx.fill(); ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=2; ctx.stroke();   // marcador sólido, sin transparencia
-    ACT().forEach((i,row)=>{ ctx.font='700 14px '+font; ctx.textAlign='left'; ctx.fillStyle='#ffe9a8'; ctx.fillText(G.names[i].slice(0,12),VW-168,28+row*22); ctx.fillStyle=PCOL[i]; ctx.beginPath(); ctx.arc(VW-180,27+row*22,6,0,7); ctx.fill();
-      ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='700 17px '+font; ctx.fillText(G.pscores[i],VW-22,28+row*22); });
+    ctx.fillStyle='#2b1a0d'; rr(ctx,10,10,186,96,12); ctx.fill(); ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=2; ctx.stroke();   // marcador sólido, sin transparencia
+    ACT().forEach((i,row)=>{ ctx.font='700 14px '+font; ctx.textAlign='left'; ctx.fillStyle='#ffe9a8'; ctx.fillText(G.names[i].slice(0,12),38,28+row*22); ctx.fillStyle=PCOL[i]; ctx.beginPath(); ctx.arc(26,27+row*22,6,0,7); ctx.fill();
+      ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='700 17px '+font; ctx.fillText(G.pscores[i],174,28+row*22); });
   } else {
-  ctx.fillStyle='#2b1a0d'; rr(ctx,VW-196,10,186,58,12); ctx.fill(); ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=2; ctx.stroke();
-  ctx.font='700 15px '+font; ctx.textAlign='left'; ctx.fillStyle='#ffe9a8'; ctx.fillText(TEAMN()[0],VW-168,30); ctx.fillText(TEAMN()[1],VW-168,54);
-  [0,1].forEach(k=>{ ctx.fillStyle=PCOL[k]; ctx.beginPath(); ctx.arc(VW-180,30+k*24-1,7,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); });
-  ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='700 20px '+font; ctx.fillText(G.scores[0],VW-22,30); ctx.fillText(G.scores[1],VW-22,54);
+  ctx.fillStyle='#2b1a0d'; rr(ctx,10,10,186,58,12); ctx.fill(); ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=2; ctx.stroke();
+  ctx.font='700 15px '+font; ctx.textAlign='left'; ctx.fillStyle='#ffe9a8'; ctx.fillText(TEAMN()[0],38,30); ctx.fillText(TEAMN()[1],38,54);
+  [0,1].forEach(k=>{ ctx.fillStyle=PCOL[k]; ctx.beginPath(); ctx.arc(26,30+k*24-1,7,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); });
+  ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='700 20px '+font; ctx.fillText(G.scores[0],174,30); ctx.fillText(G.scores[1],174,54);
   }
-  ctx.font='600 12px '+font; ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.textAlign='left'; ctx.fillText('A '+G.target+' · MANO '+G.handNo,20,18);
+  ctx.font='600 12px '+font; ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.textAlign='right'; ctx.fillText('A '+G.target+' · MANO '+G.handNo,VW-20,18);
   if(G.megaT>=0){ const t=G.frame-G.megaT;
     if(t<6){ ctx.fillStyle='rgba(255,250,220,'+(0.85-t*0.12)+')'; ctx.fillRect(0,0,VW,VH); }
     else if(t<70){ const on=Math.random()<0.55; ctx.fillStyle='rgba(0,0,0,'+(on?0.05:(0.55+Math.random()*0.3))+')'; ctx.fillRect(0,0,VW,VH);
@@ -3974,7 +3974,7 @@ function renderSeatBox(L,me){
 }
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
 function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
@@ -3992,10 +3992,15 @@ document.getElementById('pcont').addEventListener('click',()=>pauseChoose('cont'
 document.getElementById('prest').addEventListener('click',()=>pauseChoose('restart'));
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
 function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
-document.getElementById('gsalir').addEventListener('click',salirApp);
+const exitEl=document.getElementById('exitask');
+function askExit(){ exitEl.hidden=false; try{ ovFoc(exitEl,0); }catch(_){} }   // pregunta antes de salir: así no se sale sin querer
+document.getElementById('exno').addEventListener('click',()=>{ exitEl.hidden=true; if(!pauseEl.hidden) pfoc(pauseBtns().indexOf(document.getElementById('pexit'))); });
+document.getElementById('exyes').addEventListener('click',()=>{ exitEl.hidden=true; salirApp(); });
+document.getElementById('pexit').addEventListener('click',askExit);
+document.getElementById('gsalir').addEventListener('click',askExit);
 // SALIR solo en la pantalla de inicio, arriba a la derecha
 setInterval(()=>{ const $=i=>document.getElementById(i), g=$('gsalir'); const vis=e=>e&&!e.hidden;
-  const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','paywall'].some(i=>vis($(i)));
+  const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','paywall','exitask'].some(i=>vis($(i)));
   if(g.hidden===ini){ g.hidden=!ini; if(!ini) g.classList.remove('focus'); } },120);
 // ===== historial de partidas: se guarda en el aparato (no se borra al actualizar) =====
 const HKEY='dominoHistorial', HPP=4; let HP=0;
@@ -4361,7 +4366,7 @@ function navKey(k){
     if(k==='ok'){ if(cur) cur.click(); return true; }
     const n=cur&&geoBest(b,cur,k); if(n) pfoc(b.indexOf(n)); return true; }
   if(!vidov.hidden){ if(k==='ok'){ if(videl.paused) videl.play().catch(()=>{}); else videl.pause(); } else if(k==='left'||k==='right'){ try{ videl.currentTime=Math.max(0,videl.currentTime+(k==='right'?10:-10)); }catch(_){} } return true; }
-  if(!guide.hidden){ const gs=document.getElementById('gsalir'); if(k==='down'&&!gs.hidden){ gs.classList.add('focus'); return true; } if(gs.classList.contains('focus')){ if(k==='ok') salirApp(); else if(k==='up') gs.classList.remove('focus'); return true; } if(k==='right') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
+  if(!guide.hidden){ const gs=document.getElementById('gsalir'); if(k==='down'&&!gs.hidden){ gs.classList.add('focus'); return true; } if(gs.classList.contains('focus')){ if(k==='ok') askExit(); else if(k==='up') gs.classList.remove('focus'); return true; } if(k==='right') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
   if(!menu.hidden){ if(k==='ok') menuOk(); else menuMove(0,k); return true; }
   const bm=document.getElementById('bmesa');
   if(!bm.hidden){ if(k==='ok'&&bm.classList.contains('focus')){ openPause(); return true; } if(k!=='ok'){ bm.classList.add('focus'); return true; } }
@@ -4386,7 +4391,7 @@ cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu()
 /* ===== cuadros: nombres de las máquinas y activación ===== */
 const bnEl=document.getElementById('bnames'), payEl=document.getElementById('paywall');
 const soEl=document.getElementById('seatop'); let soSeat=0;
-function openOv(){ return [payEl,bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
+function openOv(){ return [document.getElementById('exitask'),payEl,bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
 function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>x.offsetParent!==null||(x.id==='gsalir'&&!x.hidden)); }
 let ovFocus=0;
 function ovFoc(el,i){ const b=ovEls(el); if(!b.length) return; ovFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===ovFocus)); try{ b[ovFocus].focus({preventScroll:true}); }catch(_){} }
