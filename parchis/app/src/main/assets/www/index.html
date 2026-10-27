@@ -195,7 +195,7 @@ body.mesa #menu .lseat{padding:4px 8px}
 .ovbox button small{display:block;font:500 12px var(--font);opacity:.85}
 .ovbox .code.sm{font-size:18px;letter-spacing:1px;word-break:break-all;padding:4px 10px}
 .ovbox .small{font-size:14px;color:#d8e8dc}
-.ovbox details summary{cursor:pointer;color:#d8e8dc;font-size:14px;margin:4px 0}
+.ovbox details summary{cursor:pointer;color:#d8e8dc;font-size:14px;margin:4px 0 16px}
 .ovbox .row button{min-width:150px}
 #lbtns button.on{background:#2f7fd8!important;border-color:#fff!important;color:#fff;box-shadow:0 0 0 4px #2f7fd8,0 0 18px #2f7fd8}
 #lbtns button.dim{opacity:.45}
@@ -2878,7 +2878,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.4';
+const VERSION='v1.2.5';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
