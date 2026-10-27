@@ -276,6 +276,8 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #pwwa.wa{background:#1f8f4e;border-color:#25d366;color:#fff}
 #pwwa small{display:block;font-size:13px;opacity:.9}
 #menu p#cred{position:absolute;right:10px;bottom:24px;margin:0;max-width:none;font-size:11px;line-height:1.35;color:#9fbfaa;text-align:right}
+#menu>p#cred{display:block!important}
+body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!important}
 @media (max-width:640px){#menu p#cred{position:static;align-self:center;text-align:center;margin:6px 0 26px}}
 .gcred{color:#d8e8dc;line-height:1.5}
 @media (max-height:460px){#menu h1{font-size:28px} #menu>p{display:none} #menu button.big{font-size:20px;padding:8px 14px} #menu button{font-size:15px;padding:8px 12px;min-width:240px} #pick button{min-width:280px}}
@@ -2739,7 +2741,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.7.0';
+const VERSION='v3.7.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4046,6 +4048,13 @@ document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctr
 
 /* ================= MENÚ ================= */
 const menu=document.getElementById('menu');
+// el menú se ajusta solo a la pantalla (sin barra de desplazamiento): encoge el contenido si no cabe
+let fitKey='';
+function fitMenu(force){ if(menu.hidden) return; const kids=[...menu.children].filter(c=>!c.hidden&&getComputedStyle(c).display!=='none');
+  const key=menu.clientWidth+'x'+menu.clientHeight+'|'+kids.map(c=>c.id).join(',')+'|'+document.body.className; if(!force&&key===fitKey) return; fitKey=key;
+  kids.forEach(c=>c.style.zoom=''); let k=1;
+  for(let i=0;i<10;i++){ const need=menu.scrollHeight, have=menu.clientHeight; if(need<=have) break; k=Math.max(0.45,k*Math.min(0.985,(have-2)/need)); kids.forEach(c=>c.style.zoom=k); } }
+window.addEventListener('resize',()=>fitMenu(true)); setInterval(()=>fitMenu(false),600); setTimeout(()=>fitMenu(true),50);
 document.getElementById('mplay').addEventListener('click',()=>{ initAudio(); if(!canStart()) return; menu.hidden=true; startMatch(); layout(); renderHand(); });
 if(isTV) document.getElementById('psolo').hidden=true;   // en la tele no tiene sentido: con el mando no se pueden tocar fichas (se juega con MESA + cels)
 const tvDevice=isTV, pick=document.getElementById('pick'), sub=document.getElementById('sub'), lobby=document.getElementById('lobby');
