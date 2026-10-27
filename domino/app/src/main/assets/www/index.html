@@ -251,6 +251,30 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #lbtns button{min-width:0!important;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #cfg .row button{width:15em;min-width:0}
 #pbox .prow button{width:155px;min-width:0}
+/* SALIR siempre abajo, en rojo, en todas las pantallas */
+#gsalir{position:fixed;left:8px;bottom:6px;z-index:80;font:800 14px var(--font);background:#c62828;color:#fff;border:2px solid #ff8a80;border-radius:10px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#gsalir.focus,#gsalir:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#power{bottom:46px!important}
+body.remote #power{bottom:auto!important}
+body.remote #tiles{left:112px!important}
+body.remote #rack{left:112px}
+#bmesa{left:96px!important}
+#menu,.ov,#pause,#prof{padding-bottom:44px!important}
+#guide{padding-bottom:44px!important}
+/* historial */
+#hlist{display:flex;flex-direction:column;gap:8px;width:min(860px,92vw)}
+.hrow{display:grid;grid-template-columns:150px 1fr 48px;align-items:center;gap:10px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);border-radius:12px;padding:6px 10px;height:64px;box-sizing:border-box;text-align:left}
+.hinfo{display:flex;flex-direction:column;font-size:13px;line-height:1.3}.hinfo b{color:#ffe9a8;font-size:14px}.hinfo span{color:#cfe3d4}
+.hpl{display:flex;gap:6px;overflow:hidden}
+.hp{flex:1 1 0;min-width:0;display:grid;grid-template-columns:38px 1fr;grid-template-rows:auto auto;column-gap:6px;align-items:center;background:rgba(0,0,0,.25);border-radius:10px;padding:3px 6px;border:2px solid transparent}
+.hp.hw{border-color:#ffd23a;background:rgba(255,210,58,.15)}
+.hp i{grid-row:1/3;width:36px;height:36px;border-radius:50%;background:#1b2f4a center/cover no-repeat;display:grid;place-items:center;font-style:normal;font-size:20px;border:2px solid #fff}
+.hp span{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hp small{font-size:12px;color:#cfe3d4}
+.hdel{min-width:0!important;width:44px;height:44px;padding:0!important;font-size:20px!important}
+#hpn{font-weight:800;color:var(--gold);min-width:70px;text-align:center}
+.hempty{height:280px;display:flex;align-items:center;justify-content:center;color:#cfe3d4}
+#hist .row button{min-width:170px}
+#hist button:disabled{opacity:.35}
 #guide{display:flex;flex-direction:column;overflow:hidden!important;padding:10px 14px!important}
 #guide #gbox{flex:1;min-height:0;width:100%;display:flex;flex-direction:column}
 .gpage{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
@@ -318,7 +342,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <div id="tablebox">
     <canvas id="t" width="960" height="540" aria-label="Mesa de dominó"></canvas>
     <div id="remotebar">
-      <div id="rb1"><button id="rexit">SALIR</button><span id="rends">Mesa vacía</span><button id="rscan">📷 ESCANEAR QR DE LA TV</button><button id="rpair">EMPAREJAR</button></div>
+      <div id="rb1"><button id="rexit">◀ MENÚ</button><span id="rends">Mesa vacía</span><button id="rscan">📷 ESCANEAR QR DE LA TV</button><button id="rpair">EMPAREJAR</button></div>
       <div id="rst">Buscando la tele en tu Wi-Fi...</div>
       <div id="rwifi">⚠ La mesa y tu cel tienen que estar en la MISMA red Wi-Fi</div>
       <div class="ipbox" hidden><input id="rip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Dirección de la tele"><button id="rgo">CONECTAR</button></div>
@@ -363,6 +387,11 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
         <li>En el inicio toca <b>⚙️ CONFIGURACIÓN</b>: ahí escuchas la música del juego sin jugar y cambias de canción con <b>◀ ▶</b>. También está la musiquita <b>Son montuno (instrumental)</b>.</li>
         <li><b>📂 ELEGIR CARPETA DE MÚSICA</b>: se abren las carpetas de la tele o del teléfono; eliges la carpeta donde tienes tu música y sus canciones se añaden a la lista.</li>
         <li><b>🎵 MÚSICA</b> y <b>🔊 EFECTOS</b>: cada toque baja el volumen; después de NO vuelve al máximo.</li>
+      </ul>
+      <h3>Historial y salir</h3>
+      <ul>
+        <li><b>📜 HISTORIAL</b> (en el inicio): cada partido terminado se guarda solo en el aparato, con el día, la hora, la foto y el nombre de cada jugador, los puntos y quién ganó 🏆. Puedes borrar una partida con 🗑 o todo con <b>BORRAR TODO</b>. Al actualizar el juego no se borra.</li>
+        <li>El botón rojo <b>✕ SALIR</b> está siempre abajo a la izquierda, en todas las pantallas: cierra el juego de una vez. Con el mando, baja hasta él y pulsa OK.</li>
       </ul>
       <h3>¿Necesita internet?</h3>
       <ul>
@@ -410,7 +439,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
       <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
       <button id="pact">ACTIVAR / COMPRAR</button>
       <button id="pcfg">⚙️ CONFIGURACIÓN</button>
-      <button id="psalir">SALIR</button>
+      <button id="phist">📜 HISTORIAL</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
           <g clip-path="url(#fw)"><rect width="150" height="80" fill="#fff"/>
@@ -455,7 +484,6 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <button id="pcont" class="main">SEGUIR JUGANDO</button>
   <button id="prest">REINICIAR PARTIDA<small>Mismos jugadores · marcador a cero</small></button>
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o modo</small></button>
-  <button id="pexit">SALIR DEL JUEGO</button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
@@ -467,6 +495,10 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 <button id="mtvmus">📂 ELEGIR CARPETA DE MÚSICA</button>
 <p class="small">Elige una carpeta de la tele o del teléfono y sus canciones se añaden a la lista.</p>
 <button id="cfgx" class="main">LISTO</button></div></div>
+<div id="hist" class="ov" hidden><div class="ovbox"><h2>📜 HISTORIAL DE PARTIDAS</h2>
+<div id="hlist"></div>
+<div class="row"><button id="hprev">◀ ATRÁS</button><span id="hpn">1 / 1</span><button id="hnext">SIGUIENTE ▶</button></div>
+<div class="row"><button id="hclear">🗑 BORRAR TODO</button><button id="hx" class="main">CERRAR</button></div></div></div>
 <div id="seatop" class="ov" hidden><div class="ovbox"><h2 id="sotit">SILLA</h2><p id="sonm"></p><button id="soname" class="main">✏️ CAMBIAR NOMBRE</button><button id="soswap">⇄ CAMBIAR DE SILLA</button><button id="sono">CANCELAR</button></div></div>
 <div id="bnames" class="ov" hidden><div class="ovbox"><h2>NOMBRES DE LOS BOTS</h2><p>Escribe el nombre de cada bot (déjalo vacío para "BOT").</p><div id="bnrows"></div><div class="row"><button id="bnok" class="main">GUARDAR</button><button id="bnno">CANCELAR</button></div></div></div>
 <div id="paywall" class="ov" hidden><div class="ovbox"><h2 id="pwt">DOMINÓ CUBANO</h2><p id="pwp"></p>
@@ -479,6 +511,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 <button id="pwwa" class="wa">💬 PAGAR DESDE ANGOLA POR WHATSAPP<small>+244 926 815 829</small></button>
 <button id="pwno">CERRAR</button></div></div>
 <button id="bmesa" hidden>☰ MENÚ</button>
+<button id="gsalir">✕ SALIR</button>
 <div id="ver"></div>
 <script>
 //---------------------------------------------------------------------
@@ -2782,7 +2815,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.7.8';
+const VERSION='v3.7.9';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3440,7 +3473,7 @@ function endHand(winner,tranque){
   G.state='handover'; G.timer=130+list.length*28+300;
   say(tranque?(team<0?'TRANQUE: EMPATE':'TRANQUE: GANA '+(sen?G.names[wseat]:TEAMN()[team])):(G.names[wseat]+' SE PEGÓ'),110);
   chime(sen?(wseat===0&&!isTV):team===0);
-  if(sen?G.pscores.some(v=>v>=G.target):(G.scores[0]>=G.target||G.scores[1]>=G.target)) G.over=true;
+  if(sen?G.pscores.some(v=>v>=G.target):(G.scores[0]>=G.target||G.scores[1]>=G.target)){ G.over=true; try{ histSave(); }catch(_){} }
   noteHand(sen?(team>=0?wseat:-1):team,team>=0?pts:0,tranque);
   broadcast();
 }
@@ -3931,7 +3964,7 @@ function renderSeatBox(L,me){
 }
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pexit','pmus','psnd','pcan'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
 function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
@@ -3948,9 +3981,40 @@ function pauseChoose(a){ if(a==='cont'){ closePause(); return; }
 document.getElementById('pcont').addEventListener('click',()=>pauseChoose('cont'));
 document.getElementById('prest').addEventListener('click',()=>pauseChoose('restart'));
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
-document.getElementById('pexit').addEventListener('click',()=>pauseChoose('exit'));
 function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
-document.getElementById('psalir').addEventListener('click',salirApp);
+document.getElementById('gsalir').addEventListener('click',salirApp);
+// ===== historial de partidas: se guarda en el aparato (no se borra al actualizar) =====
+const HKEY='dominoHistorial', HPP=4; let HP=0;
+function histLoad(){ try{ return JSON.parse(localStorage.getItem(HKEY)||'[]')||[]; }catch(_){ return []; } }
+function histStore(L){ for(let n=0;n<40;n++){ try{ localStorage.setItem(HKEY,JSON.stringify(L)); return; }catch(_){ if(!L.length) return; L.pop(); } } }
+function miniFoto(im){ try{ if(!im||!im.width) return ''; const c=document.createElement('canvas'); c.width=c.height=56; const x=c.getContext('2d'); const m=Math.min(im.width,im.height); x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,56,56); return c.toDataURL('image/jpeg',0.7); }catch(_){ return ''; } }
+function histSave(){ const sen=G.mode==='sencillo', A=ACT(), d=new Date();
+  const P=A.map(x=>({n:G.names[x],f:miniFoto(G.photos[x]),h:G.remote[x]!=null||(x===0&&!isTV),pts:sen?G.pscores[x]:G.scores[x%2],t:x%2}));
+  let win; if(sen){ const w=A.reduce((a,b)=>G.pscores[b]>G.pscores[a]?b:a,A[0]); win=A.indexOf(w); } else win=G.scores[0]>=G.scores[1]?0:1;
+  const L=histLoad(); L.unshift({id:d.getTime(),d:d.toISOString(),sen,meta:G.target,p:P,win,tn:TEAMN()}); if(L.length>300) L.length=300; histStore(L); }
+const histEl=document.getElementById('hist');
+function fmtFecha(iso){ const d=new Date(iso), z=n=>String(n).padStart(2,'0'); return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' · '+z(d.getHours())+':'+z(d.getMinutes()); }
+function histRender(){ const L=histLoad(), pages=Math.max(1,Math.ceil(L.length/HPP)); HP=Math.max(0,Math.min(HP,pages-1));
+  const box=document.getElementById('hlist'); box.innerHTML='';
+  if(!L.length){ box.innerHTML='<p class="hempty">Todavía no hay partidas terminadas.<br>Cada partido que se gane se guarda aquí solo.</p>'; }
+  L.slice(HP*HPP,HP*HPP+HPP).forEach(g=>{ const r=document.createElement('div'); r.className='hrow';
+    const info=document.createElement('div'); info.className='hinfo'; info.innerHTML='<b>'+fmtFecha(g.d)+'</b><span>'+(g.sen?'Individual':'Parejas')+' · a '+g.meta+'</span>';
+    const pl=document.createElement('div'); pl.className='hpl';
+    g.p.forEach((q,i)=>{ const won=g.sen?i===g.win:q.t===g.win; const c=document.createElement('div'); c.className='hp'+(won?' hw':'');
+      const f=document.createElement('i'); if(q.f) f.style.backgroundImage='url('+q.f+')'; else f.textContent=q.h?'👤':'🤖';
+      const n=document.createElement('span'); n.textContent=(won?'🏆 ':'')+q.n; const pt=document.createElement('small'); pt.textContent=q.pts+' pts';
+      c.append(f,n,pt); pl.appendChild(c); });
+    const del=document.createElement('button'); del.className='hdel'; del.textContent='🗑'; del.title='Borrar esta partida';
+    del.addEventListener('click',()=>{ histStore(histLoad().filter(x=>x.id!==g.id)); histRender(); try{ ovFoc(histEl,0); }catch(_){} });
+    r.append(info,pl,del); box.appendChild(r); });
+  document.getElementById('hpn').textContent=(HP+1)+' / '+pages;
+  document.getElementById('hprev').disabled=HP===0; document.getElementById('hnext').disabled=HP>=pages-1; document.getElementById('hclear').disabled=!L.length; }
+document.getElementById('phist').addEventListener('click',()=>{ HP=0; histRender(); histEl.hidden=false; try{ const b=ovEls(histEl); ovFoc(histEl,b.indexOf(document.getElementById('hx'))); }catch(_){} });
+document.getElementById('hx').addEventListener('click',()=>{ histEl.hidden=true; });
+document.getElementById('hprev').addEventListener('click',()=>{ HP--; histRender(); });
+document.getElementById('hnext').addEventListener('click',()=>{ HP++; histRender(); });
+document.getElementById('hclear').addEventListener('click',()=>{ histStore([]); HP=0; histRender(); });
+
 document.getElementById('mmus').addEventListener('click',()=>{ initAudio(); setMusV(volNext(MUSV)); });
 document.getElementById('msnd').addEventListener('click',()=>{ initAudio(); setSndV(volNext(SNDV)); });
 // reproductor del inicio: cambiar de canción sin jugar
@@ -3991,7 +4055,7 @@ const volNext=v=>v<=0?5:v-1;   // cada toque baja un punto; después de NO vuelv
 document.getElementById('pmus').addEventListener('click',()=>{ if(G.remoteMode){ const cur=G.rMusV!=null?G.rMusV:(G.rMus!==false?4:0); G.rMusV=volNext(cur); musLabel(); netSend({t:'ctl',a:'musv',v:G.rMusV}); } else setMusV(volNext(MUSV)); });
 document.getElementById('pcan').addEventListener('click',()=>{ if(G.remoteMode) netSend({t:'ctl',a:'song'}); else { if(!MUS) setMusV(4); songNext(1); } });
 document.getElementById('psnd').addEventListener('click',()=>{ if(G.remoteMode){ const cur=G.rSndV!=null?G.rSndV:(G.rSnd!==false?5:0); G.rSndV=volNext(cur); musLabel(); netSend({t:'ctl',a:'sndv',v:G.rSndV}); } else setSndV(volNext(SNDV)); });
-setInterval(()=>{ document.getElementById('bmesa').hidden=!(menu.hidden&&!G.remoteMode&&(G.state==='play'||G.state==='handover')&&pauseEl.hidden); },300);
+setInterval(()=>{ document.getElementById('bmesa').hidden=!(isTV&&menu.hidden&&!G.remoteMode&&(G.state==='play'||G.state==='handover')&&pauseEl.hidden); },300);
 // desde el cel: el mismo menú, que lo hace la mesa
 document.getElementById('bgame').addEventListener('click',()=>{ if(G.remoteMode){ rPauseOpen(); } else openPause(); });
 function rPauseOpen(){ document.getElementById('pqr').hidden=true; musLabel(); netSend({t:'ctl',a:'pause'}); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; pfoc(0); }
@@ -4123,7 +4187,7 @@ function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputed
   kids.forEach(c=>c.style.zoom=''); let k=1;
   for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
 function fitMenu(force){ fitKids(menu,force); }
-function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg'].forEach(id=>fitKids(document.getElementById(id),force));
+function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
   const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
 window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500);
 // en cuanto se abre o cierra una pantalla, se ajusta al momento (si no, el primer toque caía en un botón que se movía)
@@ -4252,7 +4316,7 @@ try{ const m=localStorage.getItem('dominoModo'); if(m==='sencillo') setMode(m); 
 if(G.nPlayers<4&&G.mode==='parejas') setMode('sencillo');
 mmode.addEventListener('click',()=>{ if(G.remoteMode) return; setMode(G.mode==='parejas'?'sencillo':'parejas'); });
 let mFocus=-1;
-function menuBtns(){ return [...menu.querySelectorAll('button')].filter(b=>b.offsetParent!==null); }
+function menuBtns(){ return [...menu.querySelectorAll('button'),document.getElementById('gsalir')].filter(b=>b.offsetParent!==null||b.id==='gsalir'); }
 function defId(){ return !lobby.hidden?'lplay':!sub.hidden?'mplay':(tvDevice?'pmesa':'ptab'); }
 function curBtn(){ const b=menuBtns(); const a=document.activeElement; if(a&&b.includes(a)) return a; if(mFocus>=0&&b[mFocus]) return b[mFocus]; return document.getElementById(defId()); }
 function setFocusBtn(el){ const b=menuBtns(); mFocus=b.indexOf(el); b.forEach(x=>x.classList.toggle('focus',x===el)); try{ el.focus({preventScroll:true}); }catch(_){} }
@@ -4269,7 +4333,7 @@ function geoBest(b,c,dir){
       const sc=main+side*2.2+(vert?Math.abs(dx):Math.abs(dy))*0.01; if(sc<bs){ bs=sc; best=x; } }
     if(best) break; }
   return best; }
-function menuMove(d,dir){ const b=menuBtns(); if(!b.length) return; const c=curBtn(); if(!c||c.offsetParent===null){ setFocusBtn(document.getElementById(defId())||b[0]); return; }
+function menuMove(d,dir){ const b=menuBtns(); if(!b.length) return; const c=curBtn(); if(!c||(c.offsetParent===null&&c.id!=='gsalir')){ setFocusBtn(document.getElementById(defId())||b[0]); return; }
   const best=geoBest(b,c,dir||(d>0?'down':'up')); setFocusBtn(best||c); }
 function menuOk(){ const c=curBtn(); if(c) c.click(); }
 menu.addEventListener('focusin',e=>{ if(e.target.tagName==='BUTTON') menuBtns().forEach(x=>x.classList.toggle('focus',x===e.target)); });   // pulsa justo el botón resaltado
@@ -4283,7 +4347,7 @@ function navKey(k){
     if(k==='ok'){ if(cur) cur.click(); return true; }
     const n=cur&&geoBest(b,cur,k); if(n) pfoc(b.indexOf(n)); return true; }
   if(!vidov.hidden){ if(k==='ok'){ if(videl.paused) videl.play().catch(()=>{}); else videl.pause(); } else if(k==='left'||k==='right'){ try{ videl.currentTime=Math.max(0,videl.currentTime+(k==='right'?10:-10)); }catch(_){} } return true; }
-  if(!guide.hidden){ if(k==='right'||k==='down') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
+  if(!guide.hidden){ const gs=document.getElementById('gsalir'); if(k==='down'){ gs.classList.add('focus'); return true; } if(gs.classList.contains('focus')){ if(k==='ok') salirApp(); else if(k==='up') gs.classList.remove('focus'); return true; } if(k==='right') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
   if(!menu.hidden){ if(k==='ok') menuOk(); else menuMove(0,k); return true; }
   const bm=document.getElementById('bmesa');
   if(!bm.hidden){ if(k==='ok'&&bm.classList.contains('focus')){ openPause(); return true; } if(k!=='ok'){ bm.classList.add('focus'); return true; } }
@@ -4308,8 +4372,8 @@ cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu()
 /* ===== cuadros: nombres de las máquinas y activación ===== */
 const bnEl=document.getElementById('bnames'), payEl=document.getElementById('paywall');
 const soEl=document.getElementById('seatop'); let soSeat=0;
-function openOv(){ return [payEl,bnEl,soEl,document.getElementById('cfg')].find(x=>x&&!x.hidden)||null; }
-function ovEls(el){ return [...el.querySelectorAll('input,button')].filter(x=>x.offsetParent!==null); }
+function openOv(){ return [payEl,bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
+function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>x.offsetParent!==null||x.id==='gsalir'); }
 let ovFocus=0;
 function ovFoc(el,i){ const b=ovEls(el); if(!b.length) return; ovFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===ovFocus)); try{ b[ovFocus].focus({preventScroll:true}); }catch(_){} }
 ['bnames','paywall','seatop'].forEach(id=>document.getElementById(id).addEventListener('focusin',e=>{ const el=document.getElementById(id), b=ovEls(el), i=b.indexOf(e.target); if(i>=0){ ovFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } }));
