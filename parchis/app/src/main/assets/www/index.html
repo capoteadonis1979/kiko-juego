@@ -2880,7 +2880,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.7';
+const VERSION='v1.2.8';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3613,7 +3613,8 @@ function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputed
   kids.forEach(c=>c.style.zoom=''); let k=1;
   for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
 function fitMenu(force){ fitKids(menu,force); }
-function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
+function fitAll(force){ try{ const ae=document.activeElement; if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')) return;   // escribiendo: no tocar nada (si no, se cierra el teclado)
+  fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
   const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
 window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500);
 // en cuanto se abre o cierra una pantalla, se ajusta al momento (si no, el primer toque caía en un botón que se movía)
@@ -3744,7 +3745,7 @@ menu.addEventListener('focusin',e=>{ if(e.target.tagName==='BUTTON') menuBtns().
 function navKey(k){
   const ov=openOv();
   if(ov){ const b=ovEls(ov), cur=b[ovFocus]||b[0];
-    if(k==='ok'){ if(!cur) return true; if(cur.tagName==='INPUT'){ cur.focus(); try{ KikoApp.showKeyboard(); }catch(_){} } else cur.click(); return true; }
+    if(k==='ok'){ if(!cur) return true; if(cur.tagName==='INPUT'){ if(cur.id==='pwin'&&askLic()) return true; cur.focus(); try{ KikoApp.showKeyboard(); }catch(_){} } else cur.click(); return true; }
     if(cur){ const n=geoBest(b,cur,k); if(n) ovFoc(ov,b.indexOf(n)); } return true; }
   if(!pauseEl.hidden){ const b=pauseBtns(), cur=b.find(x=>x.classList.contains('focus'))||b[pFocus]||b[0];
     if(k==='ok'){ if(cur) cur.click(); return true; }
@@ -3893,6 +3894,10 @@ updLic(); setInterval(updLic,60000);
 
 const APK_URL='https://github.com/capoteadonis1979/kiko-juego/releases/download/parchis/ParchisCubano.apk';
 try{ document.getElementById('lqrsvg').innerHTML=qrSVG(APK_URL); }catch(_){}
+// código de activación con el cuadro nativo de Android: el teclado no se cierra solo (en la casilla de la página sí se cerraba)
+function askLic(){ try{ if(window.KikoApp&&KikoApp.askText){ const i=document.getElementById('pwin'); i.blur(); KikoApp.askText('Código de activación',i.value||'','lic'); return true; } }catch(_){} return false; }
+document.getElementById('pwin').addEventListener('pointerdown',e=>{ if(window.KikoApp&&KikoApp.askText){ e.preventDefault(); askLic(); } });
+{ const prevKT=window.kikoText; window.kikoText=(tag,v)=>{ if(tag==='lic'){ if(v==null) return; const i=document.getElementById('pwin'); i.value=String(v).toUpperCase().replace(/[^A-Z0-9]/g,''); if(i.value) document.getElementById('pwok').click(); return; } if(prevKT) prevKT(tag,v); }; }
 /* ================= BUCLE ================= */
 function isBot(k){ return G.remote[k]==null&&!G.human[k]; }
 function update(){
