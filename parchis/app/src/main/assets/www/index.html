@@ -345,7 +345,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #pmeta{font-weight:800;color:#ffe9a8;white-space:nowrap}
 #dpanel{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:center;padding:8px 14px 46px;gap:8px}
 #droll{display:flex;align-items:center;justify-content:center;gap:22px}
-#dcup{position:relative;overflow:hidden;width:min(52vw,320px);aspect-ratio:1.3;border-radius:22px;background:radial-gradient(#1f8a4a,#0f5a2e);border:7px solid #6b3a1c;box-shadow:inset 0 6px 18px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;gap:18px}
+#dcup{position:relative;overflow:hidden;touch-action:none;width:min(52vw,320px);aspect-ratio:1.3;border-radius:22px;background:radial-gradient(#1f8a4a,#0f5a2e);border:7px solid #6b3a1c;box-shadow:inset 0 6px 18px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;gap:18px}
 #dcup .die{--s:min(13vw,74px)}
 #dcup .die{position:absolute;left:0;top:0;will-change:transform}
 @keyframes sk1{from{transform:translate(-6px,-4px) rotate(-30deg)}to{transform:translate(6px,5px) rotate(20deg)}}
@@ -3236,7 +3236,12 @@ function drawTable(){
     for(const id of ids) L[id].forEach((m,i)=>{ if(!m) return; const [x,y]=pieceXY(k,i,G.pos[k][i]); const pul=0.5+0.5*Math.sin(G.frame*0.2);
       c.strokeStyle='rgba(255,255,255,'+(0.5+0.5*pul)+')'; c.lineWidth=3; c.beginPath(); c.arc(x,y,pr+5+pul*3,0,7); c.stroke();
       if(tok){ const [tx,ty]=m.to>=META?metaSlot(k,i):m.to<=ULTCALLE?cellCenter(...TRACK[absOf(k,m.to)-1]):cellCenter(...PASILLO[k][m.to-64]); c.setLineDash([6,5]); c.strokeStyle=COL[k].c; c.lineWidth=3; c.beginPath(); c.arc(tx,ty,pr+2,0,7); c.stroke(); c.setLineDash([]);
-        c.fillStyle='#fff'; c.font='800 14px '+FONT; c.textAlign='center'; c.textBaseline='middle'; c.fillText(String(i+1),tx,ty); } }); }
+ } }); }
+  // latido: la casa del jugador al que le toca late como un corazón
+  if(G.state==='play'&&!G.paused){ const u=BS/BU, [hc,hr]=HOME[k], W=8*u, hx=BOX+PX(hc)*u+W/2, hy=BOY+PX(hr)*u+W/2;
+    const ph=(G.frame%60)/60, beat=Math.max(0,Math.sin(Math.min(1,ph/0.14)*Math.PI))*(ph<0.14?1:0)+Math.max(0,Math.sin(Math.min(1,Math.max(0,ph-0.2)/0.14)*Math.PI))*(ph>=0.2&&ph<0.34?0.7:0);
+    c.save(); c.shadowColor=COL[k].c; c.shadowBlur=10+beat*26; c.strokeStyle=COL[k].l; c.globalAlpha=0.35+beat*0.65; c.lineWidth=3+beat*4;
+    c.beginPath(); c.arc(hx,hy,W*0.36*(1+beat*0.07),0,7); c.stroke(); c.restore(); }
   // fichas (la que se mueve, aparte)
   const list=[]; for(const q of ACT()) for(let i=0;i<4;i++){ if(G.anim&&G.anim.m.k===q&&G.anim.m.i===i) continue; if(G.fx.some(f=>f.t==='casa'&&f.k===q&&f.i===i&&G.frame-f.f<40)) continue; const [x,y]=pieceXY(q,i,G.pos[q][i]); list.push([y,x,q,i]); }
   list.sort((a,b)=>a[0]-b[0]).forEach(([y,x,q,i])=>drawPiece(c,x,y,pr,q,String(i+1)));
@@ -3258,12 +3263,11 @@ function drawTable(){
     c.textAlign='center'; c.textBaseline='middle'; c.font='800 18px '+FONT; c.fillStyle='#ffd23a';
     c.fillText('TIENE: '+G.toks.filter(t=>t.kind!=='sum').map(t=>t.kind==='bonus'?'+'+t.v:t.v).join(' · '),bx,by); }
   // mensaje
-  if(G.msgT>0&&G.msg&&G.state==='over'){ c.font='900 30px '+FONT; const w=Math.min(VW-40,c.measureText(G.msg).width+60); c.globalAlpha=Math.min(1,G.msgT/15);
+  if(false){ c.font='900 30px '+FONT; const w=Math.min(VW-40,c.measureText(G.msg).width+60); c.globalAlpha=Math.min(1,G.msgT/15);
     c.fillStyle='rgba(0,0,0,.72)'; rr(c,VW/2-w/2,VH/2-30,w,60,18); c.fill(); c.strokeStyle='#ffd23a'; c.lineWidth=3; c.stroke();
     c.fillStyle='#fff'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(G.msg,VW/2,VH/2+1); c.globalAlpha=1; }
   // título
   c.fillStyle='#ffd23a'; c.font='900 26px '+FONT; c.textAlign='center'; c.fillText('PARCHÍS',150,330); c.fillText('CUBANO TV',150,362);
-  if(G.state==='over'){ c.fillStyle='#fff'; c.font='700 18px '+FONT; c.fillText(isTV?'Pulsa OK para volver a la sala':'Toca la pantalla para seguir',VW/2,VH/2+52); }
 }
 // posición de una ficha en el progreso p (para la animación: sin repartir con otras)
 function pieceXYp(k,i,p){ if(p>=META) return metaSlot(k,i); if(p<=ULTCALLE) return cellCenter(...TRACK[absOf(k,p)-1]); return cellCenter(...PASILLO[k][p-64]); }
@@ -3296,6 +3300,7 @@ function renderPanel(force){
   handEl.style.setProperty('--pc',C.c); handEl.style.setProperty('--pd',C.d); handEl.style.setProperty('--pl',C.l);
   const ph=G.remoteMode?(PR.photo||''):(G.photos[0]&&G.photos[0].src||PR.photo||''); const pe=document.getElementById('pmeph'); pe.style.backgroundImage=ph?'url('+ph+')':''; pe.textContent=ph?'':'👤';
   const roll=document.getElementById('droll'), mv=document.getElementById('dmove'), wt=document.getElementById('dwait');
+  if(!G.remoteMode&&v.turn&&v.phase==='roll'&&roll.hidden){ try{ navigator.vibrate&&navigator.vibrate([150,90,150]); }catch(_){} }
   roll.hidden=!(v.turn&&v.phase==='roll'); mv.hidden=!(v.turn&&v.phase==='move'); wt.hidden=!roll.hidden||!mv.hidden;
   if(!mv.hidden){
     if(!v.toks.some(t=>t.id===selTok&&t.any)) selTok=(v.toks.find(t=>t.any)||{}).id||null;
@@ -3321,7 +3326,7 @@ const CUP=document.getElementById('dcup');
 CUP.innerHTML='<span class="die d1"></span><span class="die d2"></span>';
 const CD=[...CUP.querySelectorAll('.die')].map((el,j)=>({el,x:0,y:0,vx:0,vy:0,a:j?0.3:-0.25,va:0,face:j?5:6,shown:0,out:false}));
 function setFace(d,v){ if(d.shown===v) return; d.shown=v; d.el.innerHTML=(DPIPS[v]||[]).map(([a,b])=>'<i style="left:'+(50+a*25)+'%;top:'+(50+b*25)+'%"'+(v===1?' class="r"':'')+'></i>').join(''); }
-let SEN={f:[0,0],rot:0,lin:[0,0,0],linT:0,e:0,t:0,has:false}, SH={thrown:0,shakeT:0,shaking:false,peak:0,lastHit:0};
+let SEN={f:[0,0],rot:0,lin:[0,0,0],linT:0,e:0,t:0,has:false}, SH={thrown:-1e9,shakeT:0,shaking:false,peak:0,lastHit:0};
 function scrAngle(){ try{ return (screen.orientation&&screen.orientation.angle)||window.orientation||0; }catch(_){ return 0; } }
 // vector del aparato (x derecha, y arriba) → pantalla (x derecha, y abajo)
 function toScreen(x,y){ const t=scrAngle()*Math.PI/180, c=Math.cos(t), s=Math.sin(t); return [x*c-y*s, -(x*s+y*c)]; }
@@ -3335,9 +3340,9 @@ addEventListener('devicemotion',ev=>{ const g=ev.accelerationIncludingGravity; i
 function canThrow(){ const v=myView(); return v&&v.turn&&v.phase==='roll'&&!handEl.hidden; }
 function checkThrow(m){ const now=performance.now(); if(now-SH.thrown<1200) return;
   if(SEN.e>3){ if(!SH.shaking){ SH.shaking=true; SH.shakeT=now; SH.peak=0; } SH.peak=Math.max(SH.peak,m); }
-  // lanzar: tirón fuerte hacia delante (hacia la tele) o hacia arriba
-  const [lx,ly,lz]=SEN.lin, fwd=Math.max(-lz,0);
-  if(fwd>15&&fwd>0.6*m){ const sx=toScreen(lx,ly)[0]; throwNow(Math.min(1.4,0.5+m/30),sx/(m||1)); return; }
+  // lanzar: golpe hacia arriba (o hacia delante, a la tele); sacudir de lado a lado no lanza
+  const [lx,ly,lz]=SEN.lin, [sx,sy]=toScreen(lx,ly), up=Math.max(-sy,Math.abs(lz),0);
+  if(up>14&&up>0.65*m){ throwNow(Math.min(1.4,0.5+m/30),sx/(m||1)); return; }
   // o al dejar de agitar después de un rato
   if(SH.shaking&&SEN.e<1.3){ SH.shaking=false; if(now-SH.shakeT>600) throwNow(Math.min(1.3,0.5+SH.peak/30),0); } }
 function throwNow(pw,aim){ if(!canThrow()||performance.now()-SH.thrown<1200) return; SH.thrown=performance.now(); SH.shaking=false;
@@ -3346,6 +3351,15 @@ function throwNow(pw,aim){ if(!canThrow()||performance.now()-SH.thrown<1200) ret
   rattle(1); try{ navigator.vibrate&&navigator.vibrate([30,40,60]); }catch(_){}
   act({t:'roll',p:pw,aim:clamp(aim||0,-1,1),sp:spin}); }
 document.getElementById('btirar').addEventListener('click',()=>{ initAudio(); throwNow(0.8,0); });
+// toque: lanza suave · desliz hacia arriba (hacia la tele): más rápido, más fuerte
+let SW=null;
+CUP.addEventListener('pointerdown',e=>{ e.preventDefault(); initAudio(); SW={x:e.clientX,y:e.clientY,t:performance.now(),pts:[[e.clientX,e.clientY,performance.now()]]}; try{ CUP.setPointerCapture(e.pointerId); }catch(_){} });
+CUP.addEventListener('pointermove',e=>{ if(!SW) return; const now=performance.now(); SW.pts.push([e.clientX,e.clientY,now]); while(SW.pts.length>2&&now-SW.pts[0][2]>120) SW.pts.shift(); });
+function swEnd(e){ if(!SW) return; const now=performance.now(), dx=e.clientX-SW.x, dy=e.clientY-SW.y, dist=Math.hypot(dx,dy), s0=SW.pts[0];
+  const dt=Math.max(16,now-s0[2]), vy=(e.clientY-s0[1])/dt, vx=(e.clientX-s0[0])/dt; SW=null;
+  if(dist<12&&now-(s0?s0[2]:now)<400){ throwNow(0.7,0); return; }
+  if(dy<-30&&-dy>Math.abs(dx)*0.6){ const sp=Math.hypot(vx,vy); throwNow(clamp(0.35+sp*0.45,0.35,1.4),clamp(vx/(Math.abs(vy)+0.01),-1,1)); } }
+CUP.addEventListener('pointerup',swEnd); CUP.addEventListener('pointercancel',()=>{ SW=null; });
 function cupReset(){ const W=CUP.clientWidth, H=CUP.clientHeight, s=CD[0].el.offsetWidth||50;
   CD.forEach((d,j)=>{ d.out=false; d.x=W/2+(j?s*0.7:-s*0.7); d.y=H/2; d.vx=d.vy=0; d.va=0; d.a=j?0.3:-0.25; d.face=j?5:6; }); }
 let cupLast=0, cupWas=false;
@@ -3510,7 +3524,7 @@ window.kikoFromTV=(line)=>{
   let o; try{ o=JSON.parse(line); }catch(_){ return; }
   if(o.t==='state'){ const was=PV&&PV.turn&&PV.phase; PV=o;
     G.rMus=o.mus!==false; G.rSnd=o.snd!==false; if(o.musv!=null) G.rMusV=o.musv; if(o.sndv!=null) G.rSndV=o.sndv; if(o.song&&o.song!==G.rSong){ G.rSong=o.song; if(!pauseEl.hidden) musLabel(); }
-    if(o.turn&&o.phase==='roll'&&was!=='roll'){ try{ navigator.vibrate&&navigator.vibrate([40,60,40]); }catch(_){} }
+    if(o.turn&&o.phase==='roll'&&was!=='roll'){ try{ navigator.vibrate&&navigator.vibrate([150,90,150]); }catch(_){} }
     document.getElementById('rends').textContent=o.turn?'¡TE TOCA!':'Juega '+(o.who||'');
     renderPanel(); }
 };
