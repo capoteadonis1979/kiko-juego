@@ -92,6 +92,11 @@ public class MainActivity extends Activity {
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
                 .addPathHandler("/music/", new WebViewAssetLoader.InternalStoragePathHandler(this, musicDir()))
+                .addPathHandler("/local/", path -> {   // música guardada en la tele/teléfono
+                    try { long id = Long.parseLong(path.replaceAll("[^0-9]", ""));
+                        Uri u = android.content.ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+                        String t = getContentResolver().getType(u); return new WebResourceResponse(t != null ? t : "audio/mpeg", null, getContentResolver().openInputStream(u));
+                    } catch (Exception e) { return null; } })
                 .build();
 
         web = new WebView(this);
@@ -113,6 +118,28 @@ public class MainActivity extends Activity {
         setContentView(web);
         pantallaCompleta();
         web.loadUrl("https://appassets.androidplatform.net/assets/www/index.html" + (tv ? "?tv=1" : ""));
+    }
+
+    // ================= MÚSICA DE LA TELE =================
+    private static final int PERM_MUS = 77;
+    private String permMusica() { return Build.VERSION.SDK_INT >= 33 ? "android.permission.READ_MEDIA_AUDIO" : "android.permission.READ_EXTERNAL_STORAGE"; }
+    private boolean tienePermMusica() { return Build.VERSION.SDK_INT < 23 || checkSelfPermission(permMusica()) == android.content.pm.PackageManager.PERMISSION_GRANTED; }
+    private void cancionesLocales(boolean pedir) {
+        if (!tienePermMusica()) { if (pedir && Build.VERSION.SDK_INT >= 23) requestPermissions(new String[]{ permMusica() }, PERM_MUS); else if (pedir) js("window.kikoLocal&&kikoLocal('[]','no')"); return; }
+        new Thread(() -> {
+            org.json.JSONArray a = new org.json.JSONArray();
+            try (android.database.Cursor c = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    new String[]{ MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DURATION },
+                    MediaStore.Audio.Media.DURATION + ">=30000", null, MediaStore.Audio.Media.TITLE + " ASC")) {
+                if (c != null) while (c.moveToNext() && a.length() < 300) { JSONObject o = new JSONObject(); o.put("id", c.getLong(0)); o.put("t", c.getString(1)); a.put(o); }
+            } catch (Exception ignored) { }
+            js("window.kikoLocal&&kikoLocal(" + JSONObject.quote(a.toString()) + ",'" + (pedir ? "si" : "auto") + "')");
+        }).start();
+    }
+    @Override
+    public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(code, perms, res);
+        if (code == PERM_MUS) { if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) cancionesLocales(true); else js("window.kikoLocal&&kikoLocal('[]','no')"); }
     }
 
     // ================= MÚSICA =================
@@ -387,6 +414,9 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void fetchSongs(String lista) { bajarMusica(lista); }
+
+        @JavascriptInterface
+        public void localSongs(boolean pedir) { runOnUiThread(() -> cancionesLocales(pedir)); }
 
         @JavascriptInterface
         public void showKeyboard() {

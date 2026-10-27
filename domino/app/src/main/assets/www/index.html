@@ -205,7 +205,7 @@ body.mesa #menu .lseat{padding:4px 8px}
 #lmode{font-size:20px;font-weight:700;color:#8aff6a;letter-spacing:1px}
 #menu .lseat{min-width:0;width:220px;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.07);border:3px solid rgba(255,255,255,.15);display:grid;grid-template-columns:50px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;font:inherit;color:var(--fg)}
 #menu .lseat.pA{border-color:#e8403a} #menu .lseat.pB{border-color:#3a8ae8} #menu .lseat.c0{border-color:#e8403a} #menu .lseat.c1{border-color:#3a8ae8} #menu .lseat.c2{border-color:#2fbf71} #menu .lseat.c3{border-color:#ffb020}
-#menu .lseat.sel{outline:4px dashed #fff;outline-offset:2px}
+#menu .lseat.sel{outline:none}
 .lseat.on{border-color:#8aff6a;background:rgba(138,255,106,.12)}
 #menu .lseat i{grid-row:1/3;width:46px;height:46px;border-radius:50%;background:#1d3a52 center/cover no-repeat;border:3px solid #fff;display:grid;place-items:center;font-style:normal;font-size:26px;color:#9cb}
 .lseat b{font-size:15px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -241,7 +241,8 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 .lnm{background:rgba(0,0,0,.62);padding:.5vh 1.8vh;border-radius:1.4vh;display:flex;flex-direction:column;align-items:center}
 .lnm b{font-size:2.6vh!important;max-width:24vh}
 .lnm small{font-size:1.7vh;color:#9fbfaa;opacity:1}
-#menu .lseat.sel .lchair{outline:.6vh dashed #fff;outline-offset:.6vh}
+#menu .lseat.sel .lchair{animation:latido 1s ease-in-out infinite;box-shadow:0 0 0 .6vh #fff,0 0 3vh 1vh rgba(255,210,58,.9)}
+@keyframes latido{0%,100%{transform:scale(1)}15%{transform:scale(1.14)}30%{transform:scale(1)}45%{transform:scale(1.09)}60%{transform:scale(1)}}
 #lqr,#lqr2{position:absolute;top:0;background:rgba(0,0,0,.25);border-radius:1.4vh;padding:1vh}
 #lqr{left:2vw} #lqr2{right:2vw}
 #lqr svg,#lqr2 svg{width:17vh;height:17vh}
@@ -275,6 +276,20 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #pick:not([hidden]){display:flex}
 #menu #ptab{background:#2f7fe0;border-color:#1c4c94}
 #menu #psolo{background:#22a04a;border-color:#0f5a26}
+#pick[hidden]~#cuba,#sub:not([hidden])~#cuba,#lobby:not([hidden])~#cuba{display:none!important}
+@media (orientation:landscape){
+  #menu>#cuba{position:absolute;left:12px;bottom:14px;flex-basis:auto;gap:12px;margin:0;z-index:1}
+  #menu>#cuba .flag{width:58px;height:30px} #menu>#cuba .tinajon{width:58px;height:42px} #menu>#cuba .cmg span{font-size:15px}
+  #menu>#cuba{gap:8px}
+  #pick{max-width:min(680px,calc(100vw - 300px))!important}
+  #pick button{min-width:0!important;flex:1 1 40%}
+  #pick #psolo{flex:1 1 100%}
+  #pick #psalir,#pick #mtvmus{flex:1 1 40%}
+}
+@media (orientation:landscape) and (min-width:900px){ #pick{max-width:min(680px,calc(100vw - 350px))!important} }
+#mplayer{display:flex;gap:10px;flex:1 1 100%;justify-content:center;max-width:624px;width:100%}
+#pick #mplayer button{min-width:0!important;flex:0 0 64px;padding-left:0;padding-right:0}
+#pick #mplayer #msong{flex:1 1 auto!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe9a8}
 #cuba{flex-basis:100%;display:flex;justify-content:center;align-items:flex-end;gap:26px;margin-top:2px}
 #cuba .flag{width:96px;height:49px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));animation:ond 2.4s ease-in-out infinite alternate;transform-origin:left center}
 #cuba .cmg{display:flex;flex-direction:column;align-items:center}
@@ -345,10 +360,16 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
         <div class="gs"><i>3</i><span class="ge">📱</span><p>¿El teléfono no tiene la app? Apunta la <b>cámara del teléfono</b> al QR de la izquierda (<b>📱 TELÉFONO</b>), baja la app e instálala.</p></div>
         <div class="gs"><i>4</i><span class="ge">👤</span><p>En el <b>teléfono</b> abre la app, toca <b>📱 TELÉFONO</b>, pon tu nombre y hazte una foto.</p></div>
         <div class="gs"><i>5</i><span class="ge">📷</span><p>Toca <b>📷 ESCANEAR QR DE LA TV</b> y apunta al QR de la derecha de la TV (<b>📺 TV</b>). Tu foto aparece en una silla de la TV.</p></div>
-        <div class="gs"><i>6</i><span class="ge">🪑</span><p>Hasta <b>4 teléfonos</b>. Las sillas libres las juega un bot. Con el mando eliges una silla y pulsas OK para cambiarle el nombre o cambiarla de sitio.</p></div>
-        <div class="gs"><i>7</i><span class="ge">▶️</span><p>En la TV elige <b>PAREJAS</b> o <b>INDIVIDUAL</b> y pulsa <b>EMPEZAR PARTIDA</b>. ¡A jugar!</p></div>
+        <div class="gs"><i>6</i><span class="ge">🪑</span><p>Hasta <b>4 teléfonos</b>. Las sillas libres las juega un bot. Para <b>cambiar de silla</b>: pulsa OK en la silla → <b>⇄ CAMBIAR DE SILLA</b> → la silla se queda <b>latiendo</b> → ve a la silla nueva y pulsa OK. Se lleva su nombre y su foto. Ahí mismo está <b>✏️ CAMBIAR NOMBRE</b>.</p></div>
+        <div class="gs"><i>7</i><span class="ge">▶️</span><p>En la TV elige <b>PAREJAS</b> o <b>INDIVIDUAL</b>, los <b>puntos para ganar</b> (botón <b>A 100 PUNTOS</b>: 100, 101, 110, 115… o el número que quieras) y pulsa <b>EMPEZAR PARTIDA</b>. El mando se mueve en todas las direcciones. ¡A jugar!</p></div>
         <div class="gs"><i>?</i><span class="ge">🆘</span><p>¿No conecta? Revisa que estén en la misma Wi-Fi y vuelve a escanear. Si alguien llega con la partida empezada, que escanee el QR del menu ☰ de la TV y elige si coge la mano de la máquina o espera la siguiente.</p></div>
       </div>
+      <h3>Música</h3>
+      <ul>
+        <li>En la pantalla de inicio puedes <b>escuchar la música</b> del juego sin jugar: <b>◀ ▶</b> para cambiar de canción. También está la musiquita <b>Son montuno (instrumental)</b>.</li>
+        <li><b>📂 MI MÚSICA</b>: pone la música que tengas guardada en la tele o en el teléfono (la primera vez pide permiso).</li>
+        <li><b>🎵 MÚSICA</b> y <b>🔊 EFECTOS</b>: cada toque baja el volumen; después de NO vuelve al máximo.</li>
+      </ul>
       <h3>¿Necesita internet?</h3>
       <ul>
         <li><b>Para jugar, no.</b> Solo la misma Wi-Fi (o el punto de acceso de un teléfono).</li>
@@ -395,6 +416,8 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
       <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
       <button id="pact">ACTIVAR / COMPRAR</button>
       <button id="mmus">🎵 MÚSICA ●●●●○</button><button id="msnd">🔊 EFECTOS ●●●●●</button>
+      <div id="mplayer"><button id="mprev">◀</button><button id="msong">♪ Pega la ficha, compay</button><button id="mnext">▶</button></div>
+      <button id="mtvmus">📂 MI MÚSICA</button>
       <button id="psalir">SALIR</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
@@ -419,7 +442,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
             <path d="M42 50 Q36 64 40 80" stroke="rgba(255,220,180,.35)" stroke-width="3" fill="none"/></g></svg><span>Camagüey</span></div>
       </div>
     </div>
-    <p id="cred">Creado por <b>Adonis Capote</b><br>capoteapps@gmail.com<br>© 2026 Todos los derechos reservados</p>
+    <p id="cred">Creado por <b>Adonis Capote</b><br>capoteapps@gmail.com<br>© 2026 · Derechos reservados</p>
     <div id="sub" hidden>
       <button id="mmode">MODO: PAREJAS (2 CONTRA 2)</button>
       <button id="mmeta">A 100 PUNTOS</button>
@@ -2760,7 +2783,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.7.2';
+const VERSION='v3.7.3';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2847,24 +2870,24 @@ function musStepPlay(t,st){
   const k=MONT.indexOf(s16); if(k>=0){ const n=ch[k%3]+(k>3?12:0); mPluck(t,mNote(n+12),0.16,0.08); mPluck(t,mNote(n+24),0.12,0.05,'triangle'); }   // montuno
 }
 /* canciones cubanas (Suno Pro): se bajan una vez y quedan guardadas en el aparato; mientras tanto suena el son de la casa */
-const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['Lechón, congrí y carnaval','07.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3']];
+const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['Lechón, congrí y carnaval','07.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Son montuno (instrumental)','','synth']];
 const NATIVE_MUS=!!(window.KikoApp&&KikoApp.songsReady);
 let songIdx=0; try{ songIdx=(parseInt(localStorage.getItem('dominoCancion'))||0)%SONGS.length; }catch(_){}
 let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songAsked=false, songReadyT=0;
-function songRefresh(){ if(!NATIVE_MUS){ SONGS.forEach(x=>songReady.add(x[1])); return; } try{ String(KikoApp.songsReady()||'').split(',').filter(Boolean).forEach(f=>songReady.add(f)); }catch(_){} }
+function songRefresh(){ if(!NATIVE_MUS){ SONGS.forEach(x=>{ if(!x[2]) songReady.add(x[1]); }); return; } try{ String(KikoApp.songsReady()||'').split(',').filter(Boolean).forEach(f=>songReady.add(f)); }catch(_){} }
 window.kikoSong=f=>{ songReady.add(f); };
-function songSrc(k){ const f=SONGS[k][1]; return NATIVE_MUS?'https://appassets.androidplatform.net/music/'+f:'https://github.com/capoteadonis1979/kiko-juego/releases/download/musica/'+f; }
-function songWant(){ return !window.VIDEO_ON&&MUS&&!G.remoteMode&&!document.hidden&&songOK&&songReady.size>0; }
-function songPick(){ for(let n=0;n<SONGS.length;n++){ if(songReady.has(SONGS[songIdx][1])) return true; songIdx=(songIdx+1)%SONGS.length; } return false; }
+function songSrc(k){ if(SONGS[k][2]==='tv') return SONGS[k][3]; const f=SONGS[k][1]; return NATIVE_MUS?'https://appassets.androidplatform.net/music/'+f:'https://github.com/capoteadonis1979/kiko-juego/releases/download/musica/'+f; }
+function songWant(){ return SONGS[songIdx][2]!=='synth'&&!window.VIDEO_ON&&MUS&&!G.remoteMode&&!document.hidden&&songOK&&songReady.size>0; }
+function songPick(){ for(let n=0;n<SONGS.length;n++){ const x=SONGS[songIdx]; if(x[2]||songReady.has(x[1])) return true; songIdx=(songIdx+1)%SONGS.length; } return false; }
 function songLoad(){ if(!songEl){ songEl=new Audio(); songEl.volume=0.6*MUSV/5; songEl.preload='auto';
     songEl.addEventListener('ended',()=>songNext(1));
     songEl.addEventListener('playing',()=>{ songErr=0; });
     songEl.addEventListener('error',()=>{ if(++songErr>=SONGS.length){ songOK=false; songRetry=Date.now()+90000; } else songNext(1); }); }
-  if(!songPick()) return; songEl.src=songSrc(songIdx); }
+  if(!songPick()) return; if(SONGS[songIdx][2]==='synth'){ songEl.pause(); return; } songEl.src=songSrc(songIdx); }
 function songNext(d){ songIdx=(songIdx+(d||1)+SONGS.length)%SONGS.length; songPick(); try{ localStorage.setItem('dominoCancion',songIdx); }catch(_){} if(songEl){ songLoad(); if(songWant()) songEl.play().catch(()=>{}); } musLabel(); broadcast(); }
 function songTick(){ if(!songOK&&Date.now()>songRetry){ songOK=true; songErr=0; } if(songEl) songEl.volume=Math.min(1,0.6*MUSV/5);
   if(Date.now()-songReadyT>8000){ songReadyT=Date.now(); songRefresh(); }
-  if(MUS&&!G.remoteMode&&!songAsked&&NATIVE_MUS&&songReady.size<SONGS.length){ songAsked=true; try{ KikoApp.fetchSongs(SONGS.map(x=>x[1]).join(',')); }catch(_){} }
+  if(MUS&&!G.remoteMode&&!songAsked&&NATIVE_MUS&&songReady.size<SONGS.filter(x=>!x[2]).length){ songAsked=true; try{ KikoApp.fetchSongs(SONGS.filter(x=>!x[2]).map(x=>x[1]).join(',')); }catch(_){} }
   if(songWant()){ if(!songEl) songLoad(); if(songEl.paused&&songEl.src) songEl.play().catch(()=>{}); } else if(songEl&&!songEl.paused) songEl.pause(); }
 setInterval(()=>{ try{ songTick(); }catch(_){} },700);
 function musTick(){
@@ -3932,10 +3955,33 @@ function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp()
 document.getElementById('psalir').addEventListener('click',salirApp);
 document.getElementById('mmus').addEventListener('click',()=>{ initAudio(); setMusV(volNext(MUSV)); });
 document.getElementById('msnd').addEventListener('click',()=>{ initAudio(); setSndV(volNext(SNDV)); });
+// reproductor del inicio: cambiar de canción sin jugar
+const songOn=()=>{ initAudio(); if(MUSV===0) setMusV(4); };
+document.getElementById('mprev').addEventListener('click',()=>{ songOn(); songNext(-1); });
+document.getElementById('mnext').addEventListener('click',()=>{ songOn(); songNext(1); });
+document.getElementById('msong').addEventListener('click',()=>{ songOn(); songNext(1); });
+// música guardada en el aparato (tele o teléfono)
+const tvBtn=document.getElementById('mtvmus');
+function tvBtnTxt(t){ tvBtn.textContent=t; }
+window.kikoLocal=(json,how)=>{ let L=[]; try{ L=JSON.parse(json)||[]; }catch(_){}
+  for(let i=SONGS.length-1;i>=0;i--) if(SONGS[i][2]==='tv') SONGS.splice(i,1);
+  L.forEach(o=>SONGS.push([String(o.t||'Canción').slice(0,40),'tv'+o.id,'tv','https://appassets.androidplatform.net/local/'+o.id]));
+  if(L.length){ tvBtnTxt('📂 MI MÚSICA ('+L.length+')'); if(how==='si'){ songIdx=SONGS.findIndex(x=>x[2]==='tv')-1; songOn(); songNext(1); } }
+  else if(how==='si') { tvBtnTxt('📂 NO HAY MÚSICA GUARDADA'); setTimeout(()=>tvBtnTxt('📂 MI MÚSICA'),3500); }
+  else if(how==='no') { tvBtnTxt('📂 SIN PERMISO PARA LA MÚSICA'); setTimeout(()=>tvBtnTxt('📂 MI MÚSICA'),3500); }
+  musLabel(); };
+tvBtn.addEventListener('click',()=>{ songOn();
+  if(window.KikoApp&&KikoApp.localSongs){ try{ KikoApp.localSongs(true); }catch(_){} return; }
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='audio/*'; inp.multiple=true;
+  inp.onchange=()=>{ for(let i=SONGS.length-1;i>=0;i--) if(SONGS[i][2]==='tv') SONGS.splice(i,1);
+    [...inp.files].forEach(f=>SONGS.push([f.name.replace(/\.[^.]+$/,'').slice(0,40),'tv'+f.name,'tv',URL.createObjectURL(f)]));
+    if(inp.files.length){ tvBtnTxt('📂 MI MÚSICA ('+inp.files.length+')'); songIdx=SONGS.findIndex(x=>x[2]==='tv')-1; songNext(1); } };
+  inp.click(); });
+try{ if(window.KikoApp&&KikoApp.localSongs) KikoApp.localSongs(false); }catch(_){}
 try{ musLabel(); }catch(_){}
 document.getElementById('bmesa').addEventListener('click',()=>openPause());
 function volTxt(v){ return v>0?'●'.repeat(v)+'○'.repeat(5-v):'NO'; }
-function musLabel(){ const m=G.remoteMode?(G.rMusV!=null?G.rMusV:(G.rMus!==false?4:0)):MUSV, n=G.remoteMode?(G.rSndV!=null?G.rSndV:(G.rSnd!==false?5:0)):SNDV; document.getElementById('pmus').textContent='MÚSICA '+volTxt(m); document.getElementById('psnd').textContent='EFECTOS '+volTxt(n); { const a=document.getElementById('mmus'), b=document.getElementById('msnd'); if(a){ a.textContent='🎵 MÚSICA '+volTxt(MUSV); b.textContent='🔊 EFECTOS '+volTxt(SNDV); } } document.getElementById('pcan').textContent='♪ '+(G.remoteMode?(G.rSong||'CANCIÓN'):SONGS[songIdx][0])+'  ▶'; }
+function musLabel(){ const m=G.remoteMode?(G.rMusV!=null?G.rMusV:(G.rMus!==false?4:0)):MUSV, n=G.remoteMode?(G.rSndV!=null?G.rSndV:(G.rSnd!==false?5:0)):SNDV; document.getElementById('pmus').textContent='MÚSICA '+volTxt(m); document.getElementById('psnd').textContent='EFECTOS '+volTxt(n); { const a=document.getElementById('mmus'), b=document.getElementById('msnd'); if(a){ a.textContent='🎵 MÚSICA '+volTxt(MUSV); b.textContent='🔊 EFECTOS '+volTxt(SNDV); } const so=document.getElementById('msong'); if(so) so.textContent='♪ '+(SONGS[songIdx]||SONGS[0])[0]; } document.getElementById('pcan').textContent='♪ '+(G.remoteMode?(G.rSong||'CANCIÓN'):SONGS[songIdx][0])+'  ▶'; }
 function setMusV(v){ MUSV=Math.max(0,Math.min(5,v|0)); MUS=MUSV>0; try{ localStorage.setItem('dominoMusVol',MUSV); localStorage.setItem('dominoMusica',MUS?'1':'0'); }catch(_){} musLabel(); broadcast(); }
 function setMus(v){ setMusV(v?(MUSV||4):0); }
 function setSndV(v){ SNDV=Math.max(0,Math.min(5,v|0)); SND=SNDV>0; try{ localStorage.setItem('dominoSndVol',SNDV); localStorage.setItem('dominoSonido',SND?'1':'0'); }catch(_){} applySnd(); musLabel(); broadcast(); }
@@ -4067,6 +4113,8 @@ document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctr
 
 /* ================= MENÚ ================= */
 const menu=document.getElementById('menu');
+// bandera, palma y tinajón: fuera de los botones (en horizontal van en la esquina de abajo a la derecha)
+(function(){ const c=document.getElementById('cuba'), cr=document.getElementById('cred'); if(c&&cr) menu.insertBefore(c,cr); })();
 // todas las pantallas se ajustan solas (sin barra de desplazamiento): si el contenido no cabe, se encoge
 const FITK=new WeakMap();
 function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputedStyle(box).position!=='fixed') return; const kids=[...box.children].filter(c=>!c.hidden&&getComputedStyle(c).display!=='none'); if(!kids.length) return;
