@@ -2880,7 +2880,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.9';
+const VERSION='v1.2.10';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3212,15 +3212,17 @@ function drawDie(x,X,Y,s,v,rot,lift){ lift=lift||0; x.save(); x.translate(X,Y); 
 /* ================= DADOS LANZADOS EN LA MESA ================= */
 // salen desde la esquina del jugador hacia el centro, chocan con el borde y entre ellos, y se paran
 const DCORNER=[[1,1],[1,-1],[-1,-1],[-1,1]];   // esquina de cada color (signo x, signo y)
+// carril del paño verde a cada lado del tablero, entre la tarjeta de arriba y la de abajo
+function diceLane(sx){ const L=sx<0?48:BOX+BS+BUU+48, R=sx<0?BOX-BUU-48:VW-48; return {L,R,T:CARDPOS[2][1]+52+30,B:CARDPOS[3][1]-52-30}; }
 function throwDice(k,vals,pw,aim,spin){ aim=clamp(+aim||0,-1,1); spin=clamp(+spin||0,0,2);
-  pw=clamp(pw||0.7,0.3,1.4); const cx=BOX+BS/2, cy=BOY+BS/2, [sx,sy]=DCORNER[k];
-  const D=vals.map((v,j)=>{ const x0=cx+sx*(BS/2-40)-sx*j*30, y0=cy+sy*(BS/2-40)+sy*j*24*(j?-1:1);
-    const ang=Math.atan2(cy-y0,cx-x0)+aim*0.6+(Math.random()-0.5)*0.25, sp=(11+Math.random()*4)*pw;
+  pw=clamp(pw||0.7,0.3,1.4); const [sx,sy]=DCORNER[k], Ln=diceLane(sx), lx=(Ln.L+Ln.R)/2;
+  const D=vals.map((v,j)=>{ const x0=lx+(j?32:-32), y0=sy>0?Ln.B-6:Ln.T+6;
+    const ang=(sy>0?-Math.PI/2:Math.PI/2)+aim*0.45+(Math.random()-0.5)*0.35, sp=(9+Math.random()*3)*pw;
     return {x:x0,y:y0,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,a:Math.random()*6,va:(Math.random()-0.5)*(0.6+spin*0.5),v,face:1+Math.floor(Math.random()*6),z:0.6,vz:0.05}; });
   G.dAnim={k,D,t:0,done:false,vals}; diceThrowSound(pw);
 }
 function stepDice(){ const A=G.dAnim; if(!A||A.done) return; A.t++;
-  const L=BOX+26, R=BOX+BS-26, T=BOY+26, B=BOY+BS-26; let moving=false;
+  const Ln=diceLane(DCORNER[A.k][0]), L=Ln.L, R=Ln.R, T=Ln.T, B=Ln.B; let moving=false;
   A.D.forEach(d=>{ d.x+=d.vx; d.y+=d.vy; d.a+=d.va; d.vz-=0.012; d.z+=d.vz; if(d.z<0){ d.z=0; if(Math.abs(d.vz)>0.03){ d.vz=-d.vz*0.45; diceHit(Math.hypot(d.vx,d.vy)/14); } else d.vz=0; }
     if(d.x<L){ d.x=L; d.vx=-d.vx*0.6; diceHit(Math.abs(d.vx)/12); } if(d.x>R){ d.x=R; d.vx=-d.vx*0.6; diceHit(Math.abs(d.vx)/12); }
     if(d.y<T){ d.y=T; d.vy=-d.vy*0.6; diceHit(Math.abs(d.vy)/12); } if(d.y>B){ d.y=B; d.vy=-d.vy*0.6; diceHit(Math.abs(d.vy)/12); }
@@ -3247,7 +3249,7 @@ function drawCard(k,X,Y){ const on=G.turn===k&&G.state==='play', act=isAct(k), C
   ctx.restore(); }
 function fit(t,w,s){ ctx.font='800 '+s+'px '+FONT; t=String(t); while(t.length>3&&ctx.measureText(t).width>w) t=t.slice(0,-1); return t; }
 const FONT=getComputedStyle(document.body).fontFamily||'sans-serif';
-const CARDPOS=[[1130,610],[1130,110],[150,110],[150,610]];
+const CARDPOS=[[1130,610],[1130,132],[150,132],[150,610]];
 function drawTable(){
   const c=ctx; c.setTransform(SC,0,0,SC,0,0);
   const bg=c.createRadialGradient(VW/2,VH/2,100,VW/2,VH/2,820); bg.addColorStop(0,'#17432b'); bg.addColorStop(1,'#0b1a12'); c.fillStyle=bg; c.fillRect(0,0,VW,VH);
@@ -3290,7 +3292,7 @@ function drawTable(){
     c.fillStyle='rgba(0,0,0,.72)'; rr(c,VW/2-w/2,VH/2-30,w,60,18); c.fill(); c.strokeStyle='#ffd23a'; c.lineWidth=3; c.stroke();
     c.fillStyle='#fff'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(G.msg,VW/2,VH/2+1); c.globalAlpha=1; }
   // título
-  c.fillStyle='#ffd23a'; c.font='900 26px '+FONT; c.textAlign='center'; c.fillText('PARCHÍS',150,330); c.fillText('CUBANO TV',150,362);
+  c.fillStyle='#ffd23a'; c.textAlign='left'; c.textBaseline='middle'; { let fs=30; c.font='900 '+fs+'px '+FONT; while(fs>12&&c.measureText('PARCHÍS CUBANO TV').width>270){ fs--; c.font='900 '+fs+'px '+FONT; } } c.fillText('PARCHÍS CUBANO TV',CARDPOS[2][0]-135,40);   // arriba del todo, encima de BOT 3
 }
 // posición de una ficha en el progreso p (para la animación: sin repartir con otras)
 function pieceXYp(k,i,p){ if(p>=META) return metaSlot(k,i); if(p<=ULTCALLE) return cellCenter(...TRACK[absOf(k,p)-1]); return cellCenter(...PASILLO[k][p-64]); }
