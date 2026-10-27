@@ -93,8 +93,8 @@ public class MainActivity extends Activity {
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
                 .addPathHandler("/music/", new WebViewAssetLoader.InternalStoragePathHandler(this, musicDir()))
                 .addPathHandler("/local/", path -> {   // música guardada en la tele/teléfono
-                    try { long id = Long.parseLong(path.replaceAll("[^0-9]", ""));
-                        Uri u = android.content.ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+                    try { int n = Integer.parseInt(path.replaceAll("[^0-9]", ""));
+                        Uri u = locales.get(n);
                         String t = getContentResolver().getType(u); return new WebResourceResponse(t != null ? t : "audio/mpeg", null, getContentResolver().openInputStream(u));
                     } catch (Exception e) { return null; } })
                 .build();
@@ -120,26 +120,66 @@ public class MainActivity extends Activity {
         web.loadUrl("https://appassets.androidplatform.net/assets/www/index.html" + (tv ? "?tv=1" : ""));
     }
 
-    // ================= MÚSICA DE LA TELE =================
-    private static final int PERM_MUS = 77;
+    // ================= MÚSICA DEL APARATO =================
+    // el usuario elige una CARPETA (selector de Android); se guardan las canciones de esa carpeta y sus subcarpetas
+    private static final int PERM_MUS = 77, REQ_CARPETA = 79, REQ_ARCHIVOS = 80;
+    private final java.util.ArrayList<Uri> locales = new java.util.ArrayList<>();
     private String permMusica() { return Build.VERSION.SDK_INT >= 33 ? "android.permission.READ_MEDIA_AUDIO" : "android.permission.READ_EXTERNAL_STORAGE"; }
     private boolean tienePermMusica() { return Build.VERSION.SDK_INT < 23 || checkSelfPermission(permMusica()) == android.content.pm.PackageManager.PERMISSION_GRANTED; }
+    private android.content.SharedPreferences prefs() { return getSharedPreferences("domino", MODE_PRIVATE); }
     private void cancionesLocales(boolean pedir) {
-        if (!tienePermMusica()) { if (pedir && Build.VERSION.SDK_INT >= 23) requestPermissions(new String[]{ permMusica() }, PERM_MUS); else if (pedir) js("window.kikoLocal&&kikoLocal('[]','no')"); return; }
+        if (!pedir) { String t = prefs().getString("carpetaMusica", null); if (t != null) listarCarpeta(Uri.parse(t), false); return; }
+        try { Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE); startActivityForResult(i, REQ_CARPETA); return; } catch (Exception ignored) { }
+        try { Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("audio/*"); i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); startActivityForResult(i, REQ_ARCHIVOS); return; } catch (Exception ignored) { }
+        try { Intent i = new Intent(Intent.ACTION_GET_CONTENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("audio/*"); i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); startActivityForResult(Intent.createChooser(i, "Elige la música"), REQ_ARCHIVOS); return; } catch (Exception ignored) { }
+        // último recurso (aparatos sin selector de archivos): solo lo que Android marca como música
+        if (!tienePermMusica() && Build.VERSION.SDK_INT >= 23) { requestPermissions(new String[]{ permMusica() }, PERM_MUS); return; }
+        musicaDelSistema();
+    }
+    private void musicaDelSistema() {
         new Thread(() -> {
-            org.json.JSONArray a = new org.json.JSONArray();
+            java.util.ArrayList<Uri> us = new java.util.ArrayList<>(); java.util.ArrayList<String> ns = new java.util.ArrayList<>();
             try (android.database.Cursor c = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    new String[]{ MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DURATION },
-                    MediaStore.Audio.Media.DURATION + ">=30000", null, MediaStore.Audio.Media.TITLE + " ASC")) {
-                if (c != null) while (c.moveToNext() && a.length() < 300) { JSONObject o = new JSONObject(); o.put("id", c.getLong(0)); o.put("t", c.getString(1)); a.put(o); }
+                    new String[]{ MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE },
+                    MediaStore.Audio.Media.IS_MUSIC + "!=0 AND " + MediaStore.Audio.Media.DURATION + ">=60000", null, MediaStore.Audio.Media.TITLE + " ASC")) {
+                if (c != null) while (c.moveToNext() && us.size() < 300) { us.add(android.content.ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, c.getLong(0))); ns.add(c.getString(1)); }
             } catch (Exception ignored) { }
-            js("window.kikoLocal&&kikoLocal(" + JSONObject.quote(a.toString()) + ",'" + (pedir ? "si" : "auto") + "')");
+            enviarLocales(us, ns, "si");
         }).start();
+    }
+    private void listarCarpeta(final Uri tree, final boolean pedido) {
+        new Thread(() -> {
+            java.util.ArrayList<Uri> us = new java.util.ArrayList<>(); java.util.ArrayList<String> ns = new java.util.ArrayList<>();
+            try { recorrer(tree, android.provider.DocumentsContract.getTreeDocumentId(tree), 0, us, ns); } catch (Exception ignored) { }
+            enviarLocales(us, ns, pedido ? "si" : "auto");
+        }).start();
+    }
+    private void recorrer(Uri tree, String doc, int nivel, java.util.ArrayList<Uri> us, java.util.ArrayList<String> ns) {
+        if (nivel > 4 || us.size() >= 300) return;
+        Uri hijos = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(tree, doc);
+        try (android.database.Cursor c = getContentResolver().query(hijos, new String[]{
+                android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID, android.provider.DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                android.provider.DocumentsContract.Document.COLUMN_MIME_TYPE }, null, null, null)) {
+            if (c == null) return;
+            while (c.moveToNext()) {
+                String id = c.getString(0), nombre = c.getString(1), mime = c.getString(2);
+                if (android.provider.DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) recorrer(tree, id, nivel + 1, us, ns);
+                else if (mime != null && mime.startsWith("audio/")) { us.add(android.provider.DocumentsContract.buildDocumentUriUsingTree(tree, id)); ns.add(nombre); }
+            }
+        } catch (Exception ignored) { }
+    }
+    private void enviarLocales(java.util.ArrayList<Uri> us, java.util.ArrayList<String> ns, String como) {
+        org.json.JSONArray a = new org.json.JSONArray();
+        java.util.ArrayList<Integer> orden = new java.util.ArrayList<>(); for (int k = 0; k < us.size(); k++) orden.add(k);
+        java.util.Collections.sort(orden, (x, y) -> String.valueOf(ns.get(x)).compareToIgnoreCase(String.valueOf(ns.get(y))));
+        java.util.ArrayList<Uri> nuevos = new java.util.ArrayList<>();
+        try { for (int k : orden) { String n = String.valueOf(ns.get(k)).replaceAll("\\.[A-Za-z0-9]{2,4}$", ""); JSONObject o = new JSONObject(); o.put("id", nuevos.size()); o.put("t", n); a.put(o); nuevos.add(us.get(k)); } } catch (Exception ignored) { }
+        runOnUiThread(() -> { locales.clear(); locales.addAll(nuevos); js("window.kikoLocal&&kikoLocal(" + JSONObject.quote(a.toString()) + ",'" + como + "')"); });
     }
     @Override
     public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
         super.onRequestPermissionsResult(code, perms, res);
-        if (code == PERM_MUS) { if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) cancionesLocales(true); else js("window.kikoLocal&&kikoLocal('[]','no')"); }
+        if (code == PERM_MUS) { if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) musicaDelSistema(); else js("window.kikoLocal&&kikoLocal('[]','no')"); }
     }
 
     // ================= MÚSICA =================
@@ -590,6 +630,20 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
+        if (req == REQ_CARPETA || req == REQ_ARCHIVOS) {
+            if (res != RESULT_OK || data == null) { js("window.kikoLocal&&kikoLocal('[]','cancel')"); return; }
+            if (req == REQ_CARPETA && data.getData() != null) {
+                Uri t = data.getData();
+                try { getContentResolver().takePersistableUriPermission(t, Intent.FLAG_GRANT_READ_URI_PERMISSION); } catch (Exception ignored) { }
+                prefs().edit().putString("carpetaMusica", t.toString()).apply();
+                listarCarpeta(t, true); return;
+            }
+            java.util.ArrayList<Uri> us = new java.util.ArrayList<>(); java.util.ArrayList<String> ns = new java.util.ArrayList<>();
+            if (data.getClipData() != null) for (int k = 0; k < data.getClipData().getItemCount(); k++) us.add(data.getClipData().getItemAt(k).getUri());
+            else if (data.getData() != null) us.add(data.getData());
+            for (Uri u : us) { String n = "Canción"; try (android.database.Cursor c = getContentResolver().query(u, new String[]{ android.provider.OpenableColumns.DISPLAY_NAME }, null, null, null)) { if (c != null && c.moveToFirst()) n = c.getString(0); } catch (Exception ignored) { } ns.add(n); }
+            enviarLocales(us, ns, "si"); return;
+        }
         if (res != RESULT_OK || data == null) return;
         try {
             Bitmap bm = null;

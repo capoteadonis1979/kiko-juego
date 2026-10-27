@@ -276,20 +276,9 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #pick:not([hidden]){display:flex}
 #menu #ptab{background:#2f7fe0;border-color:#1c4c94}
 #menu #psolo{background:#22a04a;border-color:#0f5a26}
-#pick[hidden]~#cuba,#sub:not([hidden])~#cuba,#lobby:not([hidden])~#cuba{display:none!important}
-@media (orientation:landscape){
-  #menu>#cuba{position:absolute;left:12px;bottom:14px;flex-basis:auto;gap:12px;margin:0;z-index:1}
-  #menu>#cuba .flag{width:58px;height:30px} #menu>#cuba .tinajon{width:58px;height:42px} #menu>#cuba .cmg span{font-size:15px}
-  #menu>#cuba{gap:8px}
-  #pick{max-width:min(680px,calc(100vw - 300px))!important}
-  #pick button{min-width:0!important;flex:1 1 40%}
-  #pick #psolo{flex:1 1 100%}
-  #pick #psalir,#pick #mtvmus{flex:1 1 40%}
-}
-@media (orientation:landscape) and (min-width:900px){ #pick{max-width:min(680px,calc(100vw - 350px))!important} }
-#mplayer{display:flex;gap:10px;flex:1 1 100%;justify-content:center;max-width:624px;width:100%}
-#pick #mplayer button{min-width:0!important;flex:0 0 64px;padding-left:0;padding-right:0}
-#pick #mplayer #msong{flex:1 1 auto!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe9a8}
+#mplayer{display:flex;gap:10px;justify-content:center;width:min(560px,90vw)}
+#mplayer button{min-width:0!important;flex:0 0 64px;padding-left:0;padding-right:0}
+#mplayer #msong{flex:1 1 auto!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe9a8}
 #cuba{flex-basis:100%;display:flex;justify-content:center;align-items:flex-end;gap:26px;margin-top:2px}
 #cuba .flag{width:96px;height:49px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5));animation:ond 2.4s ease-in-out infinite alternate;transform-origin:left center}
 #cuba .cmg{display:flex;flex-direction:column;align-items:center}
@@ -366,8 +355,8 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
       </div>
       <h3>Música</h3>
       <ul>
-        <li>En la pantalla de inicio puedes <b>escuchar la música</b> del juego sin jugar: <b>◀ ▶</b> para cambiar de canción. También está la musiquita <b>Son montuno (instrumental)</b>.</li>
-        <li><b>📂 MI MÚSICA</b>: pone la música que tengas guardada en la tele o en el teléfono (la primera vez pide permiso).</li>
+        <li>En el inicio toca <b>⚙️ CONFIGURACIÓN</b>: ahí escuchas la música del juego sin jugar y cambias de canción con <b>◀ ▶</b>. También está la musiquita <b>Son montuno (instrumental)</b>.</li>
+        <li><b>📂 ELEGIR CARPETA DE MÚSICA</b>: se abren las carpetas de la tele o del teléfono; eliges la carpeta donde tienes tu música y sus canciones se añaden a la lista.</li>
         <li><b>🎵 MÚSICA</b> y <b>🔊 EFECTOS</b>: cada toque baja el volumen; después de NO vuelve al máximo.</li>
       </ul>
       <h3>¿Necesita internet?</h3>
@@ -415,9 +404,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
       <button id="psolo">JUGAR SOLO CONTRA LOS BOTS</button>
       <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
       <button id="pact">ACTIVAR / COMPRAR</button>
-      <button id="mmus">🎵 MÚSICA ●●●●○</button><button id="msnd">🔊 EFECTOS ●●●●●</button>
-      <div id="mplayer"><button id="mprev">◀</button><button id="msong">♪ Pega la ficha, compay</button><button id="mnext">▶</button></div>
-      <button id="mtvmus">📂 MI MÚSICA</button>
+      <button id="pcfg">⚙️ CONFIGURACIÓN</button>
       <button id="psalir">SALIR</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
@@ -468,6 +455,13 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <button id="pcan">♪ CANCIÓN ▶</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
+<div id="cfg" class="ov" hidden><div class="ovbox"><h2>⚙️ CONFIGURACIÓN</h2>
+<div class="row"><button id="mmus">🎵 MÚSICA ●●●●○</button><button id="msnd">🔊 EFECTOS ●●●●●</button></div>
+<p class="small">Canción que suena</p>
+<div id="mplayer"><button id="mprev">◀</button><button id="msong">♪ Pega la ficha, compay</button><button id="mnext">▶</button></div>
+<button id="mtvmus">📂 ELEGIR CARPETA DE MÚSICA</button>
+<p class="small">Elige una carpeta de la tele o del teléfono y sus canciones se añaden a la lista.</p>
+<button id="cfgx" class="main">LISTO</button></div></div>
 <div id="seatop" class="ov" hidden><div class="ovbox"><h2 id="sotit">SILLA</h2><p id="sonm"></p><button id="soname" class="main">✏️ CAMBIAR NOMBRE</button><button id="soswap">⇄ CAMBIAR DE SILLA</button><button id="sono">CANCELAR</button></div></div>
 <div id="bnames" class="ov" hidden><div class="ovbox"><h2>NOMBRES DE LOS BOTS</h2><p>Escribe el nombre de cada bot (déjalo vacío para "BOT").</p><div id="bnrows"></div><div class="row"><button id="bnok" class="main">GUARDAR</button><button id="bnno">CANCELAR</button></div></div></div>
 <div id="paywall" class="ov" hidden><div class="ovbox"><h2 id="pwt">DOMINÓ CUBANO</h2><p id="pwp"></p>
@@ -2783,7 +2777,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.7.4';
+const VERSION='v3.7.5';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3957,6 +3951,9 @@ document.getElementById('mmus').addEventListener('click',()=>{ initAudio(); setM
 document.getElementById('msnd').addEventListener('click',()=>{ initAudio(); setSndV(volNext(SNDV)); });
 // reproductor del inicio: cambiar de canción sin jugar
 const songOn=()=>{ initAudio(); if(MUSV===0) setMusV(4); };
+const cfgEl=document.getElementById('cfg');
+document.getElementById('pcfg').addEventListener('click',()=>{ initAudio(); musLabel(); cfgEl.hidden=false; try{ ovFocus=0; ovFoc(cfgEl,0); }catch(_){} });
+document.getElementById('cfgx').addEventListener('click',()=>{ cfgEl.hidden=true; });
 document.getElementById('mprev').addEventListener('click',()=>{ songOn(); songNext(-1); });
 document.getElementById('mnext').addEventListener('click',()=>{ songOn(); songNext(1); });
 document.getElementById('msong').addEventListener('click',()=>{ songOn(); songNext(1); });
@@ -3966,16 +3963,16 @@ function tvBtnTxt(t){ tvBtn.textContent=t; }
 window.kikoLocal=(json,how)=>{ let L=[]; try{ L=JSON.parse(json)||[]; }catch(_){}
   for(let i=SONGS.length-1;i>=0;i--) if(SONGS[i][2]==='tv') SONGS.splice(i,1);
   L.forEach(o=>SONGS.push([String(o.t||'Canción').slice(0,40),'tv'+o.id,'tv','https://appassets.androidplatform.net/local/'+o.id]));
-  if(L.length){ tvBtnTxt('📂 MI MÚSICA ('+L.length+')'); if(how==='si'){ songIdx=SONGS.findIndex(x=>x[2]==='tv')-1; songOn(); songNext(1); } }
-  else if(how==='si') { tvBtnTxt('📂 NO HAY MÚSICA GUARDADA'); setTimeout(()=>tvBtnTxt('📂 MI MÚSICA'),3500); }
-  else if(how==='no') { tvBtnTxt('📂 SIN PERMISO PARA LA MÚSICA'); setTimeout(()=>tvBtnTxt('📂 MI MÚSICA'),3500); }
+  if(L.length){ tvBtnTxt('📂 CARPETA DE MÚSICA ('+L.length+')'); if(how==='si'){ songIdx=SONGS.findIndex(x=>x[2]==='tv')-1; songOn(); songNext(1); } }
+  else if(how==='si') { tvBtnTxt('📂 NO HAY MÚSICA EN ESA CARPETA'); setTimeout(()=>tvBtnTxt('📂 ELEGIR CARPETA DE MÚSICA'),3500); }
+  else if(how==='no') { tvBtnTxt('📂 SIN PERMISO PARA LA MÚSICA'); setTimeout(()=>tvBtnTxt('📂 ELEGIR CARPETA DE MÚSICA'),3500); }
   musLabel(); };
 tvBtn.addEventListener('click',()=>{ songOn();
   if(window.KikoApp&&KikoApp.localSongs){ try{ KikoApp.localSongs(true); }catch(_){} return; }
   const inp=document.createElement('input'); inp.type='file'; inp.accept='audio/*'; inp.multiple=true;
   inp.onchange=()=>{ for(let i=SONGS.length-1;i>=0;i--) if(SONGS[i][2]==='tv') SONGS.splice(i,1);
     [...inp.files].forEach(f=>SONGS.push([f.name.replace(/\.[^.]+$/,'').slice(0,40),'tv'+f.name,'tv',URL.createObjectURL(f)]));
-    if(inp.files.length){ tvBtnTxt('📂 MI MÚSICA ('+inp.files.length+')'); songIdx=SONGS.findIndex(x=>x[2]==='tv')-1; songNext(1); } };
+    if(inp.files.length){ tvBtnTxt('📂 CARPETA DE MÚSICA ('+inp.files.length+')'); songIdx=SONGS.findIndex(x=>x[2]==='tv')-1; songNext(1); } };
   inp.click(); });
 try{ if(window.KikoApp&&KikoApp.localSongs) KikoApp.localSongs(false); }catch(_){}
 try{ musLabel(); }catch(_){}
@@ -4114,7 +4111,7 @@ document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctr
 /* ================= MENÚ ================= */
 const menu=document.getElementById('menu');
 // bandera, palma y tinajón: fuera de los botones (en horizontal van en la esquina de abajo a la derecha)
-(function(){ const c=document.getElementById('cuba'), cr=document.getElementById('cred'); if(c&&cr) menu.insertBefore(c,cr); })();
+
 // todas las pantallas se ajustan solas (sin barra de desplazamiento): si el contenido no cabe, se encoge
 const FITK=new WeakMap();
 function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputedStyle(box).position!=='fixed') return; const kids=[...box.children].filter(c=>!c.hidden&&getComputedStyle(c).display!=='none'); if(!kids.length) return;
@@ -4122,7 +4119,7 @@ function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputed
   kids.forEach(c=>c.style.zoom=''); let k=1;
   for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
 function fitMenu(force){ fitKids(menu,force); }
-function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof'].forEach(id=>fitKids(document.getElementById(id),force));
+function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg'].forEach(id=>fitKids(document.getElementById(id),force));
   const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
 window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500); setTimeout(()=>fitAll(true),50);
 document.getElementById('mplay').addEventListener('click',()=>{ initAudio(); if(!canStart()) return; menu.hidden=true; startMatch(); layout(); renderHand(); });
@@ -4305,7 +4302,7 @@ cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu()
 /* ===== cuadros: nombres de las máquinas y activación ===== */
 const bnEl=document.getElementById('bnames'), payEl=document.getElementById('paywall');
 const soEl=document.getElementById('seatop'); let soSeat=0;
-function openOv(){ return [payEl,bnEl,soEl].find(x=>!x.hidden)||null; }
+function openOv(){ return [payEl,bnEl,soEl,document.getElementById('cfg')].find(x=>x&&!x.hidden)||null; }
 function ovEls(el){ return [...el.querySelectorAll('input,button')].filter(x=>x.offsetParent!==null); }
 let ovFocus=0;
 function ovFoc(el,i){ const b=ovEls(el); if(!b.length) return; ovFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===ovFocus)); try{ b[ovFocus].focus({preventScroll:true}); }catch(_){} }
