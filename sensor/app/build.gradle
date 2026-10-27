@@ -1,0 +1,37 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'ao.patron.sensor'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'ao.patron.sensor'
+        minSdk 21
+        targetSdk 36
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
+        versionName '0.1.0'
+    }
+    signingConfigs {
+        release {
+            storeFile file('release.jks')
+            storePassword System.getenv('KS_PASS') ?: 'kikojuego2026'
+            keyAlias 'kiko'
+            keyPassword System.getenv('KS_PASS') ?: 'kikojuego2026'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    aaptOptions { noCompress 'woff2' }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
+}

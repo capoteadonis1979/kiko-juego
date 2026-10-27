@@ -1,0 +1,114 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dados del Teléfono</title>
+<style>
+:root{--bg:#5e3412}
+html,body{margin:0;height:100%;overflow:hidden;background:linear-gradient(#a8662e,#8a4e20 55%,#5e3412);font-family:system-ui,sans-serif;touch-action:none;user-select:none}
+#wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:16px;box-sizing:border-box}
+#dcup{position:relative;overflow:hidden;touch-action:none;width:min(92vw,620px,calc((100vh - 100px)*1.3));aspect-ratio:1.3;border-radius:22px;background:radial-gradient(#1f8a4a,#0f5a2e);border:7px solid #6b3a1c;box-shadow:inset 0 6px 18px rgba(0,0,0,.5)}
+.die{position:absolute;left:0;top:0;will-change:transform;--s:min(17vw,90px,calc((100vh - 100px)*0.24));width:var(--s);height:var(--s);border-radius:18%;background:linear-gradient(135deg,#fff,#d9d4c8)}
+.die i{position:absolute;width:19%;height:19%;border-radius:50%;background:#1a1a1a;transform:translate(-50%,-50%)} .die i.r{width:24%;height:24%}
+button{font:800 18px system-ui,sans-serif;border-radius:14px;padding:10px 22px;color:#fff}
+#btirar{background:#c62828;border:3px solid #ff8a80}
+#go{position:fixed;inset:0;background:rgba(20,10,4,.85);border:0;border-radius:0;font-size:24px;color:#ffd23a}
+#ver{position:fixed;right:8px;bottom:4px;font-size:11px;color:rgba(255,255,255,.7)}
+</style></head><body>
+<div id="wrap"><div id="dcup"></div><button id="btirar">🎲 TIRAR</button></div>
+<button id="go">TOCA PARA EMPEZAR<br><small style="font-size:15px;color:#fff">Luego inclina, agita y lanza el teléfono</small></button>
+<div id="ver">v0.1.0</div>
+<script>
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)); let SND=true, started=false; const myView=()=>null, handEl={hidden:false};
+let AC=null, master, noiseBuf;
+function initAudio(){
+  try{
+    if(!AC){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return; AC=new C(); master=AC.createGain(); master.gain.value=0.9; master.connect(AC.destination);
+      noiseBuf=AC.createBuffer(1,Math.floor(AC.sampleRate*0.4),AC.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; }
+    if(AC.state==='suspended') AC.resume();
+  }catch(e){ AC=null; }
+}
+function burst(t,dur,freq,q,vol,type){
+  const s=AC.createBufferSource(); s.buffer=noiseBuf; const f=AC.createBiquadFilter(); f.type=type||'bandpass'; f.frequency.value=freq; f.Q.value=q;
+  const g=AC.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0005,t+dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t,Math.random()*0.2); s.stop(t+dur+0.02);
+}
+function ping(t,freq,dur,vol){ const o=AC.createOscillator(), g=AC.createGain(); o.type='sine'; o.frequency.setValueAtTime(freq,t); o.frequency.exponentialRampToValueAtTime(freq*0.97,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0005,t+dur); o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.02); }
+function diceHit(p){ if(!AC||!SND) return; p=clamp(p,0.08,1); const t=AC.currentTime;
+  burst(t,0.02+p*0.02,3200+p*1400,3,0.35+p*1.1); burst(t,0.06+p*0.05,260,1.2,0.2+p*0.8,'lowpass'); ping(t,2100+Math.random()*500,0.03,0.05+p*0.12); }
+function rattle(e){ if(!AC) return; const t=AC.currentTime, n=1+Math.floor(e*3);
+  for(let i=0;i<n;i++){ const d=Math.random()*0.06; burst(t+d,0.015,3800+Math.random()*1500,4,0.25+e*0.5); ping(t+d,2400+Math.random()*900,0.02,0.05+e*0.08); } }
+const DPIPS={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
+/* ---------- dados en el teléfono: se mueven según cómo mueves el teléfono ---------- */
+// usa el acelerómetro (inclinación + golpes), el giroscopio (giro de los dados) y el sensor de movimiento lineal (lanzar)
+const CUP=document.getElementById('dcup');
+CUP.innerHTML='<span class="die d1"></span><span class="die d2"></span>';
+const CD=[...CUP.querySelectorAll('.die')].map((el,j)=>({el,x:0,y:0,vx:0,vy:0,a:j?0.3:-0.25,va:0,face:j?5:6,shown:0,out:false}));
+function setFace(d,v){ if(d.shown===v) return; d.shown=v; d.el.innerHTML=(DPIPS[v]||[]).map(([a,b])=>'<i style="left:'+(50+a*25)+'%;top:'+(50+b*25)+'%"'+(v===1?' class="r"':'')+'></i>').join(''); }
+let SEN={f:[0,0],rot:0,lin:[0,0,0],linT:0,e:0,t:0,has:false}, SH={thrown:-1e9,shakeT:0,shaking:false,peak:0,lastHit:0};
+function scrAngle(){ try{ return (screen.orientation&&screen.orientation.angle)||window.orientation||0; }catch(_){ return 0; } }
+// vector del aparato (x derecha, y arriba) → pantalla (x derecha, y abajo)
+function toScreen(x,y){ const t=scrAngle()*Math.PI/180, c=Math.cos(t), s=Math.sin(t); return [x*c-y*s, -(x*s+y*c)]; }
+addEventListener('devicemotion',ev=>{ const g=ev.accelerationIncludingGravity; if(!g||g.x==null) return; SEN.has=true;
+  SEN.f=toScreen(-g.x,-g.y);                         // inclinación + empujones: lo que sienten los dados
+  const r=ev.rotationRate; if(r&&r.alpha!=null) SEN.rot=r.alpha;
+  SEN.grav=SEN.grav||[g.x,g.y,g.z]; for(let k=0;k<3;k++) SEN.grav[k]=SEN.grav[k]*0.92+[g.x,g.y,g.z][k]*0.08;
+  const l=ev.acceleration; if(l&&l.x!=null) SEN.lin=[l.x,l.y,l.z];
+  else SEN.lin=[g.x-SEN.grav[0],g.y-SEN.grav[1],g.z-SEN.grav[2]];
+  const m=Math.hypot(...SEN.lin); SEN.e=SEN.e*0.85+m*0.15;
+  if(canThrow()) checkThrow(m); });
+function canThrow(){ return started&&!CD[0].out; }
+function checkThrow(m){ const now=performance.now(); if(now-SH.thrown<1200) return;
+  if(SEN.e>3){ if(!SH.shaking){ SH.shaking=true; SH.shakeT=now; SH.peak=0; } SH.peak=Math.max(SH.peak,m); }
+  // lanzar SOLO con un golpe hacia arriba o hacia abajo (en vertical de verdad, según la gravedad);
+  // moverlo de lado a lado solo hace chocar los dados dentro, nunca los lanza
+  const G0=SEN.grav, gm=Math.hypot(...G0)||1, ux=G0[0]/gm, uy=G0[1]/gm, uz=G0[2]/gm, [lx,ly,lz]=SEN.lin;
+  const vert=lx*ux+ly*uy+lz*uz, hx=lx-vert*ux, hy=ly-vert*uy, hz=lz-vert*uz, hor=Math.hypot(hx,hy,hz);
+  if(Math.abs(vert)>13&&Math.abs(vert)>1.6*hor){ const sx=toScreen(hx,hy)[0]; throwNow(Math.min(1.4,0.5+Math.abs(vert)/30),clamp(sx/(Math.abs(vert)||1),-1,1)); }
+}
+function throwNow(pw,aim){ if(!canThrow()||performance.now()-SH.thrown<1200) return; SH.thrown=performance.now(); SH.shaking=false;
+  const spin=Math.min(2,Math.abs(SEN.rot)/300+CD.reduce((s,d)=>s+Math.abs(d.va),0)/30);
+  CD.forEach(d=>{ d.out=true; d.vy=-1800*pw; d.vx+=(aim||0)*600; d.va+=(Math.random()-0.5)*30; });
+  rattle(1); try{ navigator.vibrate&&navigator.vibrate([30,40,60]); }catch(_){}
+  setTimeout(()=>{ cupWas=false; },1100); }
+document.getElementById('btirar').addEventListener('click',()=>{ throwNow(0.8,0); });
+// toque: lanza suave · desliz hacia arriba (hacia la tele): más rápido, más fuerte
+let SW=null;
+CUP.addEventListener('pointerdown',e=>{ e.preventDefault(); initAudio(); SW={x:e.clientX,y:e.clientY,t:performance.now(),pts:[[e.clientX,e.clientY,performance.now()]]}; try{ CUP.setPointerCapture(e.pointerId); }catch(_){} });
+CUP.addEventListener('pointermove',e=>{ if(!SW) return; const now=performance.now(); SW.pts.push([e.clientX,e.clientY,now]); while(SW.pts.length>2&&now-SW.pts[0][2]>120) SW.pts.shift(); });
+function swEnd(e){ if(!SW) return; const now=performance.now(), dx=e.clientX-SW.x, dy=e.clientY-SW.y, dist=Math.hypot(dx,dy), s0=SW.pts[0];
+  const dt=Math.max(16,now-s0[2]), vy=(e.clientY-s0[1])/dt, vx=(e.clientX-s0[0])/dt; SW=null;
+  if(dist<12&&now-(s0?s0[2]:now)<400){ throwNow(0.7,0); return; }
+  if(dy<-30&&-dy>Math.abs(dx)*0.6){ const sp=Math.hypot(vx,vy); throwNow(clamp(0.35+sp*0.45,0.35,1.4),clamp(vx/(Math.abs(vy)+0.01),-1,1)); } }
+CUP.addEventListener('pointerup',swEnd); CUP.addEventListener('pointercancel',()=>{ SW=null; });
+function cupReset(){ const W=CUP.clientWidth, H=CUP.clientHeight, s=CD[0].el.offsetWidth||50;
+  CD.forEach((d,j)=>{ d.out=false; d.x=W/2+(j?s*0.7:-s*0.7); d.y=H/2; d.vx=d.vy=0; d.va=0; d.a=j?0.3:-0.25; d.face=j?5:6; }); }
+let cupLast=0, cupWas=false;
+function cupLoop(t){ requestAnimationFrame(cupLoop);
+  const on=started; if(!on){ cupWas=false; return; }
+  if(!cupWas){ cupWas=true; cupReset(); cupLast=t; }
+  const dt=Math.min(0.033,(t-cupLast)/1000||0.016); cupLast=t;
+  const W=CUP.clientWidth, H=CUP.clientHeight, s=CD[0].el.offsetWidth||50, r=s/2, K=90; let hits=0;
+  CD.forEach(d=>{
+    if(!d.out){ d.vx+=SEN.f[0]*K*dt; d.vy+=SEN.f[1]*K*dt; d.va+=-SEN.rot*0.004*dt*60*0.2;
+      const fr=Math.pow(0.25,dt); d.vx*=fr; d.vy*=fr; d.va*=Math.pow(0.15,dt); }
+    d.x+=d.vx*dt; d.y+=d.vy*dt; d.a+=d.va*dt;
+    if(!d.out){ const m=r*(0.95+0.45*Math.abs(Math.sin(2*d.a))), L=m, R=W-m, T=m, B=H-m;
+      if(d.x<L){ hits=Math.max(hits,Math.abs(d.vx)); d.x=L; d.vx=-d.vx*0.55; d.va+=d.vy*0.01; }
+      if(d.x>R){ hits=Math.max(hits,Math.abs(d.vx)); d.x=R; d.vx=-d.vx*0.55; d.va-=d.vy*0.01; }
+      if(d.y<T){ hits=Math.max(hits,Math.abs(d.vy)); d.y=T; d.vy=-d.vy*0.55; d.va-=d.vx*0.01; }
+      if(d.y>B){ hits=Math.max(hits,Math.abs(d.vy)); d.y=B; d.vy=-d.vy*0.55; d.va+=d.vx*0.01; } }
+    const sp=Math.hypot(d.vx,d.vy); if(sp>260&&Math.random()<sp/4000) d.face=1+Math.floor(Math.random()*6);
+  });
+  // choque entre los dos dados
+  const [p,q]=CD; if(!p.out){ const dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), mn=s*1.05; if(dd<mn&&dd>0){ const nx=dx/dd, ny=dy/dd, ov=(mn-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
+    const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny; if(rv<0){ p.vx+=rv*nx*0.9; p.vy+=rv*ny*0.9; q.vx-=rv*nx*0.9; q.vy-=rv*ny*0.9; hits=Math.max(hits,-rv); p.va+=rv*0.01; q.va-=rv*0.01; } } }
+  // sonido y vibración según la fuerza del golpe: más fuerte agitas, más suenan
+  if(hits>70&&t-SH.lastHit>40){ SH.lastHit=t; diceHit(Math.min(1,hits/700)); if(hits>250) try{ navigator.vibrate&&navigator.vibrate(Math.min(35,8+hits/40|0)); }catch(_){} }
+  CD.forEach(d=>{ setFace(d,d.face); d.el.style.transform='translate('+(d.x-r)+'px,'+(d.y-r)+'px) rotate('+d.a+'rad)'; const ca=Math.cos(-d.a), sa=Math.sin(-d.a), ox=3, oy=5; d.el.style.boxShadow=(ox*ca-oy*sa).toFixed(1)+'px '+(ox*sa+oy*ca).toFixed(1)+'px 0 rgba(0,0,0,.35)'; d.el.style.opacity=d.out&&d.y<-s?0:1; });
+}
+requestAnimationFrame(cupLoop);
+
+
+document.getElementById('go').addEventListener('click',async e=>{ const btn=e.currentTarget; initAudio();
+  try{ if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission) await DeviceMotionEvent.requestPermission(); }catch(_){}
+  btn.remove(); started=true; });
+</script></body></html>
