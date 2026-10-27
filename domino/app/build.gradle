@@ -8,7 +8,7 @@ android {
         minSdk 21
         targetSdk 36
         versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
-        versionName '3.9.9'
+        versionName '3.9.10'
     }
     signingConfigs {
         release {
