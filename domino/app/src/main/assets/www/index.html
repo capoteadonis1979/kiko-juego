@@ -228,7 +228,11 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #lseats [data-s="2"]{align-self:end;margin-bottom:-3.5vh;z-index:2;position:relative}
 #lseats [data-s="2"] .lnm{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:1.5vh;white-space:nowrap}
 #lseats [data-s="0"]{align-self:start;margin-top:-3.5vh;z-index:2}
-#lseats [data-s="3"]{justify-self:end} #lseats [data-s="1"]{justify-self:start}
+#lseats [data-s="3"]{justify-self:end;margin-right:-6.5vh;z-index:2;position:relative} #lseats [data-s="1"]{justify-self:start;margin-left:-6.5vh;z-index:2;position:relative}
+#lseats [data-s="3"] .lnm{position:absolute;right:100%;top:50%;transform:translateY(-50%);margin-right:1.5vh;white-space:nowrap}
+#lseats [data-s="1"] .lnm{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:1.5vh;white-space:nowrap}
+#menu button.lseat.focus,#menu button.lseat:focus-visible{outline:none}
+#menu .lseat.focus .lchair{outline:.7vh solid var(--gold);outline-offset:.5vh}
 .lchair{width:13vh;height:13vh;border-radius:3.4vh;background:linear-gradient(#8a5028,#5a3014);box-shadow:0 1vh 2.4vh rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
 #menu .lseat i{width:10vh;height:10vh;border-radius:50%;border:.6vh solid #fff;font-size:5.6vh;background:#1b2f4a center/cover no-repeat;grid-row:auto}
 #menu .lseat.on i{border-color:#ffd23a}
@@ -4205,7 +4209,7 @@ function setFocusBtn(el){ const b=menuBtns(); mFocus=b.indexOf(el); b.forEach(x=
 // botón más cercano hacia ese lado: primero los de la misma fila (o columna); si no hay, el más cercano en esa dirección
 function geoBest(b,c,dir){
   const rc=c.getBoundingClientRect(), cx=rc.left+rc.width/2, cy=rc.top+rc.height/2, vert=dir==='down'||dir==='up'; let best=null, bs=1e9;
-  for(const pass of vert?[true,false]:[true]){   // a los lados: solo botones de la misma fila
+  for(const pass of [true,false]){   // primero los de la misma fila/columna; si no hay, el más cercano en esa dirección
     for(const x of b){ if(x===c) continue; const q=x.getBoundingClientRect(); if(!q.width) continue; const qx=q.left+q.width/2, qy=q.top+q.height/2, dx=qx-cx, dy=qy-cy;
       const ok=dir==='down'?dy>8:dir==='up'?dy<-8:dir==='right'?dx>8:dx<-8; if(!ok) continue;
       const aligned=vert?(q.left<rc.right-2&&q.right>rc.left+2):(q.top<rc.bottom-2&&q.bottom>rc.top+2); if(pass&&!aligned) continue;
