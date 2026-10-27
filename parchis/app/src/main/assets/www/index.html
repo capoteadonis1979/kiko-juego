@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #seatgrid button.pA{box-shadow:0 0 0 3px #e8403a inset}
 #seatgrid button.pB{box-shadow:0 0 0 3px #3a8ae8 inset}
 #pause{position:fixed;inset:0;z-index:45;background:radial-gradient(ellipse at center,#17432b,#0b1a12 75%);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
-#pbox{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+#pbox{display:flex;flex-direction:column;gap:9px;align-items:center;text-align:center}
 #pbox h2{margin:0 0 6px;color:var(--gold);font-size:24px}
 #pbox button{font:700 19px var(--font);min-width:320px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg);display:flex;flex-direction:column;align-items:center;gap:2px}
 #pbox button.main{background:#2fbf71;border-color:#1a7a44}
@@ -249,7 +249,7 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #lbtns{display:grid!important;grid-template-columns:repeat(3,1fr);width:min(94vw,900px)}
 #lbtns button{min-width:0!important;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #cfg .row button{width:15em;min-width:0}
-#mdcol{width:min(90vw,30em);min-width:0!important;white-space:nowrap}
+#mdcol,#mbcol{width:min(90vw,30em);min-width:0!important;white-space:nowrap}
 :root{--d1:#fff;--d2:#d9d4c8;--dp:#1a1a1a}
 #pbox .prow button{width:155px;min-width:0}
 /* SALIR siempre abajo, en rojo, en todas las pantallas */
@@ -546,6 +546,7 @@ body.solo #drtxt small{font-size:12px}
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o dados</small></button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
+  <div class="prow pcol"><button id="pdcol">🎲 DADO: MARFIL</button><button id="pbcol">🎨 TABLERO: CREMA</button></div>
   <button id="pexit" class="pred">SALIR DEL JUEGO</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Parchís Cubano TV → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
@@ -557,6 +558,7 @@ body.solo #drtxt small{font-size:12px}
 <button id="mtvmus">📂 ELEGIR CARPETA DE MÚSICA</button>
 <p class="small">Elige una carpeta de la tele o del teléfono y sus canciones se añaden a la lista.</p>
 <button id="mdcol">🎲 COLOR DE DADO: MARFIL</button>
+<button id="mbcol">🎨 FONDO DEL TABLERO: CREMA</button>
 <button id="cfgx" class="main">LISTO</button></div></div>
 <div id="hist" class="ov" hidden><div class="ovbox"><h2>📜 HISTORIAL DE PARTIDAS</h2>
 <div id="hlist"></div>
@@ -2878,7 +2880,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.6';
+const VERSION='v1.2.7';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3166,12 +3168,12 @@ function segOwner(c,r,n){ const e=ENTRADA.indexOf(n); if(e>=0) return e; const d
 function drawBoard(x,ox,oy,S){ const u=S/BU, R=(c,r)=>{ const [a,b,w,h]=cellRect(c,r); return [ox+a*u,oy+b*u,w*u,h*u]; };
   x.save(); x.fillStyle='#6b3a1c'; rr(x,ox-u*0.9,oy-u*0.9,S+u*1.8,S+u*1.8,u*0.9); x.fill();
   x.strokeStyle='#8a5028'; x.lineWidth=u*0.25; rr(x,ox-u*0.5,oy-u*0.5,S+u,S+u,u*0.6); x.stroke();
-  x.fillStyle='#f4ecd8'; x.fillRect(ox,oy,S,S);
+  const TB=BTHEMES[BCOL]; x.fillStyle=TB.base; x.fillRect(ox,oy,S,S);
   for(let k=0;k<4;k++){ const [hc,hr]=HOME[k], X=ox+PX(hc)*u, Y=oy+PX(hr)*u, W=8*u, C=COL[k];
     const g=x.createLinearGradient(X,Y,X+W,Y+W); g.addColorStop(0,C.c); g.addColorStop(1,C.d); x.fillStyle=g; x.fillRect(X,Y,W,W);
     x.fillStyle='rgba(255,255,255,.9)'; x.beginPath(); x.arc(X+W/2,Y+W/2,W*0.36,0,7); x.fill(); x.strokeStyle=C.d; x.lineWidth=u*0.18; x.stroke(); }
-  x.lineWidth=Math.max(1,u*0.05); x.strokeStyle='#5b4a32';
-  TRACK.forEach(([c,r],i)=>{ const n=i+1, [X,Y,W,H]=R(c,r); let f='#fbf6ea'; const s=SALIDA.indexOf(n); if(s>=0) f=COL[s].c;
+  x.lineWidth=Math.max(1,u*0.05); x.strokeStyle=TB.line;
+  TRACK.forEach(([c,r],i)=>{ const n=i+1, [X,Y,W,H]=R(c,r); let f=TB.cell; const s=SALIDA.indexOf(n); if(s>=0) f=COL[s].c;
     x.fillStyle=f; x.fillRect(X,Y,W,H); x.strokeRect(X,Y,W,H);
     if(SEGUROS.includes(n)&&s<0){ const ow=segOwner(c,r,n); if(ow>=0){ x.fillStyle=COL[ow].l; x.globalAlpha=0.85; x.fillRect(X,Y,W,H); x.globalAlpha=1; x.strokeRect(X,Y,W,H); } x.beginPath(); x.arc(X+W/2,Y+H/2,Math.min(W,H)*0.3,0,7); x.stroke(); }
     });
@@ -3190,11 +3192,16 @@ function drawPiece(x,X,Y,r,k,label,lift){ lift=lift||0; x.save();
   x.strokeStyle='rgba(255,255,255,.55)'; x.lineWidth=r*0.1; x.beginPath(); x.arc(X,Y,r*0.62,0,7); x.stroke();
   if(label){ x.fillStyle='#fff'; x.font='800 '+(r*0.95).toFixed(1)+'px sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.lineWidth=r*0.18; x.strokeStyle='rgba(0,0,0,.6)'; x.strokeText(label,X,Y+r*0.04); x.fillText(label,X,Y+r*0.04); }
   x.restore(); }
+// color del fondo del tablero (casillas): se guarda en el aparato
+const BTHEMES=[{n:'CREMA',base:'#f4ecd8',cell:'#fbf6ea',line:'#5b4a32'},{n:'GRIS',base:'#b9bec4',cell:'#d6dadf',line:'#4a5058'},{n:'MADERA',base:'#c99a63',cell:'#ddb27e',line:'#6b4520'},
+  {n:'AZUL',base:'#8fb3d9',cell:'#b7cfe8',line:'#2d4c70'},{n:'VERDE',base:'#8fc49b',cell:'#b5dbbd',line:'#2f5c3a'},{n:'OSCURO',base:'#3a3f47',cell:'#565c66',line:'#1c1f24'}];
+let BCOL=0; try{ BCOL=Math.max(0,Math.min(BTHEMES.length-1,+(localStorage.getItem('parchisTablero')||0)|0)); }catch(_){}
 // color de los dados (Configuración): se guarda en el aparato
 const DCOLS=[{n:'MARFIL',a:'#ffffff',b:'#d9d4c8',e:'#9a9384',p:'#1a1a1a'},{n:'ROJO',a:'#ef4b3f',b:'#a8211a',e:'#6e140f',p:'#ffffff'},{n:'AZUL',a:'#3d8bef',b:'#15468f',e:'#0d2c5c',p:'#ffffff'},
   {n:'VERDE',a:'#2fb85a',b:'#0f5e27',e:'#093d19',p:'#ffffff'},{n:'NEGRO',a:'#4a4a4a',b:'#111111',e:'#000000',p:'#ffffff'},{n:'AMARILLO',a:'#ffe066',b:'#d9a400',e:'#8a6800',p:'#1a1a1a'}];
 let DCOL=0; try{ DCOL=Math.max(0,Math.min(DCOLS.length-1,+(localStorage.getItem('parchisDadoColor')||0)|0)); }catch(_){}
-function applyDCol(){ const c=DCOLS[DCOL], r=document.documentElement.style; r.setProperty('--d1',c.a); r.setProperty('--d2',c.b); r.setProperty('--dp',c.p); const b=document.getElementById('mdcol'); if(b) b.textContent='🎲 COLOR DE DADO: '+c.n; }
+function applyDCol(){ const c=DCOLS[DCOL], r=document.documentElement.style; r.setProperty('--d1',c.a); r.setProperty('--d2',c.b); r.setProperty('--dp',c.p); const b=document.getElementById('mdcol'); if(b) b.textContent='🎲 COLOR DE DADO: '+c.n; const b2=document.getElementById('pdcol'); if(b2) b2.innerHTML='DADO<br>'+c.n;
+  const t=BTHEMES[BCOL], b3=document.getElementById('mbcol'), b4=document.getElementById('pbcol'); if(b3) b3.textContent='🎨 FONDO DEL TABLERO: '+t.n; if(b4) b4.innerHTML='TABLERO<br>'+t.n; }
 const DPIPS={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
 function drawDie(x,X,Y,s,v,rot,lift){ lift=lift||0; x.save(); x.translate(X,Y); x.fillStyle='rgba(0,0,0,'+(0.38-lift*0.2)+')'; x.save(); x.translate(s*0.1+lift*s*0.5,s*0.14+lift*s*0.7); x.rotate(rot||0); rr(x,-s/2,-s/2,s,s,s*0.2); x.fill(); x.restore();
   x.translate(0,-lift*s*0.8); x.rotate(rot||0);
@@ -3409,13 +3416,17 @@ requestAnimationFrame(cupLoop);
 // el inicio siempre entero: si no cabe (letra grande, pantalla pequeña), se achica todo junto sin recortar
 setInterval(()=>{ const m=document.getElementById('menu'); if(!m||m.hidden) return; const z=+(m.style.zoom||1), need=m.scrollHeight*z, have=m.clientHeight*z;
   if(need>have+2) m.style.zoom=Math.max(0.6,z*have/need).toFixed(3); else if(z<1&&need<have*0.9) m.style.zoom=Math.min(1,z*1.05).toFixed(3); },300);
-applyDCol(); document.getElementById('mdcol').addEventListener('click',()=>{ DCOL=(DCOL+1)%DCOLS.length; try{ localStorage.setItem('parchisDadoColor',DCOL); }catch(_){} applyDCol(); });
+applyDCol();
+function nextDCol(){ DCOL=(DCOL+1)%DCOLS.length; try{ localStorage.setItem('parchisDadoColor',DCOL); }catch(_){} applyDCol(); }
+function nextBCol(){ BCOL=(BCOL+1)%BTHEMES.length; try{ localStorage.setItem('parchisTablero',BCOL); }catch(_){} BOARD=null; applyDCol(); }
+document.getElementById('mdcol').addEventListener('click',nextDCol); document.getElementById('pdcol').addEventListener('click',nextDCol);
+document.getElementById('mbcol').addEventListener('click',nextBCol); document.getElementById('pbcol').addEventListener('click',nextBCol);
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pdcol','pbcol','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
-function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG(QRP+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
+function openPause(){ if(G.remoteMode) return; document.getElementById('pbcol').hidden=false; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG(QRP+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
 function closePause(){ pauseEl.hidden=true; pPending=null; if(G.remoteMode){ netSend({t:'ctl',a:'resume'}); return; } G.paused=false; }
 function gameAction(a){
   G.paused=false; pauseEl.hidden=true;
@@ -3514,7 +3525,7 @@ document.getElementById('psnd').addEventListener('click',()=>{ if(G.remoteMode){
 setInterval(()=>{ document.getElementById('bmesa').hidden=!(isTV&&menu.hidden&&!G.remoteMode&&(G.state==='play'||G.state==='over')&&pauseEl.hidden); },300);
 // desde el cel: el mismo menú, que lo hace la mesa
 document.getElementById('bgame').addEventListener('click',()=>{ if(G.remoteMode){ rPauseOpen(); } else openPause(); });
-function rPauseOpen(){ document.getElementById('pqr').hidden=true; musLabel(); netSend({t:'ctl',a:'pause'}); pPending=null; pauseEl.hidden=false; pfoc(0); }
+function rPauseOpen(){ document.getElementById('pbcol').hidden=true; document.getElementById('pqr').hidden=true; musLabel(); netSend({t:'ctl',a:'pause'}); pPending=null; pauseEl.hidden=false; pfoc(0); }
 
 /* ================= RED: la tele es el tablero, cada teléfono son los dados ================= */
 const QRP='PCMESA:';
