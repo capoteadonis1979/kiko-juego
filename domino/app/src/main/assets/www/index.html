@@ -199,7 +199,7 @@ body.mesa #menu .lseat{padding:4px 8px}
 .ovbox .small{font-size:14px;color:#d8e8dc}
 .ovbox details summary{cursor:pointer;color:#d8e8dc;font-size:14px;margin:4px 0}
 .ovbox .row button{min-width:150px}
-#lbtns button.on{background:#2fbf71!important;border-color:#fff!important;color:#fff;box-shadow:0 0 0 4px #2fbf71,0 0 18px #2fbf71}
+#lbtns button.on{background:#2f7fd8!important;border-color:#fff!important;color:#fff;box-shadow:0 0 0 4px #2f7fd8,0 0 18px #2f7fd8}
 #lbtns button.dim{opacity:.45}
 #lbtns button.dis{opacity:.25;pointer-events:none}
 #menu .lseat.off{opacity:.3}
@@ -335,6 +335,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
 #menu button.main{background:var(--accent);border-color:#8a2418}
+#menu #lplay,#menu #mplay{background:#2fbf71;border-color:#1a7a44}   /* empezar = verde (el rojo es solo para salir) */
 #menu button:focus{outline:none}
 #menu button.focus,#menu button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
 #ver{position:fixed;right:8px;bottom:4px;font-size:11px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
@@ -2816,7 +2817,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.4';
+const VERSION='v3.9.5';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
