@@ -261,6 +261,10 @@ public class MainActivity extends Activity implements SensorEventListener {
         @JavascriptInterface
         public boolean isTV() { return tv; }
 
+        // botón ACTUALIZAR del juego
+        @JavascriptInterface
+        public void checkUpdate() { runOnUiThread(() -> buscarActualizacion(true)); }
+
         @JavascriptInterface
         public void ctrlStart(String manualIp) {
             final int gen = ++ctrlGen;
@@ -364,18 +368,26 @@ public class MainActivity extends Activity implements SensorEventListener {
         for (int i = 0; i < Math.max(x.length, y.length); i++) { int p = i < x.length ? num(x[i]) : 0, q = i < y.length ? num(y[i]) : 0; if (p != q) return p < q ? -1 : 1; }
         return 0;
     }
-    private void buscarActualizacion() {
-        long ahora = System.currentTimeMillis(); if (avisando || ahora - ultBusqueda < 10 * 60 * 1000L) return; ultBusqueda = ahora;
+    private void buscarActualizacion() { buscarActualizacion(false); }
+    // manual = el jugador pulsó ACTUALIZAR: busca ya y siempre dice algo
+    private void buscarActualizacion(final boolean manual) {
+        long ahora = System.currentTimeMillis(); if (avisando || (!manual && ahora - ultBusqueda < 10 * 60 * 1000L)) return; ultBusqueda = ahora;
+        final AlertDialog esp = manual ? new AlertDialog.Builder(this).setMessage("Buscando versión nueva…").setCancelable(true).create() : null;
+        if (esp != null) esp.show();
         new Thread(() -> {
             try {
-                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "version.txt").openConnection();
+                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "version.txt?t=" + System.currentTimeMillis()).openConnection();
                 c.setConnectTimeout(8000); c.setReadTimeout(8000); c.setUseCaches(false); c.setInstanceFollowRedirects(true);
-                if (c.getResponseCode() != 200) return;
+                if (c.getResponseCode() != 200) throw new Exception("http");
                 BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()));
                 String v = r.readLine(); r.close();
-                if (v == null) return; final String nv = v.trim();
-                if (nv.length() > 0 && compara(nv, miVersion()) > 0) runOnUiThread(() -> ofrecer(nv));
-            } catch (Exception ignored) { }
+                if (v == null) throw new Exception("vacio"); final String nv = v.trim();
+                runOnUiThread(() -> { if (esp != null) esp.dismiss();
+                    if (nv.length() > 0 && compara(nv, miVersion()) > 0) ofrecer(nv);
+                    else if (manual && !isFinishing()) new AlertDialog.Builder(MainActivity.this).setMessage("Ya tienes la última versión (" + miVersion() + ").").setPositiveButton("OK", null).show(); });
+            } catch (Exception e) {
+                if (manual) runOnUiThread(() -> { if (esp != null) esp.dismiss(); if (!isFinishing()) new AlertDialog.Builder(MainActivity.this).setMessage("No se pudo buscar la versión nueva. Revisa el internet y prueba otra vez.").setPositiveButton("OK", null).show(); });
+            }
         }).start();
     }
     private void ofrecer(String v) {
@@ -394,8 +406,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         new Thread(() -> {
             try {
                 File dir = new File(getCacheDir(), "upd"); dir.mkdirs();
-                File f = new File(dir, "VoleyBolas.apk");
-                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "VoleyBolas.apk").openConnection();
+                File f = new File(dir, "VoleyBolas.apk"); if (f.exists()) f.delete();
+                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "VoleyBolas.apk?t=" + System.currentTimeMillis()).openConnection();
                 c.setConnectTimeout(15000); c.setReadTimeout(30000); c.setInstanceFollowRedirects(true);
                 int total = c.getContentLength(), hecho = 0, ult = -1;
                 try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(f)) {
