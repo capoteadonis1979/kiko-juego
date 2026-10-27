@@ -383,6 +383,12 @@ body.remote #dpanel{padding-bottom:46px}
 .gintro{font-size:17px;line-height:1.45;color:#eef6f0;text-align:center}
 #lbtns{grid-template-columns:repeat(3,1fr)!important}
 .hp{border-left-width:6px}
+body.solo #droll{flex-direction:column;gap:6px}
+body.solo #dcup{width:min(30vh + 60px,190px);border-width:5px;gap:12px}
+body.solo #dcup .die{--s:min(9vh + 14px,50px)}
+body.solo #drtxt{gap:5px}
+body.solo #drtxt b{font-size:clamp(13px,2.1vw,18px)}
+body.solo #drtxt small{font-size:12px}
 
 </style></head><body>
 <div id="app">
@@ -2860,7 +2866,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.1.0';
+const VERSION='v1.1.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3051,7 +3057,7 @@ function startMatch(){
   const A=ACT(); G.turn=A[Math.floor(Math.random()*A.length)]; G.dbl=0; G.last=null; beginTurn(true);
 }
 function beginTurn(fresh){ G.phase='roll'; G.dice=[]; G.toks=[]; G.mustOpen=false; if(fresh) G.dbl=0; G.aiT=55+Math.random()*40;
-  say('LE TOCA A '+G.names[G.turn],90); broadcast(); }
+  say(G.names[G.turn]==='TÚ'?'¡TE TOCA!':'LE TOCA A '+G.names[G.turn],90); broadcast(); }
 function nextPlayer(){ const A=ACT(); let i=A.indexOf(G.turn); for(let n=0;n<4;n++){ i=(i+1)%A.length; if(G.pos[A[i]].some(p=>p<META)) break; } G.turn=A[i]; beginTurn(true); }
 // tirar: se llama cuando el dado ya cayó en la mesa (la animación lo decide antes)
 function rolled(vals){
@@ -3308,6 +3314,7 @@ function renderPanel(force){
 }
 function act(o){ if(G.remoteMode){ netSend(o); return; }
   initAudio(); if(o.t==='roll') doRoll(0,o.p); else if(o.t==='move') doMove(0,o.tok,o.i); else if(o.t==='sel') setSel(0,o.tok); renderPanel(); }
+(()=>{ const c=document.getElementById('dcup'); c.innerHTML=dieHTML(6,50).replace('class="die"','class="die d1"').replace(/ style="--s:50px"/,'')+dieHTML(5,50).replace('class="die"','class="die d2"').replace(/ style="--s:50px"/,''); })();
 document.getElementById('btirar').addEventListener('click',()=>{ initAudio(); throwNow(0.8); });
 /* ---------- agitar el teléfono y lanzarlo ---------- */
 let SH={e:0,last:null,t0:0,peak:0,on:false,lastR:0,thrown:0};
