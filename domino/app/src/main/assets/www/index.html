@@ -2816,7 +2816,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.3';
+const VERSION='v3.9.4';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3708,7 +3708,7 @@ function drawTable(){
   drawChainLayer();
   drawCounting();
   // mensaje: siempre encima y en un hueco sin fichas
-  if(G.msgT>0&&!(G.state==='handover'&&G.cnt&&G.frame-G.cnt.t0>=110)){
+  if(false&&G.msgT>0&&!(G.state==='handover'&&G.cnt&&G.frame-G.cnt.t0>=110)){   // sin letreros en la mesa (pasó, se pegó...): se ve lo que pasa
     ctx.font='700 24px '+font; const w=ctx.measureText(G.msg).width+40, h=44, p=freeSpot(w,h);
     ctx.fillStyle='rgba(10,20,14,0.9)'; rr(ctx,p.x-w/2,p.y-h/2,w,h,14); ctx.fill(); ctx.strokeStyle='rgba(255,210,58,.6)'; ctx.lineWidth=2; ctx.stroke();
     ctx.fillStyle='#ffd23a'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(G.msg,p.x,p.y+1);
