@@ -302,6 +302,9 @@ body.remote #rack{left:112px}
 #sub{gap:22px}
 #pick:not([hidden]){display:flex}
 #menu #ptab{background:#2f7fe0;border-color:#1c4c94}
+#menu #pmesa{background:#7b3fc4;border-color:#4a2380}
+#menu #gsalir{position:static;flex:0 0 300px;margin:0 calc((100% - 300px)/2);min-width:0;font:800 18px var(--font);background:#c62828;color:#fff;border:3px solid #ff8a80;border-radius:14px;padding:12px 18px;box-shadow:none}
+#cuba{margin-top:14px!important}
 #menu #psolo{background:#22a04a;border-color:#0f5a26}
 #mplayer{display:flex;gap:10px;justify-content:center;width:min(560px,90vw)}
 #mplayer button{min-width:0!important;flex:0 0 64px;padding-left:0;padding-right:0}
@@ -492,6 +495,7 @@ body.solo #drtxt small{font-size:12px}
       <button id="pact">ACTIVAR / COMPRAR</button>
       <button id="pcfg">⚙️ CONFIGURACIÓN</button>
       <button id="phist">📜 HISTORIAL</button>
+      <button id="gsalir">✕ SALIR</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
           <g clip-path="url(#fw)"><rect width="150" height="80" fill="#fff"/>
@@ -562,7 +566,6 @@ body.solo #drtxt small{font-size:12px}
 <button id="pwwa" class="wa">💬 PAGAR DESDE ANGOLA POR WHATSAPP<small>+244 926 815 829</small></button>
 <button id="pwno">CERRAR</button></div></div>
 <button id="bmesa" hidden>☰ MENÚ</button>
-<button id="gsalir">✕ SALIR</button>
 <div id="ver"></div>
 <script>
 //---------------------------------------------------------------------
@@ -2867,7 +2870,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.1';
+const VERSION='v1.2.2';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3681,7 +3684,7 @@ function connQR(){ const el=document.getElementById('lqr2svg'); if(!el) return; 
 isTV=false;   // hasta que se elija MESA
 // mando a distancia de la tele: OK empieza / sigue
 let mFocus=-1;
-function menuBtns(){ return [...menu.querySelectorAll('button'),document.getElementById('gsalir')].filter(b=>b.offsetParent!==null||(b.id==='gsalir'&&!b.hidden)); }
+function menuBtns(){ return [...new Set([...menu.querySelectorAll('button'),document.getElementById('gsalir')])].filter(b=>b.offsetParent!==null||(b.id==='gsalir'&&!b.hidden)); }
 function defId(){ return !lobby.hidden?'lplay':!sub.hidden?'mplay':(tvDevice?'pmesa':'ptab'); }
 function curBtn(){ const b=menuBtns(); const a=document.activeElement; if(a&&b.includes(a)) return a; if(mFocus>=0&&b[mFocus]) return b[mFocus]; return document.getElementById(defId()); }
 function setFocusBtn(el){ const b=menuBtns(); mFocus=b.indexOf(el); b.forEach(x=>x.classList.toggle('focus',x===el)); try{ el.focus({preventScroll:true}); }catch(_){} }
