@@ -337,7 +337,8 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
 #menu button.main{background:var(--accent);border-color:#8a2418}
-#menu #lplay,#menu #mplay{background:#2fbf71;border-color:#1a7a44}   /* empezar = verde (el rojo es solo para salir) */
+#menu #lplay,#menu #mplay{background:#2fbf71;border-color:#1a7a44}
+#menu #pmesa{background:#7b3fc4;border-color:#4a2380}   /* TV en morado: el rojo es solo para salir */   /* empezar = verde (el rojo es solo para salir) */
 #menu button:focus{outline:none}
 #menu button.focus,#menu button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
 #ver{position:fixed;right:8px;bottom:4px;font-size:11px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
@@ -2821,7 +2822,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.7';
+const VERSION='v3.9.8';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
