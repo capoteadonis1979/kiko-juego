@@ -246,6 +246,11 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #lqr,#lqr2{grid-area:auto;position:absolute;top:50%;background:rgba(0,0,0,.25);border-radius:1.4vh;padding:1vh}
 #lqr{left:max(calc(25% - 23vh),calc(10vh + 8px));transform:translate(-50%,-50%)} #lqr2{right:max(calc(25% - 23vh),calc(10vh + 8px));transform:translate(50%,-50%)}
 #lqr svg,#lqr2 svg{width:17vh;height:17vh}
+/* los botones no cambian de tamaño al cambiar su texto (la pantalla no se mueve) */
+#lbtns{display:grid!important;grid-template-columns:repeat(3,1fr);width:min(94vw,900px)}
+#lbtns button{min-width:0!important;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cfg .row button{width:15em;min-width:0}
+#pbox .prow button{width:155px;min-width:0}
 #guide{display:flex;flex-direction:column;overflow:hidden!important;padding:10px 14px!important}
 #guide #gbox{flex:1;min-height:0;width:100%;display:flex;flex-direction:column}
 .gpage{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
@@ -2777,7 +2782,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.7.6';
+const VERSION='v3.7.7';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4115,7 +4120,7 @@ const menu=document.getElementById('menu');
 // todas las pantallas se ajustan solas (sin barra de desplazamiento): si el contenido no cabe, se encoge
 const FITK=new WeakMap();
 function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputedStyle(box).position!=='fixed') return; const kids=[...box.children].filter(c=>!c.hidden&&getComputedStyle(c).display!=='none'); if(!kids.length) return;
-  const key=box.clientWidth+'x'+box.clientHeight+'|'+kids.map(c=>c.id||c.className).join(',')+'|'+document.body.className+'|'+box.textContent.length; if(!force&&FITK.get(box)===key) return; FITK.set(box,key);
+  const key=box.clientWidth+'x'+box.clientHeight+'|'+kids.map(c=>c.id||c.className).join(',')+'|'+document.body.className; if(!force&&FITK.get(box)===key) return; FITK.set(box,key);
   kids.forEach(c=>c.style.zoom=''); let k=1;
   for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
 function fitMenu(force){ fitKids(menu,force); }
