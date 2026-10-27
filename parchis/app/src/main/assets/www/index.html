@@ -73,6 +73,8 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #pbox h2{margin:0 0 6px;color:var(--gold);font-size:24px}
 #pbox button{font:700 19px var(--font);min-width:320px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg);display:flex;flex-direction:column;align-items:center;gap:2px}
 #pbox button.main{background:#2fbf71;border-color:#1a7a44}
+#pbox button.pred,#exyes{background:#c62828!important;border-color:#ff8a80!important;color:#fff!important}
+#exitask{z-index:90}
 #pbox button small{font:500 12px var(--font);opacity:.85}
 #pbox button.focus{outline:3px solid var(--gold);outline-offset:3px}
 #pbox .prow{display:flex;gap:10px} #pbox .prow button{min-width:155px}
@@ -195,7 +197,7 @@ body.mesa #menu .lseat{padding:4px 8px}
 .ovbox .small{font-size:14px;color:#d8e8dc}
 .ovbox details summary{cursor:pointer;color:#d8e8dc;font-size:14px;margin:4px 0}
 .ovbox .row button{min-width:150px}
-#lbtns button.on{background:#2fbf71!important;border-color:#fff!important;color:#fff;box-shadow:0 0 0 4px #2fbf71,0 0 18px #2fbf71}
+#lbtns button.on{background:#2f7fd8!important;border-color:#fff!important;color:#fff;box-shadow:0 0 0 4px #2f7fd8,0 0 18px #2f7fd8}
 #lbtns button.dim{opacity:.45}
 #lbtns button.dis{opacity:.25;pointer-events:none}
 #menu .lseat.off{opacity:.3}
@@ -256,7 +258,7 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 body.remote #power{bottom:auto!important}
 body.remote #tiles{left:112px!important}
 body.remote #rack{left:112px}
-#bmesa{left:96px!important}
+#bmesa{left:auto!important;right:10px;top:10px;bottom:auto!important;background:#2b1a0d!important;font-size:15px!important;padding:6px 14px!important}
 #menu,.ov,#pause,#prof{padding-bottom:44px!important}
 #guide{padding-bottom:44px!important}
 /* historial */
@@ -335,6 +337,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
 #menu button.main{background:var(--accent);border-color:#8a2418}
+#menu #lplay,#menu #mplay{background:#2fbf71;border-color:#1a7a44}   /* empezar = verde (el rojo es solo para salir) */
 #menu button:focus{outline:none}
 #menu button.focus,#menu button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
 #ver{position:fixed;right:8px;bottom:4px;font-size:11px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
@@ -430,7 +433,7 @@ body.solo #drtxt small{font-size:12px}
         <div class="gs"><i>2</i><span class="ge">📺</span><p>En la <b>TV</b> abre Parchís Cubano TV y elige <b>📺 TV</b>. Sale la sala con las 4 sillas (una por color) y dos códigos QR.</p></div>
         <div class="gs"><i>3</i><span class="ge">📱</span><p>¿El teléfono no tiene la app? Apunta la <b>cámara</b> al QR <b>📱 TELÉFONO</b>, bájala e instálala.</p></div>
         <div class="gs"><i>4</i><span class="ge">👤</span><p>En el <b>teléfono</b> abre la app, toca <b>📱 TELÉFONO</b>, pon tu nombre y hazte una foto.</p></div>
-        <div class="gs"><i>5</i><span class="ge">📷</span><p>Toca <b>📷 ESCANEAR QR DE LA TV</b> y apunta al QR <b>📺 TV</b>. Tu foto aparece en una silla con su color.</p></div>
+        <div class="gs"><i>5</i><span class="ge">📷</span><p>Toca <b>📷 ESCANEAR QR DE LA TV</b> y apunta al QR <b>OCUPAR SILLA</b>. Tu foto aparece en una silla con su color.</p></div>
         <div class="gs"><i>6</i><span class="ge">🪑</span><p>Se juega de <b>2 a 4</b>, mezclando <b>personas y bots</b> como quieran: las sillas libres las juega un bot. Para cambiar de color: OK en la silla → <b>⇄ CAMBIAR DE SILLA</b> → la silla late → OK en la nueva.</p></div>
         <div class="gs"><i>7</i><span class="ge">▶️</span><p>En la TV elige <b>JUGADORES</b> (2, 3 o 4) y <b>DADOS</b> (2 = cubano, 1 = clásico) y pulsa <b>EMPEZAR PARTIDA</b>. El mando se mueve en todas las direcciones.</p></div>
       </div>
@@ -495,7 +498,7 @@ body.solo #drtxt small{font-size:12px}
       <button id="pact">ACTIVAR / COMPRAR</button>
       <button id="pcfg">⚙️ CONFIGURACIÓN</button>
       <button id="phist">📜 HISTORIAL</button>
-      <button id="gsalir">✕ SALIR</button>
+      <button id="gsalir">SALIR</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
           <g clip-path="url(#fw)"><rect width="150" height="80" fill="#fff"/>
@@ -529,7 +532,7 @@ body.solo #drtxt small{font-size:12px}
     <div id="lobby" hidden>
       <div id="lip"></div>
       <div id="lmode"></div>
-      <div id="lseats"><div id="lqr"><div id="lqrsvg"></div><span><b class="qrt">📱 TELÉFONO</b>Baja la app</span></div><div id="lqr2"><div id="lqr2svg"></div><span><b class="qrt">📺 TV</b>Para sentarte</span></div><button class="lseat" data-s="2"></button><button class="lseat" data-s="3"></button><div id="lmid"></div><button class="lseat" data-s="1"></button><button class="lseat" data-s="0"></button></div>
+      <div id="lseats"><div id="lqr"><div id="lqrsvg"></div><span><b class="qrt">📱 TELÉFONO</b>Baja la app</span></div><div id="lqr2"><div id="lqr2svg"></div><span><b class="qrt">OCUPAR SILLA</b>Para sentarte</span></div><button class="lseat" data-s="2"></button><button class="lseat" data-s="3"></button><div id="lmid"></div><button class="lseat" data-s="1"></button><button class="lseat" data-s="0"></button></div>
       <div id="lbtns"><button id="lnum">JUGADORES: 4</button><button id="ldice">DADOS: 2</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
     </div>
   </div>
@@ -541,8 +544,10 @@ body.solo #drtxt small{font-size:12px}
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o dados</small></button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
+  <button id="pexit" class="pred">SALIR DEL JUEGO</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Parchís Cubano TV → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
+<div id="exitask" class="ov" hidden><div class="ovbox"><h2>¿DESEA SALIR DEL JUEGO?</h2><div class="row"><button id="exno">CANCELAR</button><button id="exyes">CONFIRMAR</button></div></div></div>
 <div id="cfg" class="ov" hidden><div class="ovbox"><h2>⚙️ CONFIGURACIÓN</h2>
 <div class="row"><button id="mmus">🎵 MÚSICA ●●●●○</button><button id="msnd">🔊 EFECTOS ●●●●●</button></div>
 <p class="small">Canción que suena</p>
@@ -2870,7 +2875,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.2';
+const VERSION='v1.2.3';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3393,7 +3398,7 @@ requestAnimationFrame(cupLoop);
 
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
 function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG(QRP+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
@@ -3411,7 +3416,12 @@ document.getElementById('pcont').addEventListener('click',()=>pauseChoose('cont'
 document.getElementById('prest').addEventListener('click',()=>pauseChoose('restart'));
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
 function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
-document.getElementById('gsalir').addEventListener('click',salirApp);
+const exitEl=document.getElementById('exitask');
+function askExit(){ exitEl.hidden=false; try{ ovFoc(exitEl,0); }catch(_){} }   // pregunta antes de salir: así no se sale sin querer
+document.getElementById('exno').addEventListener('click',()=>{ exitEl.hidden=true; if(!pauseEl.hidden) pfoc(pauseBtns().indexOf(document.getElementById('pexit'))); });
+document.getElementById('exyes').addEventListener('click',()=>{ exitEl.hidden=true; salirApp(); });
+document.getElementById('pexit').addEventListener('click',askExit);
+document.getElementById('gsalir').addEventListener('click',askExit);
 // SALIR solo en la pantalla de inicio, arriba a la derecha
 setInterval(()=>{ const $=i=>document.getElementById(i), g=$('gsalir'); const vis=e=>e&&!e.hidden;
   const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','paywall'].some(i=>vis($(i)));
@@ -3558,10 +3568,10 @@ function startRemote(){
   try{ KikoApp.setPortrait(false); }catch(_){}
   try{ KikoApp.ctrlStart(''); }catch(_){} layout(); }
 document.getElementById('rscan').addEventListener('click',()=>{ const st=document.getElementById('rst');
-  if(window.KikoApp&&KikoApp.scanQR){ st.textContent='Apunta al QR que dice "📺 TV"...'; try{ KikoApp.scanQR(); }catch(_){} } else st.textContent='Actualiza la app para usar el escáner.'; });
+  if(window.KikoApp&&KikoApp.scanQR){ st.textContent='Apunta al QR que dice "OCUPAR SILLA"...'; try{ KikoApp.scanQR(); }catch(_){} } else st.textContent='Actualiza la app para usar el escáner.'; });
 window.kikoQR=(t)=>{ const st=document.getElementById('rst'); t=String(t||'');
   if(t.startsWith(QRP)){ const ips=t.slice(QRP.length).split(',').map(x=>x.trim()).filter(x=>/^\d+\.\d+\.\d+\.\d+$/.test(x)).join(','); if(ips){ st.textContent='Conectando al tablero...'; try{ KikoApp.ctrlStart(ips); }catch(_){} return; } }
-  if(t==='ERR') st.textContent='No se pudo abrir el escáner. Escribe la dirección que sale en la tele.'; else if(t) st.textContent='Ese QR no es el que dice "📺 TV" del Parchís.'; else st.textContent='Escaneo cancelado.'; };
+  if(t==='ERR') st.textContent='No se pudo abrir el escáner. Escribe la dirección que sale en la tele.'; else if(t) st.textContent='Ese QR no es el que dice "OCUPAR SILLA" del Parchís.'; else st.textContent='Escaneo cancelado.'; };
 document.getElementById('rpair').addEventListener('click',()=>{ document.getElementById('rst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('rgo').addEventListener('click',()=>{ const ip=document.getElementById('rip').value.trim(); if(ip) try{ KikoApp.ctrlStart(ip); }catch(_){} });
 document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; PV=null;
@@ -3663,7 +3673,7 @@ gPage(0);
 function updateTvMenu(){
   if(!isTV) return;
   const n=Object.keys(peers).length;
-  document.getElementById('lip').innerHTML='Escanea el QR <b>📺 TV</b> con tu teléfono para sentarte<br><small>Misma Wi-Fi · Tablero '+(G.ip||'...')+' · '+n+' de 4 conectados</small>';
+  document.getElementById('lip').innerHTML='Escanea el QR <b>OCUPAR SILLA</b> con tu teléfono para sentarte<br><small>Misma Wi-Fi · Tablero '+(G.ip||'...')+' · '+n+' de 4 conectados</small>';
   document.querySelectorAll('#lseats .lseat').forEach(d=>{ const s=+d.dataset.s, on=G.remote[s]!=null;
     const act=isAct(s); d.className='lseat c'+s+(on?' on':'')+(lobSel===s?' sel':'')+(act?'':' off'); d.innerHTML='';
     const i=document.createElement('i'); if(on&&G.photos[s]) i.style.backgroundImage='url('+G.photos[s].src+')'; else i.textContent=on?'👤':'🤖'; i.style.borderColor=COL[s].c;
@@ -3715,7 +3725,7 @@ function navKey(k){
     if(k==='ok'){ if(cur) cur.click(); return true; }
     const n=cur&&geoBest(b,cur,k); if(n) pfoc(b.indexOf(n)); return true; }
   if(!vidov.hidden){ if(k==='ok'){ if(videl.paused) videl.play().catch(()=>{}); else videl.pause(); } else if(k==='left'||k==='right'){ try{ videl.currentTime=Math.max(0,videl.currentTime+(k==='right'?10:-10)); }catch(_){} } return true; }
-  if(!guide.hidden){ const gs=document.getElementById('gsalir'); if(k==='down'&&!gs.hidden){ gs.classList.add('focus'); return true; } if(gs.classList.contains('focus')){ if(k==='ok') salirApp(); else if(k==='up') gs.classList.remove('focus'); return true; } if(k==='right') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0&&gvb) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
+  if(!guide.hidden){ const gs=document.getElementById('gsalir'); if(k==='down'&&!gs.hidden){ gs.classList.add('focus'); return true; } if(gs.classList.contains('focus')){ if(k==='ok') askExit(); else if(k==='up') gs.classList.remove('focus'); return true; } if(k==='right') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0&&gvb) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
   if(!menu.hidden){ if(k==='ok') menuOk(); else menuMove(0,k); return true; }
   const bm=document.getElementById('bmesa');
   if(!bm.hidden){ if(k==='ok'&&bm.classList.contains('focus')){ openPause(); return true; } if(k!=='ok'){ bm.classList.add('focus'); return true; } }
@@ -3739,8 +3749,8 @@ cv.addEventListener('pointerdown',()=>{ initAudio(); if(G.state==='over') toLobb
 /* ===== cuadros: nombres de las máquinas y activación ===== */
 const bnEl=document.getElementById('bnames'), payEl=document.getElementById('paywall');
 const soEl=document.getElementById('seatop'); let soSeat=0;
-function openOv(){ return [payEl,bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
-function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>x.offsetParent!==null||(x.id==='gsalir'&&!x.hidden)); }
+function openOv(){ return [document.getElementById('exitask'),payEl,bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
+function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>(x.offsetParent!==null||(x.id==='gsalir'&&!x.hidden))&&!(el.id==='exitask'&&x.id==='gsalir')); }
 let ovFocus=0;
 function ovFoc(el,i){ const b=ovEls(el); if(!b.length) return; ovFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===ovFocus)); try{ b[ovFocus].focus({preventScroll:true}); }catch(_){} }
 ['bnames','paywall','seatop'].forEach(id=>document.getElementById(id).addEventListener('focusin',e=>{ const el=document.getElementById(id), b=ovEls(el), i=b.indexOf(e.target); if(i>=0){ ovFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } }));
