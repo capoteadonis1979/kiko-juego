@@ -3221,7 +3221,6 @@ function drawCard(k,X,Y){ const on=G.turn===k&&G.state==='play', act=isAct(k), C
   ctx.fillStyle=C.l; ctx.font='700 15px '+FONT; ctx.fillText(C.n,X-44,Y+4);
   const nm=G.pos[k].filter(p=>p===META).length; for(let j=0;j<4;j++){ ctx.fillStyle=j<nm?'#ffd23a':'rgba(255,255,255,.25)'; star(ctx,X-34+j*22,Y+28,9); ctx.fill(); }
   ctx.fillStyle='#cfe3d4'; ctx.font='600 13px '+FONT; ctx.fillText('meta '+nm+'/4',X+56,Y+29);
-  if(on){ ctx.fillStyle=C.c; ctx.font='900 15px '+FONT; ctx.textAlign='center'; ctx.fillText(G.phase==='roll'?'¡TIRA LOS DADOS!':G.phase==='move'?'ELIGE FICHA':'',X,Y+68); }
   ctx.restore(); }
 function fit(t,w,s){ ctx.font='800 '+s+'px '+FONT; t=String(t); while(t.length>3&&ctx.measureText(t).width>w) t=t.slice(0,-1); return t; }
 const FONT=getComputedStyle(document.body).fontFamily||'sans-serif';
@@ -3254,12 +3253,12 @@ function drawTable(){
   // jugadores
   for(let q=0;q<4;q++) drawCard(q,...CARDPOS[q]);
   // tirada y fichas extra del turno
-  if(G.state==='play'&&(G.phase==='move'||G.phase==='anim')&&G.toks.length){ const [X,Y]=CARDPOS[G.turn], up=Y>VH/2?-1:1; const bx=X, by=Y+up*112;
+  if(false){ const [X,Y]=CARDPOS[G.turn], up=Y>VH/2?-1:1; const bx=X, by=Y+up*112;
     c.fillStyle='rgba(0,0,0,.55)'; rr(c,bx-135,by-26,270,52,14); c.fill();
     c.textAlign='center'; c.textBaseline='middle'; c.font='800 18px '+FONT; c.fillStyle='#ffd23a';
     c.fillText('TIENE: '+G.toks.filter(t=>t.kind!=='sum').map(t=>t.kind==='bonus'?'+'+t.v:t.v).join(' · '),bx,by); }
   // mensaje
-  if(G.msgT>0&&G.msg){ c.font='900 30px '+FONT; const w=Math.min(VW-40,c.measureText(G.msg).width+60); c.globalAlpha=Math.min(1,G.msgT/15);
+  if(G.msgT>0&&G.msg&&G.state==='over'){ c.font='900 30px '+FONT; const w=Math.min(VW-40,c.measureText(G.msg).width+60); c.globalAlpha=Math.min(1,G.msgT/15);
     c.fillStyle='rgba(0,0,0,.72)'; rr(c,VW/2-w/2,VH/2-30,w,60,18); c.fill(); c.strokeStyle='#ffd23a'; c.lineWidth=3; c.stroke();
     c.fillStyle='#fff'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(G.msg,VW/2,VH/2+1); c.globalAlpha=1; }
   // título
