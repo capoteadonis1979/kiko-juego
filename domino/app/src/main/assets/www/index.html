@@ -55,7 +55,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #libpage .palos{letter-spacing:2px}
 #libnext{position:absolute;right:14px;bottom:12px;z-index:2;font:700 17px var(--font);background:#2fbf71;color:#fff;border:3px solid #1a7a44;border-radius:12px;padding:10px 16px;box-shadow:0 4px 10px rgba(0,0,0,.4)}
 #libx{position:absolute;right:14px;top:10px;font:700 16px var(--font);background:#5a3a1a;color:#fff;border:2px solid #8a5a2a;border-radius:10px;padding:2px 12px;z-index:2}
-#passbox{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:19;background:rgba(120,14,10,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none}
+#passbox{position:fixed;left:0;right:0;top:0;bottom:0;z-index:60;background:rgba(120,14,10,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none}
 #passbox b{font-size:20px;color:#fff;letter-spacing:1px}
 #passbox span{font-size:16px;color:#ffe0d0}
 #passbox i{font-style:normal;font-size:24px;min-height:28px}
@@ -359,7 +359,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
-    <div id="passbox" hidden><b>NO LLEVAS FICHA</b><div id="pbtns"><button data-st="azar">👊 PASO<small>toca para pasar</small></button></div><i id="passn"></i></div>
+    <div id="passbox" hidden><b>NO LLEVAS FICHA</b><div id="pbtns"><button data-st="azar">👊 PASO<small>toca en cualquier parte para pasar</small></button></div><i id="passn"></i></div>
     <div id="seatbox" hidden><b>ELIGE TU SILLA</b><div id="seatgrid"></div><small>Tu pareja es siempre el de enfrente</small></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
     <div id="libreta" hidden><div id="libpage"></div><button id="libx">✕</button><button id="libnext" hidden>SIGUIENTE MANO ▶</button></div>
@@ -2822,7 +2822,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.9';
+const VERSION='v3.9.10';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3957,7 +3957,8 @@ document.querySelectorAll('#pbtns button').forEach(b=>b.addEventListener('pointe
   if(st!=='toque'){ clearTimeout(passTm); passTaps=0; sendPass(1,st); return; }
   passTaps=Math.min(2,passTaps+1); document.getElementById('passn').textContent='✊'.repeat(passTaps); clearTimeout(passTm);
   passTm=setTimeout(()=>{ const n=passTaps; passTaps=0; if(n) sendPass(n,'toque'); },650); }));
-passbox.addEventListener('pointerdown',e=>e.preventDefault());
+// tocar en cualquier parte de la pantalla también pasa (no solo el botón)
+passbox.addEventListener('pointerdown',e=>{ e.preventDefault(); if(!mustPass()) return; initAudio(); try{ navigator.vibrate&&navigator.vibrate(40); }catch(_){} clearTimeout(passTm); passTaps=0; const r=Math.random(); sendPass(Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); });
 setInterval(()=>{ if(!G.remoteMode&&!isTV) checkPassBox(); },200);
 // ---- elegir silla desde el cel (en la sala) ----
 const seatbox=document.getElementById('seatbox');
