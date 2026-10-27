@@ -2822,7 +2822,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.10';
+const VERSION='v3.9.9';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3678,7 +3678,7 @@ function drawTable(){
   const fg=ctx.createRadialGradient(VW/2,VH/2,60,VW/2,VH/2,VW*0.62); fg.addColorStop(0,'#2a8a58'); fg.addColorStop(1,'#145234');
   ctx.fillStyle=fg; rr(ctx,26,26,VW-52,VH-52,26); ctx.fill();
   ctx.strokeStyle='rgba(255,230,160,0.35)'; ctx.lineWidth=2; rr(ctx,36,36,VW-72,VH-72,20); ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.font='700 64px '+getComputedStyle(document.body).fontFamily; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('DOMINÓ',VW/2,VH/2+150);
+  
   drawProps();
   // jugadores
   for(let s=0;s<4;s++) if(G.state==='menu'||isAct(s)) drawSeat(s);
@@ -4203,8 +4203,7 @@ function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputed
   kids.forEach(c=>c.style.zoom=''); let k=1;
   for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
 function fitMenu(force){ fitKids(menu,force); }
-function fitAll(force){ try{ const ae=document.activeElement; if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')) return;   // escribiendo: no tocar nada (si no, se cierra el teclado)
-  fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
+function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
   const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
 window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500);
 // en cuanto se abre o cierra una pantalla, se ajusta al momento (si no, el primer toque caía en un botón que se movía)
@@ -4358,7 +4357,7 @@ menu.addEventListener('focusin',e=>{ if(e.target.tagName==='BUTTON') menuBtns().
 function navKey(k){
   const ov=openOv();
   if(ov){ const b=ovEls(ov), cur=b[ovFocus]||b[0];
-    if(k==='ok'){ if(!cur) return true; if(cur.tagName==='INPUT'){ if(cur.id==='pwin'&&askLic()) return true; cur.focus(); try{ KikoApp.showKeyboard(); }catch(_){} } else cur.click(); return true; }
+    if(k==='ok'){ if(!cur) return true; if(cur.tagName==='INPUT'){ cur.focus(); try{ KikoApp.showKeyboard(); }catch(_){} } else cur.click(); return true; }
     if(cur){ const n=geoBest(b,cur,k); if(n) ovFoc(ov,b.indexOf(n)); } return true; }
   if(!pauseEl.hidden){ const b=pauseBtns(), cur=b.find(x=>x.classList.contains('focus'))||b[pFocus]||b[0];
     if(k==='ok'){ if(cur) cur.click(); return true; }
@@ -4506,10 +4505,6 @@ document.getElementById('pwok').addEventListener('click',()=>{ const r=checkCode
   LIC=r; try{ localStorage.setItem('dominoLic',r.code); localStorage.removeItem('dominoOrder'); }catch(_){} m.style.color='#7dffa8'; m.textContent='¡ACTIVADA! '+licInfo(); updLic(); setTimeout(()=>{ payEl.hidden=true; },1500); });
 updLic(); setInterval(updLic,60000);
 
-// código de activación con el cuadro nativo de Android: el teclado no se cierra solo (en la casilla de la página sí se cerraba)
-function askLic(){ try{ if(window.KikoApp&&KikoApp.askText){ const i=document.getElementById('pwin'); i.blur(); KikoApp.askText('Código de activación',i.value||'','lic'); return true; } }catch(_){} return false; }
-document.getElementById('pwin').addEventListener('pointerdown',e=>{ if(window.KikoApp&&KikoApp.askText){ e.preventDefault(); askLic(); } });
-{ const prevKT=window.kikoText; window.kikoText=(tag,v)=>{ if(tag==='lic'){ if(v==null) return; const i=document.getElementById('pwin'); i.value=String(v).toUpperCase().replace(/[^A-Z0-9]/g,''); if(i.value) document.getElementById('pwok').click(); return; } if(prevKT) prevKT(tag,v); }; }
 /* ================= BUCLE ================= */
 function update(){
   if(G.paused) return;
