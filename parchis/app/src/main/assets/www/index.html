@@ -475,7 +475,7 @@ body.solo #drtxt small{font-size:12px}
       <ul>
         <li><b>Comer</b>: si caes en la casilla de una ficha rival, se va a su casa y tú <b>cuentas 20</b> con una de tus fichas.</li>
         <li><b>Seguros</b> (casillas con círculo) y <b>salidas</b> (de color): ahí no se come.</li>
-        <li><b>Puente</b>: dos fichas <b>del mismo color</b> en la misma casilla. <b>Nadie puede pasar</b> ni caer en un puente, ni siquiera tus propias fichas.</li>
+        <li><b>Puente</b>: dos fichas <b>del mismo color</b> juntas en una <b>salida</b>. En las demás casillas no hay puente. <b>Nadie puede pasar</b> ni caer en un puente, ni siquiera tus propias fichas.</li>
         <li>Con <b>dobles</b> (o un <b>6</b> si juegas con un dado) estás <b>obligado a abrir tu puente</b> si puedes.</li>
       </ul>
       <h3>5 · Reglas: dobles, meta y ganar</h3>
@@ -2900,7 +2900,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.3.1';
+const VERSION='v1.3.2';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3044,9 +3044,9 @@ function say(t,n){ G.msg=t; G.msgT=n||110; }
 // ¿quién está en una casilla de la calle?
 function occ(abs,exceptK,exceptI){ const r=[]; for(const k of ACT()) G.pos[k].forEach((p,i)=>{ if(p>=0&&p<=ULTCALLE&&absOf(k,p)===abs&&!(k===exceptK&&i===exceptI)) r.push({k,i}); }); return r; }
 function occPas(k,p,exceptI){ return G.pos[k].filter((q,i)=>q===p&&i!==exceptI).length; }
-// ¿hay puente en esa casilla? solo dos fichas IGUALES (del mismo color); dos de colores distintos (en un seguro) no cierran el paso
-const barrera=(abs,k,i)=>{ const o=occ(abs,k,i); return o.length>=2&&o.every(x=>x.k===o[0].k); };
-function isPuente(k,i){ const p=G.pos[k][i]; if(p<0||p>ULTCALLE) return false; const o=occ(absOf(k,p)); return o.length>=2&&o.every(x=>x.k===k); }
+// ¿hay puente en esa casilla? solo en una SALIDA y con dos fichas IGUALES (del mismo color); en el resto de casillas no se cierra el paso
+const barrera=(abs,k,i)=>{ if(!SALIDA.includes(abs)) return false; const o=occ(abs,k,i); return o.length>=2&&o.every(x=>x.k===o[0].k); };
+function isPuente(k,i){ const p=G.pos[k][i]; if(p<0||p>ULTCALLE) return false; const a=absOf(k,p); if(!SALIDA.includes(a)) return false; const o=occ(a); return o.length>=2&&o.every(x=>x.k===k); }
 // resultado de mover la ficha i de k, v pasos (o sacar con 5). null = no se puede
 function tryMove(k,i,v,exit){
   const p=G.pos[k][i];
