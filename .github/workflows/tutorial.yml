@@ -1,0 +1,23 @@
+name: Subir video tutorial
+
+on:
+  push:
+    paths:
+      - "media/tutorial/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tutorial:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tutorial
+          name: Tutorial Dominó Cubano
+          body: Video tutorial para conectar la TV y los teléfonos.
+          files: media/tutorial/*.mp4
+          make_latest: false
