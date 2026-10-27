@@ -2782,7 +2782,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.7.7';
+const VERSION='v3.7.8';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3942,7 +3942,6 @@ function gameAction(a){
   else if(a==='new'){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } else { showSub(); } broadcast(); }
 }
 function pauseChoose(a){ if(a==='cont'){ closePause(); return; }
-  if(pPending!==a){ pPending=a; const c=document.getElementById('pconf'); c.hidden=false; c.textContent=a==='restart'?'¿Seguro? Toca otra vez REINICIAR PARTIDA para confirmar':a==='exit'?'¿Seguro? Toca otra vez SALIR DEL JUEGO para cerrar':'¿Seguro? Toca otra vez NUEVA PARTIDA para confirmar'; return; }
   if(a==='exit'){ salirApp(); return; }
   if(G.remoteMode){ netSend({t:'ctl',a}); pauseEl.hidden=true; pPending=null; return; }
   gameAction(a); }
@@ -4126,7 +4125,9 @@ function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputed
 function fitMenu(force){ fitKids(menu,force); }
 function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof','cfg'].forEach(id=>fitKids(document.getElementById(id),force));
   const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
-window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500); setTimeout(()=>fitAll(true),50);
+window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500);
+// en cuanto se abre o cierra una pantalla, se ajusta al momento (si no, el primer toque caía en un botón que se movía)
+try{ new MutationObserver(()=>fitAll(false)).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden']}); new MutationObserver(()=>fitAll(false)).observe(document.body,{attributes:true,attributeFilter:['class']}); }catch(_){} setTimeout(()=>fitAll(true),50);
 document.getElementById('mplay').addEventListener('click',()=>{ initAudio(); if(!canStart()) return; menu.hidden=true; startMatch(); layout(); renderHand(); });
 if(isTV) document.getElementById('psolo').hidden=true;   // en la tele no tiene sentido: con el mando no se pueden tocar fichas (se juega con MESA + cels)
 const tvDevice=isTV, pick=document.getElementById('pick'), sub=document.getElementById('sub'), lobby=document.getElementById('lobby');
