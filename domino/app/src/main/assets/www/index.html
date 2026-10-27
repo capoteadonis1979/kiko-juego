@@ -261,7 +261,7 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #power{bottom:46px!important}
 body.remote #power{bottom:auto!important}
 
-#bmesa{left:96px!important}
+#bmesa{left:auto!important;right:10px;top:10px;bottom:auto!important;background:#2b1a0d!important;font-size:15px!important;padding:6px 14px!important}   /* arriba a la derecha, mismo color que el marcador */
 #menu,.ov,#pause,#prof{padding-bottom:44px!important}
 #guide{padding-bottom:44px!important}
 /* historial */
@@ -490,7 +490,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o modo</small></button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
-  <button id="pexit" class="pred">✕ SALIR DEL JUEGO</button>
+  <button id="pexit" class="pred">SALIR DEL JUEGO</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano TV → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
 <div id="exitask" class="ov" hidden><div class="ovbox"><h2>¿DESEA SALIR DEL JUEGO?</h2><div class="row"><button id="exno">CANCELAR</button><button id="exyes">CONFIRMAR</button></div></div></div>
@@ -517,7 +517,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 <button id="pwwa" class="wa">💬 PAGAR DESDE ANGOLA POR WHATSAPP<small>+244 926 815 829</small></button>
 <button id="pwno">CERRAR</button></div></div>
 <button id="bmesa" hidden>☰ MENÚ</button>
-<button id="gsalir">✕ SALIR</button>
+<button id="gsalir">SALIR</button>
 <div id="ver"></div>
 <script>
 //---------------------------------------------------------------------
@@ -2821,7 +2821,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.6';
+const VERSION='v3.9.7';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3262,7 +3262,7 @@ function drawFist(){
     if(f.n&&t>=12&&t<hitEnd&&((t-12)%16)===0) dust(P.x,P.y,f.hard?28:10,f.hard?2.6:1.2);
   } else if(st==='palma'){
     let lift=t<10?0.6:t<20?0.6+0.4*(t-10)/10:t<24?1-(t-20)/4:0;
-    const P=at(E,k); handArm('palm',P.x,P.y,rot0,(f.hard?1.2:1)*(1+0.3*lift),E,{lift});   // todos con la mano derecha
+    const P=at(E,k); handArm('palm',P.x,P.y,rot0,(f.hard?1.2:1)*(1+0.3*lift),E,{lift,flip:true});   // todos con la mano derecha
     if(t>=24&&t<34){ const e=(t-24)/10; ctx.save(); ctx.strokeStyle='rgba(255,255,255,'+(0.9*(1-e))+')'; ctx.lineWidth=3; ctx.lineCap='round';
       for(let q=0;q<8;q++){ const a=q/8*6.283+0.2, r0=52+e*26, r1=r0+16; ctx.beginPath(); ctx.moveTo(P.x+Math.cos(a)*r0,P.y+Math.sin(a)*r0*0.75); ctx.lineTo(P.x+Math.cos(a)*r1,P.y+Math.sin(a)*r1*0.75); ctx.stroke(); } ctx.restore(); }
     if(t===24) dust(P.x,P.y,18,2);
@@ -3679,9 +3679,6 @@ function drawTable(){
   ctx.strokeStyle='rgba(255,230,160,0.35)'; ctx.lineWidth=2; rr(ctx,36,36,VW-72,VH-72,20); ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.font='700 64px '+getComputedStyle(document.body).fontFamily; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('DOMINÓ',VW/2,VH/2+150);
   drawProps();
-  // extremos abiertos
-  if(G.ends&&G.state==='play'){ ctx.font='700 18px '+getComputedStyle(document.body).fontFamily; ctx.fillStyle='rgba(255,240,200,0.85)'; ctx.textAlign='left';
-    ctx.textAlign='right'; ctx.fillText('A LOS '+G.ends[0]+'   ·   A LOS '+G.ends[1],VW-52,52); }
   // jugadores
   for(let s=0;s<4;s++) if(G.state==='menu'||isAct(s)) drawSeat(s);
   // marcador
@@ -3696,7 +3693,6 @@ function drawTable(){
   [0,1].forEach(k=>{ ctx.fillStyle=PCOL[k]; ctx.beginPath(); ctx.arc(26,30+k*24-1,7,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke(); });
   ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='700 20px '+font; ctx.fillText(G.scores[0],174,30); ctx.fillText(G.scores[1],174,54);
   }
-  ctx.font='600 12px '+font; ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.textAlign='right'; ctx.fillText('A '+G.target+' · MANO '+G.handNo,VW-20,18);
   if(G.megaT>=0){ const t=G.frame-G.megaT;
     if(t<6){ ctx.fillStyle='rgba(255,250,220,'+(0.85-t*0.12)+')'; ctx.fillRect(0,0,VW,VH); }
     else if(t<70){ const on=Math.random()<0.55; ctx.fillStyle='rgba(0,0,0,'+(on?0.05:(0.55+Math.random()*0.3))+')'; ctx.fillRect(0,0,VW,VH);
