@@ -123,6 +123,7 @@ body.remote #rb1{flex:1}
 body.remote #rst{max-width:40%}
 body.remote #hand{border-top:0;background:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 2px,transparent 2px 7px,rgba(255,220,170,.05) 7px 9px,transparent 9px 16px),linear-gradient(#a8662e,#8a4e20 55%,#5e3412)}
 body.remote #tablebox{background:#2a1608}
+body.remote{background:linear-gradient(#2a1608 0 34px,#3a200c 34px 66px,#a8662e 66px,#8a4e20 55%,#5e3412)}   /* el hueco de la cámara (lado izquierdo) con el color de la madera */
 body.remote #tiles{top:32px;bottom:4px}
 body.remote #rb1 button{padding:5px 9px;font-size:12px}
 body.remote #rends{font-size:15px}
@@ -257,8 +258,7 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #gsalir.focus,#gsalir:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #power{bottom:46px!important}
 body.remote #power{bottom:auto!important}
-body.remote #tiles{left:112px!important}
-body.remote #rack{left:112px}
+
 #bmesa{left:96px!important}
 #menu,.ov,#pause,#prof{padding-bottom:44px!important}
 #guide{padding-bottom:44px!important}
@@ -2816,7 +2816,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.0';
+const VERSION='v3.9.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3259,7 +3259,7 @@ function drawFist(){
     let lift=t<10?0.6:t<20?0.6+0.4*(t-10)/10:t<24?1-(t-20)/4:0;
     let P=at(E,k), rr=rot0, E2=E, ff=false;
     if(f.seat===1){ // el de la derecha: palmada con la mano izquierda, en el hueco entre sus fichas y el tabaco (no encima de su foto)
-      const sp=seatPos(1); E2={x:sp.x+90,y:VH/2+122}; const T2={x:VW-90,y:VH/2+122};
+      const sp=seatPos(1); E2={x:sp.x+90,y:VH/2+142}; const T2={x:VW-92,y:VH/2+142};
       P={x:E2.x+(T2.x-E2.x)*k,y:E2.y+(T2.y-E2.y)*k}; rr=Math.atan2(T2.y-E2.y,T2.x-E2.x)+Math.PI/2; ff=true; }
     handArm('palm',P.x,P.y,rr,1+0.3*lift,E2,{lift,flip:ff});
     if(t>=24&&t<34){ const e=(t-24)/10; ctx.save(); ctx.strokeStyle='rgba(255,255,255,'+(0.9*(1-e))+')'; ctx.lineWidth=3; ctx.lineCap='round';
@@ -3505,7 +3505,7 @@ function seatE(seat){ const sp=seatPos(seat), cx=VW/2-sp.x, cy=VH/2-sp.y, cl=Mat
   return {x:sp.x-vx*90-vy*off, y:sp.y-vy*90+vx*off}; }
 function rackRect(s){ const n=Math.max(1,(G.hands[s]||[]).length);
   if(s%2===0){ const h=n*11+14; return s===0?[VW/2-h,VH-62,VW/2+h,VH+60]:[VW/2-h,-60,VW/2+h,62]; }
-  const h=n*8+14; return s===1?[VW-62,VH/2-h,VW+60,VH/2+h]:[-60,VH/2-h,62,VH/2+h]; }
+  const h=n*11+14; return s===1?[VW-62,VH/2-h,VW+60,VH/2+h]:[-60,VH/2-h,62,VH/2+h]; }
 // sitio limpio (sin fichas) donde baja el puño, lo más cerca posible del jugador
 function fistTarget(seat){
   const E=seatE(seat), sp=seatPos(seat);
@@ -3762,7 +3762,7 @@ function drawSeat(s){
   ctx.save();
   // fichas boca abajo de los demás
   if(s!==0||!showLocalHand()){
-    const horiz=s%2===0, step=horiz?22:16;
+    const horiz=s%2===0, step=22;   // misma separación arriba/abajo y a los lados
     const c=G.cnt, hs=c&&G.state==='handover'?G.frame-c.t0:-1, up=hs>=110;
     for(let i=0;i<n;i++){
       if(up&&c.list.some((x,k)=>x.s===s&&x.ti===i&&hs>=130+k*28)) continue;   // ya se fue al centro a contar
