@@ -4,8 +4,8 @@
 :root{--bg:#5e3412}
 html,body{margin:0;height:100%;overflow:hidden;background:linear-gradient(#a8662e,#8a4e20 55%,#5e3412);font-family:system-ui,sans-serif;touch-action:none;user-select:none}
 #wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:16px;box-sizing:border-box}
-#dcup{position:relative;overflow:hidden;touch-action:none;width:min(92vw,620px,calc((100vh - 100px)*1.3));aspect-ratio:1.3;border-radius:22px;background:radial-gradient(#1f8a4a,#0f5a2e);border:7px solid #6b3a1c;box-shadow:inset 0 6px 18px rgba(0,0,0,.5)}
-.die{position:absolute;left:0;top:0;will-change:transform;--s:min(17vw,90px,calc((100vh - 100px)*0.24));width:var(--s);height:var(--s);border-radius:18%;background:linear-gradient(135deg,#fff,#d9d4c8)}
+#dcup{position:relative;overflow:hidden;touch-action:none;width:min(92vw,620px,calc((100vh - 110px)*0.78));aspect-ratio:0.78;border-radius:22px;background:radial-gradient(#1f8a4a,#0f5a2e);border:7px solid #6b3a1c;box-shadow:inset 0 6px 18px rgba(0,0,0,.5)}
+.die{position:absolute;left:0;top:0;will-change:transform;--s:min(20vw,96px,calc((100vh - 110px)*0.13));width:var(--s);height:var(--s);border-radius:18%;background:linear-gradient(135deg,#fff,#d9d4c8)}
 .die i{position:absolute;width:19%;height:19%;border-radius:50%;background:#1a1a1a;transform:translate(-50%,-50%)} .die i.r{width:24%;height:24%}
 button{font:800 18px system-ui,sans-serif;border-radius:14px;padding:10px 22px;color:#fff}
 #btirar{background:#c62828;border:3px solid #ff8a80}
@@ -14,7 +14,7 @@ button{font:800 18px system-ui,sans-serif;border-radius:14px;padding:10px 22px;c
 </style></head><body>
 <div id="wrap"><div id="dcup"></div><button id="btirar">🎲 TIRAR</button></div>
 <button id="go">TOCA PARA EMPEZAR<br><small style="font-size:15px;color:#fff">Luego inclina, agita y lanza el teléfono</small></button>
-<div id="ver">v0.1.0</div>
+<div id="ver">v0.2.0</div>
 <script>
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)); let SND=true, started=false; const myView=()=>null, handEl={hidden:false};
 let AC=null, master, noiseBuf;
@@ -86,10 +86,14 @@ function cupLoop(t){ requestAnimationFrame(cupLoop);
   const on=started; if(!on){ cupWas=false; return; }
   if(!cupWas){ cupWas=true; cupReset(); cupLast=t; }
   const dt=Math.min(0.033,(t-cupLast)/1000||0.016); cupLast=t;
-  const W=CUP.clientWidth, H=CUP.clientHeight, s=CD[0].el.offsetWidth||50, r=s/2, K=90; let hits=0;
+  const W=CUP.clientWidth, H=CUP.clientHeight, s=CD[0].el.offsetWidth||50, r=s/2; let hits=0;
+  // física real: al mover el teléfono, los dados se quedan atrás (inercia) y chocan; inclinarlo los hace rodar
+  const KL=W*9, KG=W*1.6;                                   // px/s² por cada m/s² (moverlo / inclinarlo)
+  const tg=toScreen(-(SEN.grav?SEN.grav[0]:0),-(SEN.grav?SEN.grav[1]:0)), tm=Math.hypot(tg[0],tg[1]), tk=tm>1.2?(tm-1.2)/tm:0;   // poca inclinación no los mueve (fricción del paño)
+  const ln=toScreen(-SEN.lin[0],-SEN.lin[1]), ax=tg[0]*tk*KG+ln[0]*KL, ay=tg[1]*tk*KG+ln[1]*KL, spinT=-(SEN.rot||0)*Math.PI/180;
   CD.forEach(d=>{
-    if(!d.out){ d.vx+=SEN.f[0]*K*dt; d.vy+=SEN.f[1]*K*dt; d.va+=-SEN.rot*0.004*dt*60*0.2;
-      const fr=Math.pow(0.25,dt); d.vx*=fr; d.vy*=fr; d.va*=Math.pow(0.15,dt); }
+    if(!d.out){ d.vx+=ax*dt; d.vy+=ay*dt; d.va+=(spinT-d.va)*Math.min(1,dt*4);
+      const fr=Math.pow(0.4,dt); d.vx*=fr; d.vy*=fr; const vm=Math.hypot(d.vx,d.vy), cap=W*12; if(vm>cap){ d.vx*=cap/vm; d.vy*=cap/vm; } }
     d.x+=d.vx*dt; d.y+=d.vy*dt; d.a+=d.va*dt;
     if(!d.out){ const m=r*(0.95+0.45*Math.abs(Math.sin(2*d.a))), L=m, R=W-m, T=m, B=H-m;
       if(d.x<L){ hits=Math.max(hits,Math.abs(d.vx)); d.x=L; d.vx=-d.vx*0.55; d.va+=d.vy*0.01; }
@@ -102,7 +106,7 @@ function cupLoop(t){ requestAnimationFrame(cupLoop);
   const [p,q]=CD; if(!p.out){ const dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), mn=s*1.05; if(dd<mn&&dd>0){ const nx=dx/dd, ny=dy/dd, ov=(mn-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
     const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny; if(rv<0){ p.vx+=rv*nx*0.9; p.vy+=rv*ny*0.9; q.vx-=rv*nx*0.9; q.vy-=rv*ny*0.9; hits=Math.max(hits,-rv); p.va+=rv*0.01; q.va-=rv*0.01; } } }
   // sonido y vibración según la fuerza del golpe: más fuerte agitas, más suenan
-  if(hits>70&&t-SH.lastHit>40){ SH.lastHit=t; diceHit(Math.min(1,hits/700)); if(hits>250) try{ navigator.vibrate&&navigator.vibrate(Math.min(35,8+hits/40|0)); }catch(_){} }
+  if(hits>W*0.4&&t-SH.lastHit>40){ SH.lastHit=t; diceHit(Math.min(1,hits/(W*5))); if(hits>W*1.5) try{ navigator.vibrate&&navigator.vibrate(Math.min(40,10+hits/(W*0.3)|0)); }catch(_){} }
   CD.forEach(d=>{ setFace(d,d.face); d.el.style.transform='translate('+(d.x-r)+'px,'+(d.y-r)+'px) rotate('+d.a+'rad)'; const ca=Math.cos(-d.a), sa=Math.sin(-d.a), ox=3, oy=5; d.el.style.boxShadow=(ox*ca-oy*sa).toFixed(1)+'px '+(ox*sa+oy*ca).toFixed(1)+'px 0 rgba(0,0,0,.35)'; d.el.style.opacity=d.out&&d.y<-s?0:1; });
 }
 requestAnimationFrame(cupLoop);
