@@ -162,10 +162,10 @@ public class MainActivity extends Activity {
         return 0;
     }
     private void buscarActualizacion() {
-        long ahora = System.currentTimeMillis(); if (avisando || ahora - ultBusqueda < 10 * 60 * 1000L) return; ultBusqueda = ahora;
+        long ahora = System.currentTimeMillis(); if (avisando || ahora - ultBusqueda < 60 * 1000L) return; ultBusqueda = ahora;
         new Thread(() -> {
             try {
-                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "version.txt").openConnection();
+                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "version.txt?t=" + System.currentTimeMillis()).openConnection();
                 c.setConnectTimeout(8000); c.setReadTimeout(8000); c.setUseCaches(false); c.setInstanceFollowRedirects(true);
                 if (c.getResponseCode() != 200) return;
                 BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -180,26 +180,29 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this)
             .setTitle("Versión nueva " + v)
             .setMessage("Hay una versión nueva del Dominó Cubano (tienes la " + miVersion() + ").\n¿La instalo ahora?")
-            .setPositiveButton("ACTUALIZAR", (d, w) -> descargar())
+            .setPositiveButton("ACTUALIZAR", (d, w) -> descargar(v))
             .setNegativeButton("DESPUÉS", null)
             .setOnDismissListener(d -> avisando = false)
             .show();
     }
-    private void descargar() {
+    private void descargar(final String quiero) {
         final AlertDialog dlg = new AlertDialog.Builder(this).setTitle("Actualizando").setMessage("Descargando… 0%").setCancelable(false).create();
         dlg.show();
         new Thread(() -> {
             try {
                 File dir = new File(getCacheDir(), "upd"); dir.mkdirs();
-                File f = new File(dir, "DominoCubano.apk");
-                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "DominoCubano.apk").openConnection();
-                c.setConnectTimeout(15000); c.setReadTimeout(30000); c.setInstanceFollowRedirects(true);
+                File f = new File(dir, "DominoCubano.apk"); if (f.exists()) f.delete();
+                HttpURLConnection c = (HttpURLConnection) new URL(UPD + "DominoCubano.apk?t=" + System.currentTimeMillis()).openConnection();
+                c.setConnectTimeout(15000); c.setReadTimeout(30000); c.setInstanceFollowRedirects(true); c.setUseCaches(false);
                 int total = c.getContentLength(), hecho = 0, ult = -1;
                 try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(f)) {
                     byte[] buf = new byte[32768]; int n;
                     while ((n = in.read(buf)) > 0) { out.write(buf, 0, n); hecho += n;
                         if (total > 0) { final int pc = (int) (hecho * 100L / total); if (pc != ult) { ult = pc; runOnUiThread(() -> dlg.setMessage("Descargando… " + pc + "%")); } } }
                 }
+                // comprobar que lo bajado es de verdad la última (si GitHub aún da la anterior, no se instala)
+                String bajada = "0"; try { android.content.pm.PackageInfo pi = getPackageManager().getPackageArchiveInfo(f.getPath(), 0); if (pi != null && pi.versionName != null) bajada = pi.versionName; } catch (Exception ignored) { }
+                if (compara(bajada, quiero) < 0) { f.delete(); runOnUiThread(() -> { dlg.dismiss(); new AlertDialog.Builder(this).setMessage("La versión " + quiero + " todavía se está subiendo. Prueba otra vez en un par de minutos.").setPositiveButton("OK", null).show(); }); return; }
                 runOnUiThread(() -> { dlg.dismiss(); apkNueva = f; instalar(); });
             } catch (Exception e) {
                 runOnUiThread(() -> { dlg.dismiss(); new AlertDialog.Builder(this).setMessage("No se pudo descargar la versión nueva. Revisa el internet y vuelve a abrir el juego.").setPositiveButton("OK", null).show(); });

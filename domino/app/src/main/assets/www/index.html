@@ -80,7 +80,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #pbox button.focus{outline:3px solid var(--gold);outline-offset:3px}
 #pbox .prow{display:flex;gap:10px} #pbox .prow button{min-width:155px}
 #pqr{display:flex;gap:12px;align-items:center;text-align:left;font-size:13px;color:#d8e8dc;max-width:420px} #pqr svg{width:92px;height:92px;border-radius:6px;flex:none}
-#pbox{max-height:100%;overflow-y:auto}
+#pbox{max-height:none}
 #bmesa.focus{outline:4px solid var(--gold);outline-offset:2px;background:#5a3a1a}
 #joinbox{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:22;background:rgba(20,40,70,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:10px}
 #joinbox b{color:var(--gold);font-size:20px} #joinbox div{display:flex;gap:14px} #joinbox button{font:700 18px var(--font);padding:14px 20px;border-radius:14px;border:3px solid #8a5a2a;background:#f6f0e2;color:#2a1608}
@@ -241,6 +241,19 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #lqr,#lqr2{position:absolute;top:0;background:rgba(0,0,0,.25);border-radius:1.4vh;padding:1vh}
 #lqr{left:2vw} #lqr2{right:2vw}
 #lqr svg,#lqr2 svg{width:17vh;height:17vh}
+#guide{display:flex;flex-direction:column;overflow:hidden!important;padding:10px 14px!important}
+#guide #gbox{flex:1;min-height:0;width:100%;display:flex;flex-direction:column}
+.gpage{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.gpage>h2{margin-top:0}
+#gnav{display:flex;align-items:center;justify-content:center;gap:12px;padding-top:8px;flex:0 0 auto}
+#gnav button{font:700 17px var(--font);padding:10px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:#fff;margin:0}
+#gnav button:disabled{opacity:.3}
+#gnav #gclose{background:var(--accent);border-color:#8a2418}
+#gpn{font-weight:800;color:var(--gold);min-width:60px;text-align:center}
+#vidov{position:fixed;inset:0;z-index:70;background:#000;display:flex;align-items:center;justify-content:center}
+#vidov video{width:100%;height:100%;object-fit:contain;background:#000}
+#vidx{position:absolute;top:10px;right:10px;font:800 16px var(--font);padding:8px 14px;border-radius:12px;border:2px solid #fff;background:rgba(0,0,0,.6);color:#fff;z-index:2}
+#pause,.ov{overflow:hidden!important}
 #guide{position:absolute;inset:0;z-index:40;background:#0b1a12;overflow-y:auto;touch-action:pan-y;padding:16px;box-sizing:border-box}
 #gbox{max-width:760px;margin:0 auto;line-height:1.45;font-size:16px;color:#eef6f0}
 #gbox h2{color:var(--gold);text-align:center;margin:4px 0 10px;font-size:24px}
@@ -319,7 +332,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <div id="guide" hidden>
     <div id="gbox">
       <h2>CÓMO JUGAR AL DOMINÓ CUBANO</h2>
-      <div id="gvid"><div id="gvqr"></div><div><b>📹 VIDEO TUTORIAL</b><br>Escanea este QR con la cámara del teléfono para ver el video de cómo conectar la TV y los teléfonos.<br><button id="gvbtn">▶ VER VIDEO</button></div></div>
+      <div id="gvid"><div id="gvqr"></div><div><b>📹 VIDEO TUTORIAL</b><br>Cómo conectar la TV y los teléfonos. Míralo aquí o escanea el QR para verlo en otro teléfono mientras conectas.<br><button id="gvbtn">▶ VER VIDEO</button></div></div>
       <h3>1 · Conectar los teléfonos con la TV (paso a paso)</h3>
       <div class="gsteps">
         <div class="gs"><i>1</i><span class="ge">📶</span><p>La <b>TV</b> y <b>todos los teléfonos</b> en la <b>misma Wi-Fi</b>. Si uno está en otra red (o solo con datos), no se conecta. <b>No hace falta internet</b>: basta con que estén en la misma red.</p></div>
@@ -345,7 +358,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
         <li>Se juega hacia la derecha. Si no llevas ficha que case, <b>pasas</b>.</li>
         <li>Gana la mano quien <b>se pega</b> (pone su última ficha) y se anota todos los puntos que quedan en las manos.</li>
         <li><b>Tranque</b>: si nadie puede jugar, gana quien tenga menos puntos (en parejas, la pareja). Si empatan, nadie se anota.</li>
-        <li>Gana el partido el primero que llegue a <b>100</b>.</li>
+        <li>Gana el partido el primero que llegue a los <b>puntos elegidos</b>: 100, 101, 110, 115… o el número que quieran (botón <b>A 100 PUNTOS</b> en la sala).</li>
       </ul>
       <h3>3 · En tu cel (JUGADOR)</h3>
       <ul>
@@ -405,6 +418,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
     <p id="cred">Creado por <b>Adonis Capote</b><br>capoteapps@gmail.com<br>© 2026 Todos los derechos reservados</p>
     <div id="sub" hidden>
       <button id="mmode">MODO: PAREJAS (2 CONTRA 2)</button>
+      <button id="mmeta">A 100 PUNTOS</button>
       <button class="main" id="mplay">JUGAR CONTRA LOS BOTS</button>
       <button id="mbots">NOMBRES DE LOS BOTS</button>
       <p id="mtv" hidden></p>
@@ -413,10 +427,11 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
       <div id="lip"></div>
       <div id="lmode"></div>
       <div id="lseats"><div id="lqr"><svg viewBox="0 0 47 47" shape-rendering="crispEdges"><rect width="47" height="47" fill="#fff"/><path d="M3 3h7v1h-7zM13 3h2v1h-2zM16 3h1v1h-1zM18 3h1v1h-1zM21 3h1v1h-1zM24 3h3v1h-3zM29 3h1v1h-1zM32 3h2v1h-2zM37 3h7v1h-7zM3 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM13 4h1v1h-1zM15 4h1v1h-1zM17 4h1v1h-1zM20 4h1v1h-1zM28 4h2v1h-2zM31 4h1v1h-1zM33 4h1v1h-1zM35 4h1v1h-1zM37 4h1v1h-1zM43 4h1v1h-1zM3 5h1v1h-1zM5 5h3v1h-3zM9 5h1v1h-1zM11 5h1v1h-1zM13 5h4v1h-4zM19 5h8v1h-8zM28 5h1v1h-1zM31 5h1v1h-1zM33 5h3v1h-3zM37 5h1v1h-1zM39 5h3v1h-3zM43 5h1v1h-1zM3 6h1v1h-1zM5 6h3v1h-3zM9 6h1v1h-1zM11 6h1v1h-1zM17 6h1v1h-1zM22 6h2v1h-2zM25 6h3v1h-3zM30 6h2v1h-2zM33 6h3v1h-3zM37 6h1v1h-1zM39 6h3v1h-3zM43 6h1v1h-1zM3 7h1v1h-1zM5 7h3v1h-3zM9 7h1v1h-1zM13 7h2v1h-2zM16 7h2v1h-2zM21 7h3v1h-3zM25 7h2v1h-2zM33 7h2v1h-2zM37 7h1v1h-1zM39 7h3v1h-3zM43 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM13 8h5v1h-5zM24 8h2v1h-2zM28 8h1v1h-1zM31 8h2v1h-2zM35 8h1v1h-1zM37 8h1v1h-1zM43 8h1v1h-1zM3 9h7v1h-7zM11 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM23 9h1v1h-1zM25 9h1v1h-1zM27 9h1v1h-1zM29 9h1v1h-1zM31 9h1v1h-1zM33 9h1v1h-1zM35 9h1v1h-1zM37 9h7v1h-7zM11 10h1v1h-1zM15 10h4v1h-4zM21 10h1v1h-1zM23 10h1v1h-1zM25 10h2v1h-2zM30 10h2v1h-2zM3 11h1v1h-1zM9 11h1v1h-1zM11 11h1v1h-1zM14 11h1v1h-1zM19 11h2v1h-2zM22 11h2v1h-2zM25 11h1v1h-1zM27 11h2v1h-2zM32 11h1v1h-1zM34 11h1v1h-1zM36 11h2v1h-2zM40 11h3v1h-3zM5 12h1v1h-1zM8 12h1v1h-1zM12 12h1v1h-1zM15 12h2v1h-2zM19 12h1v1h-1zM21 12h2v1h-2zM24 12h7v1h-7zM32 12h3v1h-3zM36 12h1v1h-1zM38 12h2v1h-2zM3 13h4v1h-4zM9 13h1v1h-1zM11 13h1v1h-1zM16 13h2v1h-2zM23 13h1v1h-1zM25 13h1v1h-1zM29 13h4v1h-4zM35 13h1v1h-1zM37 13h2v1h-2zM3 14h4v1h-4zM8 14h1v1h-1zM11 14h1v1h-1zM13 14h2v1h-2zM16 14h1v1h-1zM18 14h2v1h-2zM22 14h2v1h-2zM25 14h1v1h-1zM29 14h1v1h-1zM31 14h1v1h-1zM34 14h2v1h-2zM37 14h2v1h-2zM40 14h1v1h-1zM43 14h1v1h-1zM4 15h1v1h-1zM6 15h1v1h-1zM8 15h2v1h-2zM12 15h3v1h-3zM16 15h1v1h-1zM19 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM30 15h1v1h-1zM35 15h1v1h-1zM37 15h1v1h-1zM42 15h2v1h-2zM3 16h2v1h-2zM7 16h2v1h-2zM11 16h2v1h-2zM14 16h1v1h-1zM16 16h3v1h-3zM20 16h2v1h-2zM28 16h1v1h-1zM33 16h1v1h-1zM37 16h1v1h-1zM39 16h5v1h-5zM3 17h1v1h-1zM8 17h2v1h-2zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM23 17h5v1h-5zM29 17h3v1h-3zM33 17h1v1h-1zM35 17h2v1h-2zM38 17h1v1h-1zM40 17h2v1h-2zM4 18h3v1h-3zM8 18h1v1h-1zM10 18h1v1h-1zM13 18h2v1h-2zM18 18h2v1h-2zM23 18h1v1h-1zM25 18h2v1h-2zM31 18h1v1h-1zM34 18h3v1h-3zM39 18h5v1h-5zM4 19h1v1h-1zM6 19h2v1h-2zM9 19h4v1h-4zM14 19h1v1h-1zM19 19h1v1h-1zM25 19h6v1h-6zM32 19h1v1h-1zM34 19h1v1h-1zM36 19h1v1h-1zM38 19h1v1h-1zM41 19h1v1h-1zM3 20h1v1h-1zM11 20h7v1h-7zM19 20h1v1h-1zM21 20h4v1h-4zM26 20h2v1h-2zM30 20h10v1h-10zM43 20h1v1h-1zM7 21h4v1h-4zM13 21h3v1h-3zM17 21h1v1h-1zM20 21h3v1h-3zM26 21h1v1h-1zM28 21h4v1h-4zM34 21h6v1h-6zM43 21h1v1h-1zM3 22h1v1h-1zM7 22h2v1h-2zM11 22h1v1h-1zM13 22h1v1h-1zM18 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM29 22h1v1h-1zM31 22h3v1h-3zM35 22h2v1h-2zM39 22h1v1h-1zM3 23h1v1h-1zM5 23h2v1h-2zM8 23h2v1h-2zM13 23h4v1h-4zM21 23h2v1h-2zM24 23h4v1h-4zM30 23h1v1h-1zM34 23h3v1h-3zM41 23h1v1h-1zM6 24h3v1h-3zM10 24h4v1h-4zM16 24h2v1h-2zM19 24h1v1h-1zM22 24h1v1h-1zM25 24h2v1h-2zM28 24h1v1h-1zM30 24h1v1h-1zM32 24h5v1h-5zM39 24h1v1h-1zM41 24h1v1h-1zM4 25h2v1h-2zM9 25h1v1h-1zM12 25h3v1h-3zM16 25h2v1h-2zM23 25h1v1h-1zM28 25h4v1h-4zM33 25h1v1h-1zM35 25h1v1h-1zM38 25h1v1h-1zM40 25h1v1h-1zM3 26h2v1h-2zM6 26h3v1h-3zM12 26h4v1h-4zM17 26h1v1h-1zM19 26h1v1h-1zM23 26h1v1h-1zM25 26h1v1h-1zM30 26h1v1h-1zM34 26h5v1h-5zM40 26h1v1h-1zM4 27h1v1h-1zM9 27h1v1h-1zM13 27h3v1h-3zM18 27h1v1h-1zM22 27h2v1h-2zM26 27h2v1h-2zM34 27h2v1h-2zM37 27h2v1h-2zM40 27h1v1h-1zM42 27h1v1h-1zM3 28h1v1h-1zM5 28h1v1h-1zM11 28h2v1h-2zM16 28h3v1h-3zM21 28h4v1h-4zM26 28h1v1h-1zM28 28h1v1h-1zM30 28h3v1h-3zM34 28h1v1h-1zM37 28h4v1h-4zM43 28h1v1h-1zM4 29h1v1h-1zM7 29h1v1h-1zM9 29h1v1h-1zM11 29h1v1h-1zM13 29h2v1h-2zM18 29h1v1h-1zM21 29h1v1h-1zM25 29h1v1h-1zM28 29h1v1h-1zM30 29h1v1h-1zM32 29h2v1h-2zM35 29h2v1h-2zM39 29h1v1h-1zM3 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h1v1h-1zM17 30h3v1h-3zM23 30h1v1h-1zM26 30h1v1h-1zM29 30h1v1h-1zM31 30h1v1h-1zM34 30h1v1h-1zM36 30h8v1h-8zM4 31h1v1h-1zM7 31h1v1h-1zM9 31h2v1h-2zM14 31h4v1h-4zM20 31h1v1h-1zM25 31h2v1h-2zM28 31h2v1h-2zM32 31h1v1h-1zM34 31h1v1h-1zM38 31h1v1h-1zM40 31h2v1h-2zM3 32h2v1h-2zM7 32h1v1h-1zM10 32h1v1h-1zM14 32h1v1h-1zM19 32h1v1h-1zM23 32h3v1h-3zM27 32h3v1h-3zM31 32h1v1h-1zM33 32h9v1h-9zM43 32h1v1h-1zM3 33h2v1h-2zM6 33h1v1h-1zM8 33h2v1h-2zM11 33h2v1h-2zM14 33h4v1h-4zM21 33h1v1h-1zM23 33h1v1h-1zM26 33h1v1h-1zM28 33h2v1h-2zM31 33h2v1h-2zM34 33h3v1h-3zM39 33h2v1h-2zM43 33h1v1h-1zM3 34h1v1h-1zM5 34h1v1h-1zM8 34h1v1h-1zM13 34h2v1h-2zM16 34h4v1h-4zM22 34h2v1h-2zM25 34h1v1h-1zM27 34h1v1h-1zM29 34h3v1h-3zM33 34h1v1h-1zM37 34h1v1h-1zM40 34h1v1h-1zM42 34h2v1h-2zM3 35h1v1h-1zM6 35h1v1h-1zM8 35h3v1h-3zM12 35h2v1h-2zM16 35h1v1h-1zM18 35h1v1h-1zM20 35h1v1h-1zM22 35h1v1h-1zM25 35h1v1h-1zM27 35h3v1h-3zM32 35h2v1h-2zM35 35h5v1h-5zM41 35h2v1h-2zM11 36h1v1h-1zM14 36h2v1h-2zM18 36h1v1h-1zM20 36h1v1h-1zM22 36h1v1h-1zM25 36h2v1h-2zM28 36h3v1h-3zM33 36h1v1h-1zM35 36h1v1h-1zM39 36h2v1h-2zM3 37h7v1h-7zM12 37h1v1h-1zM14 37h1v1h-1zM17 37h1v1h-1zM19 37h2v1h-2zM23 37h2v1h-2zM27 37h5v1h-5zM33 37h3v1h-3zM37 37h1v1h-1zM39 37h3v1h-3zM3 38h1v1h-1zM9 38h1v1h-1zM13 38h6v1h-6zM20 38h2v1h-2zM23 38h1v1h-1zM25 38h2v1h-2zM28 38h1v1h-1zM30 38h2v1h-2zM34 38h2v1h-2zM39 38h2v1h-2zM42 38h1v1h-1zM3 39h1v1h-1zM5 39h3v1h-3zM9 39h1v1h-1zM13 39h4v1h-4zM19 39h2v1h-2zM23 39h3v1h-3zM27 39h2v1h-2zM31 39h10v1h-10zM42 39h2v1h-2zM3 40h1v1h-1zM5 40h3v1h-3zM9 40h1v1h-1zM17 40h1v1h-1zM19 40h1v1h-1zM21 40h3v1h-3zM25 40h2v1h-2zM30 40h2v1h-2zM35 40h1v1h-1zM38 40h1v1h-1zM40 40h3v1h-3zM3 41h1v1h-1zM5 41h3v1h-3zM9 41h1v1h-1zM12 41h1v1h-1zM15 41h2v1h-2zM18 41h2v1h-2zM21 41h1v1h-1zM24 41h1v1h-1zM28 41h1v1h-1zM30 41h2v1h-2zM34 41h6v1h-6zM41 41h1v1h-1zM3 42h1v1h-1zM9 42h1v1h-1zM14 42h2v1h-2zM20 42h4v1h-4zM31 42h1v1h-1zM33 42h2v1h-2zM39 42h3v1h-3zM43 42h1v1h-1zM3 43h7v1h-7zM11 43h1v1h-1zM13 43h2v1h-2zM18 43h1v1h-1zM20 43h2v1h-2zM23 43h1v1h-1zM25 43h1v1h-1zM27 43h3v1h-3zM32 43h1v1h-1zM38 43h2v1h-2zM41 43h1v1h-1z" fill="#000"/></svg><span><b class="qrt">📱 TELÉFONO</b>Baja la app</span></div><div id="lqr2"><div id="lqr2svg"></div><span><b class="qrt">📺 TV</b>Para sentarte</span></div><button class="lseat" data-s="2"></button><button class="lseat" data-s="3"></button><div id="lmid"></div><button class="lseat" data-s="1"></button><button class="lseat" data-s="0"></button></div>
-      <div id="lbtns"><button id="lnum">JUGADORES: 4</button><button id="lpar">MODO PAREJAS</button><button id="lind">INDIVIDUAL</button><button id="lcount">CONTAR: TODAS</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
+      <div id="lbtns"><button id="lnum">JUGADORES: 4</button><button id="lpar">MODO PAREJAS</button><button id="lind">INDIVIDUAL</button><button id="lcount">CONTAR: TODAS</button><button id="lmeta">A 100 PUNTOS</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
     </div>
   </div>
 </div>
+<div id="vidov" hidden><video id="videl" controls playsinline preload="metadata"></video><button id="vidx">✕ CERRAR</button></div>
 <div id="pause" hidden><div id="pbox"><h2>MENÚ DE LA PARTIDA</h2>
   <button id="pcont" class="main">SEGUIR JUGANDO</button>
   <button id="prest">REINICIAR PARTIDA<small>Mismos jugadores · marcador a cero</small></button>
@@ -2741,7 +2756,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.7.1';
+const VERSION='v3.7.2';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2835,7 +2850,7 @@ let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songA
 function songRefresh(){ if(!NATIVE_MUS){ SONGS.forEach(x=>songReady.add(x[1])); return; } try{ String(KikoApp.songsReady()||'').split(',').filter(Boolean).forEach(f=>songReady.add(f)); }catch(_){} }
 window.kikoSong=f=>{ songReady.add(f); };
 function songSrc(k){ const f=SONGS[k][1]; return NATIVE_MUS?'https://appassets.androidplatform.net/music/'+f:'https://github.com/capoteadonis1979/kiko-juego/releases/download/musica/'+f; }
-function songWant(){ return MUS&&!G.remoteMode&&!document.hidden&&songOK&&songReady.size>0; }
+function songWant(){ return !window.VIDEO_ON&&MUS&&!G.remoteMode&&!document.hidden&&songOK&&songReady.size>0; }
 function songPick(){ for(let n=0;n<SONGS.length;n++){ if(songReady.has(SONGS[songIdx][1])) return true; songIdx=(songIdx+1)%SONGS.length; } return false; }
 function songLoad(){ if(!songEl){ songEl=new Audio(); songEl.volume=0.6*MUSV/5; songEl.preload='auto';
     songEl.addEventListener('ended',()=>songNext(1));
@@ -4048,13 +4063,16 @@ document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctr
 
 /* ================= MENÚ ================= */
 const menu=document.getElementById('menu');
-// el menú se ajusta solo a la pantalla (sin barra de desplazamiento): encoge el contenido si no cabe
-let fitKey='';
-function fitMenu(force){ if(menu.hidden) return; const kids=[...menu.children].filter(c=>!c.hidden&&getComputedStyle(c).display!=='none');
-  const key=menu.clientWidth+'x'+menu.clientHeight+'|'+kids.map(c=>c.id).join(',')+'|'+document.body.className; if(!force&&key===fitKey) return; fitKey=key;
+// todas las pantallas se ajustan solas (sin barra de desplazamiento): si el contenido no cabe, se encoge
+const FITK=new WeakMap();
+function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputedStyle(box).position!=='fixed') return; const kids=[...box.children].filter(c=>!c.hidden&&getComputedStyle(c).display!=='none'); if(!kids.length) return;
+  const key=box.clientWidth+'x'+box.clientHeight+'|'+kids.map(c=>c.id||c.className).join(',')+'|'+document.body.className+'|'+box.textContent.length; if(!force&&FITK.get(box)===key) return; FITK.set(box,key);
   kids.forEach(c=>c.style.zoom=''); let k=1;
-  for(let i=0;i<10;i++){ const need=menu.scrollHeight, have=menu.clientHeight; if(need<=have) break; k=Math.max(0.45,k*Math.min(0.985,(have-2)/need)); kids.forEach(c=>c.style.zoom=k); } }
-window.addEventListener('resize',()=>fitMenu(true)); setInterval(()=>fitMenu(false),600); setTimeout(()=>fitMenu(true),50);
+  for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
+function fitMenu(force){ fitKids(menu,force); }
+function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','seatop','prof'].forEach(id=>fitKids(document.getElementById(id),force));
+  const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
+window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500); setTimeout(()=>fitAll(true),50);
 document.getElementById('mplay').addEventListener('click',()=>{ initAudio(); if(!canStart()) return; menu.hidden=true; startMatch(); layout(); renderHand(); });
 if(isTV) document.getElementById('psolo').hidden=true;   // en la tele no tiene sentido: con el mando no se pueden tocar fichas (se juega con MESA + cels)
 const tvDevice=isTV, pick=document.getElementById('pick'), sub=document.getElementById('sub'), lobby=document.getElementById('lobby');
@@ -4084,6 +4102,16 @@ document.getElementById('lpar').addEventListener('click',()=>{ if(G.nPlayers<4) 
 document.getElementById('lind').addEventListener('click',()=>{ setMode('sencillo'); G.wins=[0,0,0,0]; updateTvMenu(); broadcast(); });
 document.getElementById('lcount').addEventListener('click',()=>{ G.countMode=G.countMode==='perdedores'?'todas':'perdedores'; try{ localStorage.setItem('dominoContar',G.countMode); }catch(_){} updateTvMenu(); });
 try{ if(localStorage.getItem('dominoContar')==='perdedores') G.countMode='perdedores'; }catch(_){}
+// puntos para ganar el partido: 100, 101, 110, 115... o el número que quieran
+const METAS=[100,101,110,115,120,150,200];
+try{ const m=parseInt(localStorage.getItem('dominoMeta')); if(m>=10&&m<=999) G.target=m; }catch(_){}
+function setMeta(v){ v=parseInt(v); if(!(v>=10&&v<=999)) return; G.target=v; try{ localStorage.setItem('dominoMeta',String(v)); }catch(_){} metaLabel(); try{ updateTvMenu(); }catch(_){} }
+function metaLabel(){ const t='A '+G.target+' PUNTOS'; ['lmeta','mmeta'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=t; });
+  const d=document.querySelector('#menu>p'); if(d&&!d.id) d.textContent='Doble nueve · 4 jugadores · 10 fichas cada uno · no se roba · partido a '+G.target+' puntos.'; }
+function askMeta(){ const cur=String(G.target); try{ if(window.KikoApp&&KikoApp.askText){ KikoApp.askText('Puntos para ganar (10 a 999)',cur,'meta'); return; } }catch(_){} const v=prompt('Puntos para ganar (10 a 999)',cur); if(v!==null) setMeta(v); }
+function metaNext(){ const i=METAS.indexOf(G.target); if(i>=0&&i<METAS.length-1) setMeta(METAS[i+1]); else if(i===METAS.length-1) askMeta(); else setMeta(100); }
+['lmeta','mmeta'].forEach(id=>document.getElementById(id).addEventListener('click',metaNext));
+metaLabel();
 
 function showPick(){ document.body.classList.remove('mesa'); lobby.hidden=true; pick.hidden=false; sub.hidden=true; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
 function showSub(){ pick.hidden=true; sub.hidden=false; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
@@ -4105,9 +4133,35 @@ document.getElementById('ptab').addEventListener('click',()=>{ initAudio(); isTV
 document.getElementById('psolo').addEventListener('click',()=>{ initAudio(); becomeSolo(); });
 const guide=document.getElementById('guide');
 const VIDEO_URL='https://github.com/capoteadonis1979/kiko-juego/releases/download/tutorial/tutorial_domino.mp4';
-document.getElementById('gvbtn').addEventListener('click',()=>{ try{ if(window.KikoApp&&KikoApp.openUrl){ KikoApp.openUrl(VIDEO_URL); return; } }catch(_){} window.open(VIDEO_URL,'_blank'); });
-document.getElementById('pguia').addEventListener('click',()=>{ const v=document.getElementById('gvqr'); if(!v.innerHTML) try{ v.innerHTML=qrSVG(VIDEO_URL); }catch(_){} guide.hidden=false; guide.scrollTop=0; document.getElementById('gclose').classList.add('focus'); });
+// ---- reproductor del video tutorial (va dentro del APK: se ve sin internet en la TV y en el teléfono) ----
+const vidov=document.getElementById('vidov'), videl=document.getElementById('videl');
+const VIDEO_SRC=location.host==='appassets.androidplatform.net'?'tutorial.mp4':VIDEO_URL;
+function openVideo(){ window.VIDEO_ON=true; try{ if(songEl&&!songEl.paused) songEl.pause(); }catch(_){} if(!videl.src) videl.src=VIDEO_SRC; vidov.hidden=false; try{ videl.currentTime=0; }catch(_){} videl.play().catch(()=>{}); }
+function closeVideo(){ try{ videl.pause(); }catch(_){} vidov.hidden=true; window.VIDEO_ON=false; }
+document.getElementById('gvbtn').addEventListener('click',openVideo);
+document.getElementById('vidx').addEventListener('click',closeVideo);
+videl.addEventListener('error',()=>{ if(videl.src.indexOf('github')<0){ videl.src=VIDEO_URL; videl.play().catch(()=>{}); } });
+document.getElementById('pguia').addEventListener('click',()=>{ const v=document.getElementById('gvqr'); if(!v.innerHTML) try{ v.innerHTML=qrSVG(VIDEO_URL); }catch(_){} guide.hidden=false; gPage(0); });
 document.getElementById('gclose').addEventListener('click',()=>{ guide.hidden=true; });
+// ---- la guía va por páginas que caben enteras (sin scroll) ----
+const GPAGES=[]; let GP=0;
+(function guidePages(){ const gb=document.getElementById('gbox'), close=document.getElementById('gclose'); const kids=[...gb.children].filter(x=>x!==close);
+  let cur=null; const newPage=()=>{ cur=document.createElement('div'); cur.className='gpage'; GPAGES.push(cur); };
+  for(const el of kids){
+    if(el.tagName==='H3'&&!/Créditos/.test(el.textContent)) newPage(); else if(!cur) newPage();
+    if(el.classList&&el.classList.contains('gsteps')){ const steps=[...el.children], h=cur.querySelector('h3'), half=4;
+      const a=document.createElement('div'); a.className='gsteps'; steps.slice(0,half).forEach(x=>a.appendChild(x)); cur.appendChild(a);
+      newPage(); if(h){ const h2=h.cloneNode(true); h2.textContent=h.textContent.replace(/\s*\(paso a paso\)/,'')+' (sigue)'; cur.appendChild(h2); }
+      const b2=document.createElement('div'); b2.className='gsteps'; steps.slice(half).forEach(x=>b2.appendChild(x)); cur.appendChild(b2); el.remove(); continue; }
+    cur.appendChild(el); }
+  GPAGES.forEach(pg=>gb.insertBefore(pg,close));
+  const nav=document.createElement('div'); nav.id='gnav'; nav.innerHTML='<button id="gprev">◀ ATRÁS</button><span id="gpn"></span><button id="gnext">SIGUIENTE ▶</button>';
+  gb.appendChild(nav); nav.appendChild(close); close.textContent='✕ CERRAR';
+  document.getElementById('gprev').addEventListener('click',()=>gPage(GP-1)); document.getElementById('gnext').addEventListener('click',()=>gPage(GP+1));
+})();
+function gPage(n){ GP=Math.max(0,Math.min(GPAGES.length-1,n)); GPAGES.forEach((p,i)=>p.hidden=i!==GP); document.getElementById('gpn').textContent=(GP+1)+' / '+GPAGES.length;
+  document.getElementById('gprev').disabled=GP===0; document.getElementById('gnext').disabled=GP===GPAGES.length-1; fitAll(true); }
+gPage(0);
 function updateTvMenu(){
   if(!isTV) return;
   const n=Object.keys(peers).length;
@@ -4173,7 +4227,8 @@ function navKey(k){
   if(!pauseEl.hidden){ const b=pauseBtns(), cur=b.find(x=>x.classList.contains('focus'))||b[pFocus]||b[0];
     if(k==='ok'){ if(cur) cur.click(); return true; }
     const n=cur&&geoBest(b,cur,k); if(n) pfoc(b.indexOf(n)); return true; }
-  if(!guide.hidden){ if(k==='down'||k==='up') guide.scrollTop+=(k==='down'?120:-120); else if(k==='ok') guide.hidden=true; return true; }
+  if(!vidov.hidden){ if(k==='ok'){ if(videl.paused) videl.play().catch(()=>{}); else videl.pause(); } else if(k==='left'||k==='right'){ try{ videl.currentTime=Math.max(0,videl.currentTime+(k==='right'?10:-10)); }catch(_){} } return true; }
+  if(!guide.hidden){ if(k==='right'||k==='down') gPage(GP+1); else if(k==='left'||k==='up') gPage(GP-1); else if(k==='ok'){ if(GP===0) openVideo(); else if(GP>=GPAGES.length-1) guide.hidden=true; else gPage(GP+1); } return true; }
   if(!menu.hidden){ if(k==='ok') menuOk(); else menuMove(0,k); return true; }
   const bm=document.getElementById('bmesa');
   if(!bm.hidden){ if(k==='ok'&&bm.classList.contains('focus')){ openPause(); return true; } if(k!=='ok'){ bm.classList.add('focus'); return true; } }
@@ -4191,7 +4246,7 @@ addEventListener('keydown',e=>{
 window.kikoKey=(k,down)=>{ if(!down) return; if(k==='a'||k==='start') k='ok';
   const t=document.activeElement; if(k==='ok'&&t&&t.tagName==='INPUT'){ const ov=openOv(); if(ov===payEl&&t.value.trim()){ document.getElementById('pwok').click(); return; } }
   navKey(k); };
-window.kikoBack=()=>{ const ov=openOv(); if(ov){ ov.hidden=true; return true; } if(!guide.hidden){ guide.hidden=true; return true; } if(!pauseEl.hidden){ closePause(); return true; } if(!G.remoteMode&&menu.hidden&&(G.state==='play'||G.state==='handover')){ openPause(); return true; } if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
+window.kikoBack=()=>{ if(!vidov.hidden){ closeVideo(); return true; } const ov=openOv(); if(ov){ ov.hidden=true; return true; } if(!guide.hidden){ guide.hidden=true; return true; } if(!pauseEl.hidden){ closePause(); return true; } if(!G.remoteMode&&menu.hidden&&(G.state==='play'||G.state==='handover')){ openPause(); return true; } if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
 function nextHandOrMenu(){ if(G.over){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } broadcast(); } else dealHand(); }
 cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu(); });
 
@@ -4218,7 +4273,7 @@ function openSeatOp(s){ soSeat=s; const on=G.remote[s]!=null; document.getElemen
 function askSeatName(s){ const cur=BOTN[s]||'';
   try{ if(window.KikoApp&&KikoApp.askText){ KikoApp.askText('Nombre del bot '+SEATLAB[s].toLowerCase(),cur,'seat'+s); return; } }catch(_){}
   const v=prompt('Nombre del bot '+SEATLAB[s].toLowerCase(),cur); if(v!==null) window.kikoText('seat'+s,v); }
-window.kikoText=(tag,v)=>{ if(v==null) return; if(String(tag).startsWith('seat')){ const s=+String(tag).slice(4); BOTN[s]=String(v).trim().toUpperCase().slice(0,14);
+window.kikoText=(tag,v)=>{ if(v==null) return; if(tag==='meta'){ setMeta(String(v).replace(/[^0-9]/g,'')); return; } if(String(tag).startsWith('seat')){ const s=+String(tag).slice(4); BOTN[s]=String(v).trim().toUpperCase().slice(0,14);
   try{ localStorage.setItem('dominoBots',JSON.stringify(BOTN)); }catch(_){} if(G.remote[s]==null) G.names[s]=botName(s); updateTvMenu(); broadcast(); } };
 document.getElementById('soname').addEventListener('click',()=>{ soEl.hidden=true; askSeatName(soSeat); });
 document.getElementById('soswap').addEventListener('click',()=>{ soEl.hidden=true; lobSel=soSeat; updateTvMenu(); });
