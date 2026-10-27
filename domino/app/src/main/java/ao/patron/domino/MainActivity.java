@@ -3,6 +3,7 @@ package ao.patron.domino;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.net.Uri;
+import android.widget.Toast;
 import android.provider.Settings;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -377,6 +378,9 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void exitApp() { runOnUiThread(() -> { if (Build.VERSION.SDK_INT >= 21) finishAndRemoveTask(); else finish(); }); }
+
+        @JavascriptInterface
+        public void openUrl(String url) { runOnUiThread(() -> { try { Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url)); i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(i); } catch (Exception e) { Toast.makeText(MainActivity.this, "No se pudo abrir WhatsApp", Toast.LENGTH_LONG).show(); } }); }
 
         @JavascriptInterface
         public void fetchSongs(String lista) { bajarMusica(lista); }

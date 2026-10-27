@@ -175,6 +175,7 @@ body.mesa #lobby{gap:8px}
 body.mesa #lbtns{gap:8px}
 body.mesa #lbtns button{min-width:190px;padding:7px 12px;font-size:16px}
 body.mesa #menu .lseat{padding:4px 8px}
+.qrt{display:block;font-size:15px;color:#fff;background:#1d5a37;border:2px solid currentColor;border-radius:8px;padding:1px 8px;margin-bottom:2px}
 #lqr2{grid-area:c;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#7dffa8;line-height:1.15;text-align:center}
 #lqr2 svg{width:96px;height:96px;border-radius:6px}
 #lqr{grid-area:q;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--gold);line-height:1.15}
@@ -213,11 +214,42 @@ body.mesa #menu .lseat{padding:4px 8px}
 body.mesa #menu>p,body.mesa #menu h1{display:none}
 #lip{font-size:14px!important}
 #lip b{font-size:1.15em!important}
-#guide{position:absolute;inset:0;z-index:40;background:rgba(6,16,10,.96);overflow-y:auto;touch-action:pan-y;padding:16px;box-sizing:border-box}
+/* ===== sala de la mesa: mesa cuadrada con 4 sillas ===== */
+body.mesa #lmode{display:none}
+body.mesa #lip{font-size:15px!important;line-height:1.3}
+body.mesa #lip b{font-size:1.1em!important}
+body.mesa #lip small{font-size:12px;color:#9fbfaa}
+#lseats{grid-template-columns:1fr 38vh 1fr;grid-template-rows:auto 38vh auto;gap:0 3vh;width:100%;justify-items:center;position:relative}
+#lmid{width:38vh;height:38vh;box-sizing:border-box;border-radius:5vh;background:radial-gradient(ellipse at 45% 40%,#1f8a4a,#0f5a2e 80%);border:3vh solid #6b3a1c;box-shadow:inset 0 0 0 .6vh #8a5028,0 2vh 5vh rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;color:#fff}
+#lmid em{font-style:normal;font-weight:900;font-size:5vh;letter-spacing:.5vh;color:rgba(255,255,255,.18)}
+#lmid b{display:block;font-size:3.4vh;line-height:1.15;color:#ffd23a;text-align:center}
+#lmid small{font-size:2.2vh;line-height:1.35;color:#e8f4ea;text-align:center}
+#menu .lseat{width:auto;padding:0;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:.8vh;text-align:center;cursor:pointer}
+#lseats [data-s="2"]{align-self:end;margin-bottom:-3.5vh;z-index:2;position:relative}
+#lseats [data-s="2"] .lnm{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:1.5vh;white-space:nowrap}
+#lseats [data-s="0"]{align-self:start;margin-top:-3.5vh;z-index:2}
+#lseats [data-s="3"]{justify-self:end} #lseats [data-s="1"]{justify-self:start}
+.lchair{width:13vh;height:13vh;border-radius:3.4vh;background:linear-gradient(#8a5028,#5a3014);box-shadow:0 1vh 2.4vh rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
+#menu .lseat i{width:10vh;height:10vh;border-radius:50%;border:.6vh solid #fff;font-size:5.6vh;background:#1b2f4a center/cover no-repeat;grid-row:auto}
+#menu .lseat.on i{border-color:#ffd23a}
+#menu .lseat.pA i,#menu .lseat.c0 i{border-color:#e8473a} #menu .lseat.pB i,#menu .lseat.c1 i{border-color:#3a8be8} #menu .lseat.c2 i{border-color:#2fbf71} #menu .lseat.c3 i{border-color:#ffb020}
+#menu .lseat.pA,#menu .lseat.pB,#menu .lseat.c0,#menu .lseat.c1,#menu .lseat.c2,#menu .lseat.c3,.lseat.on{border:0;background:none}
+.lnm{background:rgba(0,0,0,.62);padding:.5vh 1.8vh;border-radius:1.4vh;display:flex;flex-direction:column;align-items:center}
+.lnm b{font-size:2.6vh!important;max-width:24vh}
+.lnm small{font-size:1.7vh;color:#9fbfaa;opacity:1}
+#menu .lseat.sel .lchair{outline:.6vh dashed #fff;outline-offset:.6vh}
+#lqr,#lqr2{position:absolute;top:0;background:rgba(0,0,0,.25);border-radius:1.4vh;padding:1vh}
+#lqr{left:2vw} #lqr2{right:2vw}
+#lqr svg,#lqr2 svg{width:17vh;height:17vh}
+#guide{position:absolute;inset:0;z-index:40;background:#0b1a12;overflow-y:auto;touch-action:pan-y;padding:16px;box-sizing:border-box}
 #gbox{max-width:760px;margin:0 auto;line-height:1.45;font-size:16px;color:#eef6f0}
 #gbox h2{color:var(--gold);text-align:center;margin:4px 0 10px;font-size:24px}
 #gbox h3{color:#8aff6a;margin:16px 0 6px;font-size:18px}
 #gbox li{margin:4px 0}
+.gsteps{display:flex;flex-direction:column;gap:8px}
+.gs{display:grid;grid-template-columns:34px 44px 1fr;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);border-radius:12px;padding:8px 10px}
+.gs i{font-style:normal;font-weight:800;font-size:20px;color:#2a1608;background:var(--gold);border-radius:50%;width:32px;height:32px;display:grid;place-items:center}
+.gs .ge{font-size:30px;text-align:center}.gsx{border-color:var(--gold);background:rgba(255,210,58,.12)}.gsx i{background:none;font-size:24px}.gs p{margin:0}
 #gbox b{color:#ffe9a8}
 #gclose{display:block;margin:18px auto 8px;font:700 18px var(--font);padding:12px 30px;border-radius:14px;border:3px solid #8a2418;background:var(--accent);color:#fff}
 #gclose.focus{outline:3px solid var(--gold);outline-offset:3px}
@@ -237,6 +269,15 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 #pick button{min-width:300px}
 #pick #psolo{flex:1 1 100%;max-width:624px}
 #menu{overflow-y:auto}
+#gvid{display:flex;gap:16px;align-items:center;background:#14301f;border:2px solid #ffd23a;border-radius:14px;padding:12px;margin:8px 0 14px;text-align:left;line-height:1.4}
+#gvqr{flex:0 0 130px;width:130px;height:130px;background:#fff;border-radius:8px;padding:6px;box-sizing:border-box}
+#gvqr svg{width:100%;height:100%}
+#gvbtn{margin-top:8px;background:#e8473a;color:#fff;border:2px solid #ff8a7a;border-radius:10px;padding:8px 18px;font:800 16px inherit;font-family:inherit;cursor:pointer}
+#pwwa.wa{background:#1f8f4e;border-color:#25d366;color:#fff}
+#pwwa small{display:block;font-size:13px;opacity:.9}
+#menu p#cred{position:absolute;right:10px;bottom:24px;margin:0;max-width:none;font-size:11px;line-height:1.35;color:#9fbfaa;text-align:right}
+@media (max-width:640px){#menu p#cred{position:static;align-self:center;text-align:center;margin:6px 0 26px}}
+.gcred{color:#d8e8dc;line-height:1.5}
 @media (max-height:460px){#menu h1{font-size:28px} #menu>p{display:none} #menu button.big{font-size:20px;padding:8px 14px} #menu button{font-size:15px;padding:8px 12px;min-width:240px} #pick button{min-width:280px}}
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
@@ -249,7 +290,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
   <div id="tablebox">
     <canvas id="t" width="960" height="540" aria-label="Mesa de dominó"></canvas>
     <div id="remotebar">
-      <div id="rb1"><button id="rexit">SALIR</button><span id="rends">Mesa vacía</span><button id="rscan">ESCANEAR QR</button><button id="rpair">EMPAREJAR</button></div>
+      <div id="rb1"><button id="rexit">SALIR</button><span id="rends">Mesa vacía</span><button id="rscan">📷 ESCANEAR QR DE LA TV</button><button id="rpair">EMPAREJAR</button></div>
       <div id="rst">Buscando la tele en tu Wi-Fi...</div>
       <div id="rwifi">⚠ La mesa y tu cel tienen que estar en la MISMA red Wi-Fi</div>
       <div class="ipbox" hidden><input id="rip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Dirección de la tele"><button id="rgo">CONECTAR</button></div>
@@ -260,7 +301,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
     <div id="tiles"></div>
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
-    <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano de la máquina o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
+    <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
     <div id="passbox" hidden><b>NO LLEVAS FICHA · ¿CÓMO PASAS?</b><div id="pbtns"><button data-st="toque">👊 TOQUE<small>1 o 2 toques</small></button><button data-st="palma">✋ PALMA<small>¡Pa' ti!</small></button><button data-st="senalar">👉 SEÑALAR<small>¡Juega tú!</small></button><button data-st="bum">😡 TA-TA-TÁ<small>las dos manos</small></button></div><i id="passn"></i></div>
     <div id="seatbox" hidden><b>ELIGE TU SILLA</b><div id="seatgrid"></div><small>Tu pareja es siempre el de enfrente</small></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
@@ -276,16 +317,24 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
   <div id="guide" hidden>
     <div id="gbox">
       <h2>CÓMO JUGAR AL DOMINÓ CUBANO</h2>
-      <h3>1 · Conectar los cels con la tele</h3>
-      <ol>
-        <li>Instala <b>Dominó Cubano</b> en la tele (o una tablet) y en cada cel.</li>
-        <li>Todos los aparatos conectados a la <b>misma Wi-Fi</b>.</li>
-        <li>En la tele toca <b>MESA</b>: verás la sala con los 4 puestos y la dirección de la mesa.</li>
-        <li>En cada cel toca <b>JUGADOR</b>, pon tu nombre, hazte una foto y toca <b>LISTO, A LA MESA</b>. El cel busca la mesa solo y en la tele aparece tu foto.</li>
-        <li>Si el cel no encuentra la mesa, escribe la dirección que sale en la tele (ej. 192.168.1.20) y toca <b>CONECTAR</b>.</li>
-        <li>Pueden jugar hasta <b>4 cels</b>. Los puestos libres los juega la máquina.</li>
-        <li>En la tele elige el modo y pulsa <b>EMPEZAR PARTIDA</b> (con el mando: OK).</li>
-      </ol>
+      <div id="gvid"><div id="gvqr"></div><div><b>📹 VIDEO TUTORIAL</b><br>Escanea este QR con la cámara del teléfono para ver el video de cómo conectar la TV y los teléfonos.<br><button id="gvbtn">▶ VER VIDEO</button></div></div>
+      <h3>1 · Conectar los teléfonos con la TV (paso a paso)</h3>
+      <div class="gsteps">
+        <div class="gs"><i>1</i><span class="ge">📶</span><p>La <b>TV</b> y <b>todos los teléfonos</b> en la <b>misma Wi-Fi</b>. Si uno está en otra red (o solo con datos), no se conecta. <b>No hace falta internet</b>: basta con que estén en la misma red.</p></div>
+        <div class="gs gsx"><i>💡</i><span class="ge">📲</span><p><b>¿No hay Wi-Fi ni router?</b> Crea un <b>punto de acceso</b> con un teléfono: Ajustes → <b>Punto de acceso / Zona Wi-Fi</b> → actívalo. Conecta la <b>TV</b> y los <b>demás teléfonos</b> a esa Wi-Fi. No gasta datos jugando (puedes apagar los datos) y ese teléfono también puede jugar.</p></div>
+        <div class="gs"><i>2</i><span class="ge">📺</span><p>En la <b>TV</b> abre Dominó Cubano y elige <b>📺 TV</b>. Sale la sala con las 4 sillas y dos códigos QR.</p></div>
+        <div class="gs"><i>3</i><span class="ge">📱</span><p>¿El teléfono no tiene la app? Apunta la <b>cámara del teléfono</b> al QR de la izquierda (<b>📱 TELÉFONO</b>), baja la app e instálala.</p></div>
+        <div class="gs"><i>4</i><span class="ge">👤</span><p>En el <b>teléfono</b> abre la app, toca <b>📱 TELÉFONO</b>, pon tu nombre y hazte una foto.</p></div>
+        <div class="gs"><i>5</i><span class="ge">📷</span><p>Toca <b>📷 ESCANEAR QR DE LA TV</b> y apunta al QR de la derecha de la TV (<b>📺 TV</b>). Tu foto aparece en una silla de la TV.</p></div>
+        <div class="gs"><i>6</i><span class="ge">🪑</span><p>Hasta <b>4 teléfonos</b>. Las sillas libres las juega un bot. Con el mando eliges una silla y pulsas OK para cambiarle el nombre o cambiarla de sitio.</p></div>
+        <div class="gs"><i>7</i><span class="ge">▶️</span><p>En la TV elige <b>PAREJAS</b> o <b>INDIVIDUAL</b> y pulsa <b>EMPEZAR PARTIDA</b>. ¡A jugar!</p></div>
+        <div class="gs"><i>?</i><span class="ge">🆘</span><p>¿No conecta? Revisa que estén en la misma Wi-Fi y vuelve a escanear. Si alguien llega con la partida empezada, que escanee el QR del menu ☰ de la TV y elige si coge la mano de la máquina o espera la siguiente.</p></div>
+      </div>
+      <h3>¿Necesita internet?</h3>
+      <ul>
+        <li><b>Para jugar, no.</b> Solo la misma Wi-Fi (o el punto de acceso de un teléfono).</li>
+        <li>Internet solo hace falta para <b>bajar la app</b> y las <b>actualizaciones</b>, para <b>bajar las canciones la primera vez</b> (después suenan sin internet) y para <b>comprar</b> la licencia.</li>
+      </ul>
       <h3>2 · Las reglas</h3>
       <ul>
         <li>Dominó <b>doble nueve</b>: 55 fichas, 4 jugadores con 10 fichas cada uno. Sobran 15 que no se usan. <b>No se roba.</b></li>
@@ -300,16 +349,19 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
       <ul>
         <li><b>Toca una ficha</b> para ponerla en la mesa (sin golpe). Si casa por los dos lados, te pregunta a qué número ponerla.</li>
         <li><b>Desliza la ficha hacia arriba</b> para dar un <b>golpetazo</b> con toda la fuerza acumulada.</li>
-        <li>La barra <b>FUERZA</b> (a la izquierda) tiene <b>10 niveles</b>: cada ficha que pones sube un nivel, y si <b>pasas baja 2</b>. Pegar no la gasta. Empieza en 0 en cada mano. Con más nivel: más llena, más fuerte cae la ficha, más polvo, el vaso de ron se tambalea y salpica, y con todo lleno se vira. La <b>ficha con la que te pegas</b> pega el doble, y <b>el que va ganando</b> pega más duro que el que va perdiendo.</li>
+        <li>La barra <b>FUERZA</b> (arriba) tiene <b>10 niveles</b>: cada ficha que pones sube un nivel, y si <b>pasas baja 2</b>. Pegar no la gasta. Empieza en 0 en cada mano. Con más nivel: más llena, más fuerte cae la ficha, más polvo, el vaso de ron se tambalea y salpica, y con todo lleno se vira. La <b>ficha con la que te pegas</b> pega el doble, y <b>el que va ganando</b> pega más duro que el que va perdiendo.</li>
+        <li>Si <b>no llevas ficha</b>, el teléfono te da 4 formas de pasar: <b>TOQUE</b> (1 o 2 toques), <b>PALMA</b>, <b>SEÑALAR</b> al siguiente o <b>TA-TA-TÁ</b> con las dos manos.</li>
         <li>Arrastra una ficha a los lados para ordenarlas, o toca <b>ORDENAR</b>.</li>
         <li><b>FRASES</b>: las frases cubanas de cada número de ficha, del 0 al 9. <b>CARITAS</b>: risa, bravo, enfurecido…</li>
       </ul>
       <h3>4 · Bajar la app y comprarla</h3>
       <ul>
         <li>En la sala de la MESA sale un <b>código QR</b>: escanéalo con el cel y se baja la app.</li>
-        <li>La primera <b>semana es gratis</b> y sin límite. Después: <b>3 partidas gratis al día</b>, o cómprala por <b>5 USD al mes</b> o <b>20 USD para siempre</b>.</li>
-        <li>Para comprar toca <b>ACTIVAR / COMPRAR</b>, elige el plan y paga con <b>PayPal</b>, <b>USDT</b> o <b>transferencia BAI</b> (Angola). Con PayPal y USDT la app se activa sola en un par de minutos; con el BAI, manda el comprobante a <b>capoteapps@gmail.com</b> y se activa en cuanto lo aprobemos. Solo hace falta en la tele o el cel donde se pone la mesa; los que juegan con el cel como JUGADOR no pagan.</li>
+        <li>La primera <b>hora de juego es gratis</b> y sin límite (solo cuenta el tiempo jugando). Después: <b>3 partidas gratis al día</b>, o cómprala por <b>5 USD al mes</b> o <b>20 USD para siempre</b>.</li>
+        <li>Para comprar toca <b>ACTIVAR / COMPRAR</b>, elige el plan y paga con <b>PayPal</b>, <b>USDT</b> o <b>transferencia BAI</b> (Angola). Con PayPal y USDT la app se activa sola en un par de minutos; con el BAI, manda el comprobante a <b>capoteapps@gmail.com</b> o por <b>WhatsApp +244 926 815 829</b> y se activa en cuanto lo aprobemos. Solo hace falta en la tele o el cel donde se pone la mesa; los que juegan con el teléfono no pagan.</li>
       </ul>
+      <h3>Créditos</h3>
+      <p class="gcred">Dominó Cubano — idea, diseño y desarrollo: <b>Adonis Capote</b>.<br>Contacto: <b>capoteapps@gmail.com</b><br>© 2026 Adonis Capote. Todos los derechos reservados.</p>
       <button id="gclose">ENTENDIDO</button>
     </div>
   </div>
@@ -318,11 +370,12 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
     <p>Doble nueve · 4 jugadores · 10 fichas cada uno · no se roba · partido a 100 puntos.</p>
     <div id="lic"></div>
     <div id="pick">
-      <button class="big main" id="pmesa">MESA<small>Para la tele: aquí se ve la partida</small></button>
-      <button class="big" id="ptab">JUGADOR<small>Para el cel: aquí tienes tus fichas</small></button>
-      <button id="psolo">JUGAR SOLO CONTRA LA MÁQUINA</button>
+      <button class="big main" id="pmesa">📺 TV<small>Aquí se ve la mesa</small></button>
+      <button class="big" id="ptab">📱 TELÉFONO<small>Aquí tienes tus fichas</small></button>
+      <button id="psolo">JUGAR SOLO CONTRA LOS BOTS</button>
       <button id="pguia">CÓMO JUGAR Y CONECTAR</button>
       <button id="pact">ACTIVAR / COMPRAR</button>
+      <button id="mmus">🎵 MÚSICA ●●●●○</button><button id="msnd">🔊 EFECTOS ●●●●●</button>
       <button id="psalir">SALIR</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
@@ -347,16 +400,17 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
             <path d="M42 50 Q36 64 40 80" stroke="rgba(255,220,180,.35)" stroke-width="3" fill="none"/></g></svg><span>Camagüey</span></div>
       </div>
     </div>
+    <p id="cred">Creado por <b>Adonis Capote</b><br>capoteapps@gmail.com<br>© 2026 Todos los derechos reservados</p>
     <div id="sub" hidden>
       <button id="mmode">MODO: PAREJAS (2 CONTRA 2)</button>
-      <button class="main" id="mplay">JUGAR CONTRA LA MÁQUINA</button>
-      <button id="mbots">NOMBRES DE LAS MÁQUINAS</button>
+      <button class="main" id="mplay">JUGAR CONTRA LOS BOTS</button>
+      <button id="mbots">NOMBRES DE LOS BOTS</button>
       <p id="mtv" hidden></p>
     </div>
     <div id="lobby" hidden>
       <div id="lip"></div>
       <div id="lmode"></div>
-      <div id="lseats"><div id="lqr"><svg viewBox="0 0 47 47" shape-rendering="crispEdges"><rect width="47" height="47" fill="#fff"/><path d="M3 3h7v1h-7zM13 3h2v1h-2zM16 3h1v1h-1zM18 3h1v1h-1zM21 3h1v1h-1zM24 3h3v1h-3zM29 3h1v1h-1zM32 3h2v1h-2zM37 3h7v1h-7zM3 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM13 4h1v1h-1zM15 4h1v1h-1zM17 4h1v1h-1zM20 4h1v1h-1zM28 4h2v1h-2zM31 4h1v1h-1zM33 4h1v1h-1zM35 4h1v1h-1zM37 4h1v1h-1zM43 4h1v1h-1zM3 5h1v1h-1zM5 5h3v1h-3zM9 5h1v1h-1zM11 5h1v1h-1zM13 5h4v1h-4zM19 5h8v1h-8zM28 5h1v1h-1zM31 5h1v1h-1zM33 5h3v1h-3zM37 5h1v1h-1zM39 5h3v1h-3zM43 5h1v1h-1zM3 6h1v1h-1zM5 6h3v1h-3zM9 6h1v1h-1zM11 6h1v1h-1zM17 6h1v1h-1zM22 6h2v1h-2zM25 6h3v1h-3zM30 6h2v1h-2zM33 6h3v1h-3zM37 6h1v1h-1zM39 6h3v1h-3zM43 6h1v1h-1zM3 7h1v1h-1zM5 7h3v1h-3zM9 7h1v1h-1zM13 7h2v1h-2zM16 7h2v1h-2zM21 7h3v1h-3zM25 7h2v1h-2zM33 7h2v1h-2zM37 7h1v1h-1zM39 7h3v1h-3zM43 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM13 8h5v1h-5zM24 8h2v1h-2zM28 8h1v1h-1zM31 8h2v1h-2zM35 8h1v1h-1zM37 8h1v1h-1zM43 8h1v1h-1zM3 9h7v1h-7zM11 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM23 9h1v1h-1zM25 9h1v1h-1zM27 9h1v1h-1zM29 9h1v1h-1zM31 9h1v1h-1zM33 9h1v1h-1zM35 9h1v1h-1zM37 9h7v1h-7zM11 10h1v1h-1zM15 10h4v1h-4zM21 10h1v1h-1zM23 10h1v1h-1zM25 10h2v1h-2zM30 10h2v1h-2zM3 11h1v1h-1zM9 11h1v1h-1zM11 11h1v1h-1zM14 11h1v1h-1zM19 11h2v1h-2zM22 11h2v1h-2zM25 11h1v1h-1zM27 11h2v1h-2zM32 11h1v1h-1zM34 11h1v1h-1zM36 11h2v1h-2zM40 11h3v1h-3zM5 12h1v1h-1zM8 12h1v1h-1zM12 12h1v1h-1zM15 12h2v1h-2zM19 12h1v1h-1zM21 12h2v1h-2zM24 12h7v1h-7zM32 12h3v1h-3zM36 12h1v1h-1zM38 12h2v1h-2zM3 13h4v1h-4zM9 13h1v1h-1zM11 13h1v1h-1zM16 13h2v1h-2zM23 13h1v1h-1zM25 13h1v1h-1zM29 13h4v1h-4zM35 13h1v1h-1zM37 13h2v1h-2zM3 14h4v1h-4zM8 14h1v1h-1zM11 14h1v1h-1zM13 14h2v1h-2zM16 14h1v1h-1zM18 14h2v1h-2zM22 14h2v1h-2zM25 14h1v1h-1zM29 14h1v1h-1zM31 14h1v1h-1zM34 14h2v1h-2zM37 14h2v1h-2zM40 14h1v1h-1zM43 14h1v1h-1zM4 15h1v1h-1zM6 15h1v1h-1zM8 15h2v1h-2zM12 15h3v1h-3zM16 15h1v1h-1zM19 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM30 15h1v1h-1zM35 15h1v1h-1zM37 15h1v1h-1zM42 15h2v1h-2zM3 16h2v1h-2zM7 16h2v1h-2zM11 16h2v1h-2zM14 16h1v1h-1zM16 16h3v1h-3zM20 16h2v1h-2zM28 16h1v1h-1zM33 16h1v1h-1zM37 16h1v1h-1zM39 16h5v1h-5zM3 17h1v1h-1zM8 17h2v1h-2zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM23 17h5v1h-5zM29 17h3v1h-3zM33 17h1v1h-1zM35 17h2v1h-2zM38 17h1v1h-1zM40 17h2v1h-2zM4 18h3v1h-3zM8 18h1v1h-1zM10 18h1v1h-1zM13 18h2v1h-2zM18 18h2v1h-2zM23 18h1v1h-1zM25 18h2v1h-2zM31 18h1v1h-1zM34 18h3v1h-3zM39 18h5v1h-5zM4 19h1v1h-1zM6 19h2v1h-2zM9 19h4v1h-4zM14 19h1v1h-1zM19 19h1v1h-1zM25 19h6v1h-6zM32 19h1v1h-1zM34 19h1v1h-1zM36 19h1v1h-1zM38 19h1v1h-1zM41 19h1v1h-1zM3 20h1v1h-1zM11 20h7v1h-7zM19 20h1v1h-1zM21 20h4v1h-4zM26 20h2v1h-2zM30 20h10v1h-10zM43 20h1v1h-1zM7 21h4v1h-4zM13 21h3v1h-3zM17 21h1v1h-1zM20 21h3v1h-3zM26 21h1v1h-1zM28 21h4v1h-4zM34 21h6v1h-6zM43 21h1v1h-1zM3 22h1v1h-1zM7 22h2v1h-2zM11 22h1v1h-1zM13 22h1v1h-1zM18 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM29 22h1v1h-1zM31 22h3v1h-3zM35 22h2v1h-2zM39 22h1v1h-1zM3 23h1v1h-1zM5 23h2v1h-2zM8 23h2v1h-2zM13 23h4v1h-4zM21 23h2v1h-2zM24 23h4v1h-4zM30 23h1v1h-1zM34 23h3v1h-3zM41 23h1v1h-1zM6 24h3v1h-3zM10 24h4v1h-4zM16 24h2v1h-2zM19 24h1v1h-1zM22 24h1v1h-1zM25 24h2v1h-2zM28 24h1v1h-1zM30 24h1v1h-1zM32 24h5v1h-5zM39 24h1v1h-1zM41 24h1v1h-1zM4 25h2v1h-2zM9 25h1v1h-1zM12 25h3v1h-3zM16 25h2v1h-2zM23 25h1v1h-1zM28 25h4v1h-4zM33 25h1v1h-1zM35 25h1v1h-1zM38 25h1v1h-1zM40 25h1v1h-1zM3 26h2v1h-2zM6 26h3v1h-3zM12 26h4v1h-4zM17 26h1v1h-1zM19 26h1v1h-1zM23 26h1v1h-1zM25 26h1v1h-1zM30 26h1v1h-1zM34 26h5v1h-5zM40 26h1v1h-1zM4 27h1v1h-1zM9 27h1v1h-1zM13 27h3v1h-3zM18 27h1v1h-1zM22 27h2v1h-2zM26 27h2v1h-2zM34 27h2v1h-2zM37 27h2v1h-2zM40 27h1v1h-1zM42 27h1v1h-1zM3 28h1v1h-1zM5 28h1v1h-1zM11 28h2v1h-2zM16 28h3v1h-3zM21 28h4v1h-4zM26 28h1v1h-1zM28 28h1v1h-1zM30 28h3v1h-3zM34 28h1v1h-1zM37 28h4v1h-4zM43 28h1v1h-1zM4 29h1v1h-1zM7 29h1v1h-1zM9 29h1v1h-1zM11 29h1v1h-1zM13 29h2v1h-2zM18 29h1v1h-1zM21 29h1v1h-1zM25 29h1v1h-1zM28 29h1v1h-1zM30 29h1v1h-1zM32 29h2v1h-2zM35 29h2v1h-2zM39 29h1v1h-1zM3 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h1v1h-1zM17 30h3v1h-3zM23 30h1v1h-1zM26 30h1v1h-1zM29 30h1v1h-1zM31 30h1v1h-1zM34 30h1v1h-1zM36 30h8v1h-8zM4 31h1v1h-1zM7 31h1v1h-1zM9 31h2v1h-2zM14 31h4v1h-4zM20 31h1v1h-1zM25 31h2v1h-2zM28 31h2v1h-2zM32 31h1v1h-1zM34 31h1v1h-1zM38 31h1v1h-1zM40 31h2v1h-2zM3 32h2v1h-2zM7 32h1v1h-1zM10 32h1v1h-1zM14 32h1v1h-1zM19 32h1v1h-1zM23 32h3v1h-3zM27 32h3v1h-3zM31 32h1v1h-1zM33 32h9v1h-9zM43 32h1v1h-1zM3 33h2v1h-2zM6 33h1v1h-1zM8 33h2v1h-2zM11 33h2v1h-2zM14 33h4v1h-4zM21 33h1v1h-1zM23 33h1v1h-1zM26 33h1v1h-1zM28 33h2v1h-2zM31 33h2v1h-2zM34 33h3v1h-3zM39 33h2v1h-2zM43 33h1v1h-1zM3 34h1v1h-1zM5 34h1v1h-1zM8 34h1v1h-1zM13 34h2v1h-2zM16 34h4v1h-4zM22 34h2v1h-2zM25 34h1v1h-1zM27 34h1v1h-1zM29 34h3v1h-3zM33 34h1v1h-1zM37 34h1v1h-1zM40 34h1v1h-1zM42 34h2v1h-2zM3 35h1v1h-1zM6 35h1v1h-1zM8 35h3v1h-3zM12 35h2v1h-2zM16 35h1v1h-1zM18 35h1v1h-1zM20 35h1v1h-1zM22 35h1v1h-1zM25 35h1v1h-1zM27 35h3v1h-3zM32 35h2v1h-2zM35 35h5v1h-5zM41 35h2v1h-2zM11 36h1v1h-1zM14 36h2v1h-2zM18 36h1v1h-1zM20 36h1v1h-1zM22 36h1v1h-1zM25 36h2v1h-2zM28 36h3v1h-3zM33 36h1v1h-1zM35 36h1v1h-1zM39 36h2v1h-2zM3 37h7v1h-7zM12 37h1v1h-1zM14 37h1v1h-1zM17 37h1v1h-1zM19 37h2v1h-2zM23 37h2v1h-2zM27 37h5v1h-5zM33 37h3v1h-3zM37 37h1v1h-1zM39 37h3v1h-3zM3 38h1v1h-1zM9 38h1v1h-1zM13 38h6v1h-6zM20 38h2v1h-2zM23 38h1v1h-1zM25 38h2v1h-2zM28 38h1v1h-1zM30 38h2v1h-2zM34 38h2v1h-2zM39 38h2v1h-2zM42 38h1v1h-1zM3 39h1v1h-1zM5 39h3v1h-3zM9 39h1v1h-1zM13 39h4v1h-4zM19 39h2v1h-2zM23 39h3v1h-3zM27 39h2v1h-2zM31 39h10v1h-10zM42 39h2v1h-2zM3 40h1v1h-1zM5 40h3v1h-3zM9 40h1v1h-1zM17 40h1v1h-1zM19 40h1v1h-1zM21 40h3v1h-3zM25 40h2v1h-2zM30 40h2v1h-2zM35 40h1v1h-1zM38 40h1v1h-1zM40 40h3v1h-3zM3 41h1v1h-1zM5 41h3v1h-3zM9 41h1v1h-1zM12 41h1v1h-1zM15 41h2v1h-2zM18 41h2v1h-2zM21 41h1v1h-1zM24 41h1v1h-1zM28 41h1v1h-1zM30 41h2v1h-2zM34 41h6v1h-6zM41 41h1v1h-1zM3 42h1v1h-1zM9 42h1v1h-1zM14 42h2v1h-2zM20 42h4v1h-4zM31 42h1v1h-1zM33 42h2v1h-2zM39 42h3v1h-3zM43 42h1v1h-1zM3 43h7v1h-7zM11 43h1v1h-1zM13 43h2v1h-2zM18 43h1v1h-1zM20 43h2v1h-2zM23 43h1v1h-1zM25 43h1v1h-1zM27 43h3v1h-3zM32 43h1v1h-1zM38 43h2v1h-2zM41 43h1v1h-1z" fill="#000"/></svg><span>ESCANEA CON TU CEL<br>Y BAJA LA APP</span></div><div id="lqr2"><div id="lqr2svg"></div><span>CONECTAR A LA MESA<br>escanéalo desde JUGADOR</span></div><button class="lseat" data-s="2"></button><button class="lseat" data-s="3"></button><div id="lmid"></div><button class="lseat" data-s="1"></button><button class="lseat" data-s="0"></button></div>
+      <div id="lseats"><div id="lqr"><svg viewBox="0 0 47 47" shape-rendering="crispEdges"><rect width="47" height="47" fill="#fff"/><path d="M3 3h7v1h-7zM13 3h2v1h-2zM16 3h1v1h-1zM18 3h1v1h-1zM21 3h1v1h-1zM24 3h3v1h-3zM29 3h1v1h-1zM32 3h2v1h-2zM37 3h7v1h-7zM3 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM13 4h1v1h-1zM15 4h1v1h-1zM17 4h1v1h-1zM20 4h1v1h-1zM28 4h2v1h-2zM31 4h1v1h-1zM33 4h1v1h-1zM35 4h1v1h-1zM37 4h1v1h-1zM43 4h1v1h-1zM3 5h1v1h-1zM5 5h3v1h-3zM9 5h1v1h-1zM11 5h1v1h-1zM13 5h4v1h-4zM19 5h8v1h-8zM28 5h1v1h-1zM31 5h1v1h-1zM33 5h3v1h-3zM37 5h1v1h-1zM39 5h3v1h-3zM43 5h1v1h-1zM3 6h1v1h-1zM5 6h3v1h-3zM9 6h1v1h-1zM11 6h1v1h-1zM17 6h1v1h-1zM22 6h2v1h-2zM25 6h3v1h-3zM30 6h2v1h-2zM33 6h3v1h-3zM37 6h1v1h-1zM39 6h3v1h-3zM43 6h1v1h-1zM3 7h1v1h-1zM5 7h3v1h-3zM9 7h1v1h-1zM13 7h2v1h-2zM16 7h2v1h-2zM21 7h3v1h-3zM25 7h2v1h-2zM33 7h2v1h-2zM37 7h1v1h-1zM39 7h3v1h-3zM43 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM13 8h5v1h-5zM24 8h2v1h-2zM28 8h1v1h-1zM31 8h2v1h-2zM35 8h1v1h-1zM37 8h1v1h-1zM43 8h1v1h-1zM3 9h7v1h-7zM11 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM23 9h1v1h-1zM25 9h1v1h-1zM27 9h1v1h-1zM29 9h1v1h-1zM31 9h1v1h-1zM33 9h1v1h-1zM35 9h1v1h-1zM37 9h7v1h-7zM11 10h1v1h-1zM15 10h4v1h-4zM21 10h1v1h-1zM23 10h1v1h-1zM25 10h2v1h-2zM30 10h2v1h-2zM3 11h1v1h-1zM9 11h1v1h-1zM11 11h1v1h-1zM14 11h1v1h-1zM19 11h2v1h-2zM22 11h2v1h-2zM25 11h1v1h-1zM27 11h2v1h-2zM32 11h1v1h-1zM34 11h1v1h-1zM36 11h2v1h-2zM40 11h3v1h-3zM5 12h1v1h-1zM8 12h1v1h-1zM12 12h1v1h-1zM15 12h2v1h-2zM19 12h1v1h-1zM21 12h2v1h-2zM24 12h7v1h-7zM32 12h3v1h-3zM36 12h1v1h-1zM38 12h2v1h-2zM3 13h4v1h-4zM9 13h1v1h-1zM11 13h1v1h-1zM16 13h2v1h-2zM23 13h1v1h-1zM25 13h1v1h-1zM29 13h4v1h-4zM35 13h1v1h-1zM37 13h2v1h-2zM3 14h4v1h-4zM8 14h1v1h-1zM11 14h1v1h-1zM13 14h2v1h-2zM16 14h1v1h-1zM18 14h2v1h-2zM22 14h2v1h-2zM25 14h1v1h-1zM29 14h1v1h-1zM31 14h1v1h-1zM34 14h2v1h-2zM37 14h2v1h-2zM40 14h1v1h-1zM43 14h1v1h-1zM4 15h1v1h-1zM6 15h1v1h-1zM8 15h2v1h-2zM12 15h3v1h-3zM16 15h1v1h-1zM19 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM30 15h1v1h-1zM35 15h1v1h-1zM37 15h1v1h-1zM42 15h2v1h-2zM3 16h2v1h-2zM7 16h2v1h-2zM11 16h2v1h-2zM14 16h1v1h-1zM16 16h3v1h-3zM20 16h2v1h-2zM28 16h1v1h-1zM33 16h1v1h-1zM37 16h1v1h-1zM39 16h5v1h-5zM3 17h1v1h-1zM8 17h2v1h-2zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM23 17h5v1h-5zM29 17h3v1h-3zM33 17h1v1h-1zM35 17h2v1h-2zM38 17h1v1h-1zM40 17h2v1h-2zM4 18h3v1h-3zM8 18h1v1h-1zM10 18h1v1h-1zM13 18h2v1h-2zM18 18h2v1h-2zM23 18h1v1h-1zM25 18h2v1h-2zM31 18h1v1h-1zM34 18h3v1h-3zM39 18h5v1h-5zM4 19h1v1h-1zM6 19h2v1h-2zM9 19h4v1h-4zM14 19h1v1h-1zM19 19h1v1h-1zM25 19h6v1h-6zM32 19h1v1h-1zM34 19h1v1h-1zM36 19h1v1h-1zM38 19h1v1h-1zM41 19h1v1h-1zM3 20h1v1h-1zM11 20h7v1h-7zM19 20h1v1h-1zM21 20h4v1h-4zM26 20h2v1h-2zM30 20h10v1h-10zM43 20h1v1h-1zM7 21h4v1h-4zM13 21h3v1h-3zM17 21h1v1h-1zM20 21h3v1h-3zM26 21h1v1h-1zM28 21h4v1h-4zM34 21h6v1h-6zM43 21h1v1h-1zM3 22h1v1h-1zM7 22h2v1h-2zM11 22h1v1h-1zM13 22h1v1h-1zM18 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM29 22h1v1h-1zM31 22h3v1h-3zM35 22h2v1h-2zM39 22h1v1h-1zM3 23h1v1h-1zM5 23h2v1h-2zM8 23h2v1h-2zM13 23h4v1h-4zM21 23h2v1h-2zM24 23h4v1h-4zM30 23h1v1h-1zM34 23h3v1h-3zM41 23h1v1h-1zM6 24h3v1h-3zM10 24h4v1h-4zM16 24h2v1h-2zM19 24h1v1h-1zM22 24h1v1h-1zM25 24h2v1h-2zM28 24h1v1h-1zM30 24h1v1h-1zM32 24h5v1h-5zM39 24h1v1h-1zM41 24h1v1h-1zM4 25h2v1h-2zM9 25h1v1h-1zM12 25h3v1h-3zM16 25h2v1h-2zM23 25h1v1h-1zM28 25h4v1h-4zM33 25h1v1h-1zM35 25h1v1h-1zM38 25h1v1h-1zM40 25h1v1h-1zM3 26h2v1h-2zM6 26h3v1h-3zM12 26h4v1h-4zM17 26h1v1h-1zM19 26h1v1h-1zM23 26h1v1h-1zM25 26h1v1h-1zM30 26h1v1h-1zM34 26h5v1h-5zM40 26h1v1h-1zM4 27h1v1h-1zM9 27h1v1h-1zM13 27h3v1h-3zM18 27h1v1h-1zM22 27h2v1h-2zM26 27h2v1h-2zM34 27h2v1h-2zM37 27h2v1h-2zM40 27h1v1h-1zM42 27h1v1h-1zM3 28h1v1h-1zM5 28h1v1h-1zM11 28h2v1h-2zM16 28h3v1h-3zM21 28h4v1h-4zM26 28h1v1h-1zM28 28h1v1h-1zM30 28h3v1h-3zM34 28h1v1h-1zM37 28h4v1h-4zM43 28h1v1h-1zM4 29h1v1h-1zM7 29h1v1h-1zM9 29h1v1h-1zM11 29h1v1h-1zM13 29h2v1h-2zM18 29h1v1h-1zM21 29h1v1h-1zM25 29h1v1h-1zM28 29h1v1h-1zM30 29h1v1h-1zM32 29h2v1h-2zM35 29h2v1h-2zM39 29h1v1h-1zM3 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h1v1h-1zM17 30h3v1h-3zM23 30h1v1h-1zM26 30h1v1h-1zM29 30h1v1h-1zM31 30h1v1h-1zM34 30h1v1h-1zM36 30h8v1h-8zM4 31h1v1h-1zM7 31h1v1h-1zM9 31h2v1h-2zM14 31h4v1h-4zM20 31h1v1h-1zM25 31h2v1h-2zM28 31h2v1h-2zM32 31h1v1h-1zM34 31h1v1h-1zM38 31h1v1h-1zM40 31h2v1h-2zM3 32h2v1h-2zM7 32h1v1h-1zM10 32h1v1h-1zM14 32h1v1h-1zM19 32h1v1h-1zM23 32h3v1h-3zM27 32h3v1h-3zM31 32h1v1h-1zM33 32h9v1h-9zM43 32h1v1h-1zM3 33h2v1h-2zM6 33h1v1h-1zM8 33h2v1h-2zM11 33h2v1h-2zM14 33h4v1h-4zM21 33h1v1h-1zM23 33h1v1h-1zM26 33h1v1h-1zM28 33h2v1h-2zM31 33h2v1h-2zM34 33h3v1h-3zM39 33h2v1h-2zM43 33h1v1h-1zM3 34h1v1h-1zM5 34h1v1h-1zM8 34h1v1h-1zM13 34h2v1h-2zM16 34h4v1h-4zM22 34h2v1h-2zM25 34h1v1h-1zM27 34h1v1h-1zM29 34h3v1h-3zM33 34h1v1h-1zM37 34h1v1h-1zM40 34h1v1h-1zM42 34h2v1h-2zM3 35h1v1h-1zM6 35h1v1h-1zM8 35h3v1h-3zM12 35h2v1h-2zM16 35h1v1h-1zM18 35h1v1h-1zM20 35h1v1h-1zM22 35h1v1h-1zM25 35h1v1h-1zM27 35h3v1h-3zM32 35h2v1h-2zM35 35h5v1h-5zM41 35h2v1h-2zM11 36h1v1h-1zM14 36h2v1h-2zM18 36h1v1h-1zM20 36h1v1h-1zM22 36h1v1h-1zM25 36h2v1h-2zM28 36h3v1h-3zM33 36h1v1h-1zM35 36h1v1h-1zM39 36h2v1h-2zM3 37h7v1h-7zM12 37h1v1h-1zM14 37h1v1h-1zM17 37h1v1h-1zM19 37h2v1h-2zM23 37h2v1h-2zM27 37h5v1h-5zM33 37h3v1h-3zM37 37h1v1h-1zM39 37h3v1h-3zM3 38h1v1h-1zM9 38h1v1h-1zM13 38h6v1h-6zM20 38h2v1h-2zM23 38h1v1h-1zM25 38h2v1h-2zM28 38h1v1h-1zM30 38h2v1h-2zM34 38h2v1h-2zM39 38h2v1h-2zM42 38h1v1h-1zM3 39h1v1h-1zM5 39h3v1h-3zM9 39h1v1h-1zM13 39h4v1h-4zM19 39h2v1h-2zM23 39h3v1h-3zM27 39h2v1h-2zM31 39h10v1h-10zM42 39h2v1h-2zM3 40h1v1h-1zM5 40h3v1h-3zM9 40h1v1h-1zM17 40h1v1h-1zM19 40h1v1h-1zM21 40h3v1h-3zM25 40h2v1h-2zM30 40h2v1h-2zM35 40h1v1h-1zM38 40h1v1h-1zM40 40h3v1h-3zM3 41h1v1h-1zM5 41h3v1h-3zM9 41h1v1h-1zM12 41h1v1h-1zM15 41h2v1h-2zM18 41h2v1h-2zM21 41h1v1h-1zM24 41h1v1h-1zM28 41h1v1h-1zM30 41h2v1h-2zM34 41h6v1h-6zM41 41h1v1h-1zM3 42h1v1h-1zM9 42h1v1h-1zM14 42h2v1h-2zM20 42h4v1h-4zM31 42h1v1h-1zM33 42h2v1h-2zM39 42h3v1h-3zM43 42h1v1h-1zM3 43h7v1h-7zM11 43h1v1h-1zM13 43h2v1h-2zM18 43h1v1h-1zM20 43h2v1h-2zM23 43h1v1h-1zM25 43h1v1h-1zM27 43h3v1h-3zM32 43h1v1h-1zM38 43h2v1h-2zM41 43h1v1h-1z" fill="#000"/></svg><span><b class="qrt">📱 TELÉFONO</b>Baja la app</span></div><div id="lqr2"><div id="lqr2svg"></div><span><b class="qrt">📺 TV</b>Para sentarte</span></div><button class="lseat" data-s="2"></button><button class="lseat" data-s="3"></button><div id="lmid"></div><button class="lseat" data-s="1"></button><button class="lseat" data-s="0"></button></div>
       <div id="lbtns"><button id="lnum">JUGADORES: 4</button><button id="lpar">MODO PAREJAS</button><button id="lind">INDIVIDUAL</button><button id="lcount">CONTAR: TODAS</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
     </div>
   </div>
@@ -368,10 +422,10 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
   <button id="pexit">SALIR DEL JUEGO</button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
-  <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano → JUGADOR → <b>ESCANEAR QR</b><br>y ocupa el sitio de una máquina.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
+  <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
 <div id="seatop" class="ov" hidden><div class="ovbox"><h2 id="sotit">SILLA</h2><p id="sonm"></p><button id="soname" class="main">✏️ CAMBIAR NOMBRE</button><button id="soswap">⇄ CAMBIAR DE SILLA</button><button id="sono">CANCELAR</button></div></div>
-<div id="bnames" class="ov" hidden><div class="ovbox"><h2>NOMBRES DE LAS MÁQUINAS</h2><p>Escribe el nombre de cada máquina (déjalo vacío para "MÁQUINA").</p><div id="bnrows"></div><div class="row"><button id="bnok" class="main">GUARDAR</button><button id="bnno">CANCELAR</button></div></div></div>
+<div id="bnames" class="ov" hidden><div class="ovbox"><h2>NOMBRES DE LOS BOTS</h2><p>Escribe el nombre de cada bot (déjalo vacío para "BOT").</p><div id="bnrows"></div><div class="row"><button id="bnok" class="main">GUARDAR</button><button id="bnno">CANCELAR</button></div></div></div>
 <div id="paywall" class="ov" hidden><div class="ovbox"><h2 id="pwt">DOMINÓ CUBANO</h2><p id="pwp"></p>
 <div class="small">CÓDIGO DE TU EQUIPO: <b class="code sm" id="pwdev">····-····</b></div>
 <div id="pwstep1"><p>1 · Elige tu plan</p><div class="row"><button class="pwplan main" data-plan="M">1 MES<small>5 USD</small></button><button class="pwplan main" data-plan="P">PARA SIEMPRE<small>20 USD</small></button></div></div>
@@ -379,6 +433,7 @@ body.mesa #menu>p,body.mesa #menu h1{display:none}
 <div id="pwstep3" hidden><p id="pwhow"></p><div class="code" id="pwamt"></div><div class="row"><div class="code sm" id="pwto"></div><button id="pwcopy">COPIAR</button></div><p class="small" id="pwtit"></p><p class="small" id="pwwait"></p><div class="row"><button id="pwpaid" class="main">YA PAGUÉ</button><button id="pwback2">VOLVER</button></div></div>
 <div class="msg" id="pwmsg"></div>
 <details id="pwhave"><summary>¿Ya tienes un código de activación?</summary><div class="row"><input id="pwin" maxlength="20" placeholder="CÓDIGO DE ACTIVACIÓN" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="pwok" class="main">ACTIVAR</button></div></details>
+<button id="pwwa" class="wa">💬 PAGAR DESDE ANGOLA POR WHATSAPP<small>+244 926 815 829</small></button>
 <button id="pwno">CERRAR</button></div></div>
 <button id="bmesa" hidden>☰ MENÚ</button>
 <div id="ver"></div>
@@ -2684,7 +2739,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.6.9';
+const VERSION='v3.7.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2862,9 +2917,9 @@ const same=(x,y)=>x&&y&&((x[0]===y[0]&&x[1]===y[1])||(x[0]===y[1]&&x[1]===y[0]))
 const SEATS=['TÚ','DERECHA','COMPAÑERO','IZQUIERDA'];
 const TEAMN=()=>isTV?['ROJOS','AZULES']:['NOSOTROS','ELLOS'];
 let BOTN=['','','','']; try{ const a=JSON.parse(localStorage.getItem('dominoBots')||'[]'); if(Array.isArray(a)) BOTN=[0,1,2,3].map(i=>String(a[i]||'').toUpperCase().slice(0,14)); }catch(_){}
-function botName(s){ return BOTN[s]||('MÁQUINA '+(isTV?s+1:s)); }
+function botName(s){ return BOTN[s]||('BOT '+(isTV?s+1:s)); }
 const G=window.__D={state:'menu',hands:[[],[],[],[]],chain:[],ends:null,turn:0,passes:0,log:[],wins:[0,0,0,0],countMode:'todas',cnt:null,matchNo:0,nPlayers:4,energy:[0,0,0,0],scores:[0,0],pscores:[0,0,0,0],mode:'parejas',handNo:0,starter:0,lastWinner:-1,msg:'',msgT:0,
-  human:[true,false,false,false],names:['TÚ','MÁQUINA 1','MÁQUINA 2','MÁQUINA 3'],aiT:0,anim:[],shake:0,fist:null,dust:[],exps:[],says:[],fallT:-1,fallHold:false,megaT:-1,wobT:-999,wobA:0,photos:[null,null,null,null],fly:null,frame:0,remote:[null,null,null,null],over:false,target:100,rum:1,burn:0,ash:0,drink:null,lastDrink:0,drops:[],ashp:[],puffs:[],smoke:null,lastSmoke:600,pc:[0,0,0,0],ashDrop:false,spilled:false,puddle:0};
+  human:[true,false,false,false],names:['TÚ','BOT 1','BOT 2','BOT 3'],aiT:0,anim:[],shake:0,fist:null,dust:[],exps:[],says:[],fallT:-1,fallHold:false,megaT:-1,wobT:-999,wobA:0,photos:[null,null,null,null],fly:null,frame:0,remote:[null,null,null,null],over:false,target:100,rum:1,burn:0,ash:0,drink:null,lastDrink:0,drops:[],ashp:[],puffs:[],smoke:null,lastSmoke:600,pc:[0,0,0,0],ashDrop:false,spilled:false,puddle:0};
 function newDeck(){ const d=[]; for(let a=0;a<=9;a++) for(let b=a;b<=9;b++) d.push([a,b]); for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; } return d; }
 function canPlay(t){ if(!G.ends) return ['L']; const s=[]; if(t[0]===G.ends[0]||t[1]===G.ends[0]) s.push('L'); if(t[0]===G.ends[1]||t[1]===G.ends[1]) s.push('R'); return s; }
 function playable(seat){ return G.hands[seat].filter(t=>canPlay(t).length); }
@@ -3854,9 +3909,12 @@ document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'))
 document.getElementById('pexit').addEventListener('click',()=>pauseChoose('exit'));
 function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
 document.getElementById('psalir').addEventListener('click',salirApp);
+document.getElementById('mmus').addEventListener('click',()=>{ initAudio(); setMusV(volNext(MUSV)); });
+document.getElementById('msnd').addEventListener('click',()=>{ initAudio(); setSndV(volNext(SNDV)); });
+try{ musLabel(); }catch(_){}
 document.getElementById('bmesa').addEventListener('click',()=>openPause());
 function volTxt(v){ return v>0?'●'.repeat(v)+'○'.repeat(5-v):'NO'; }
-function musLabel(){ const m=G.remoteMode?(G.rMusV!=null?G.rMusV:(G.rMus!==false?4:0)):MUSV, n=G.remoteMode?(G.rSndV!=null?G.rSndV:(G.rSnd!==false?5:0)):SNDV; document.getElementById('pmus').textContent='MÚSICA '+volTxt(m); document.getElementById('psnd').textContent='EFECTOS '+volTxt(n); document.getElementById('pcan').textContent='♪ '+(G.remoteMode?(G.rSong||'CANCIÓN'):SONGS[songIdx][0])+'  ▶'; }
+function musLabel(){ const m=G.remoteMode?(G.rMusV!=null?G.rMusV:(G.rMus!==false?4:0)):MUSV, n=G.remoteMode?(G.rSndV!=null?G.rSndV:(G.rSnd!==false?5:0)):SNDV; document.getElementById('pmus').textContent='MÚSICA '+volTxt(m); document.getElementById('psnd').textContent='EFECTOS '+volTxt(n); { const a=document.getElementById('mmus'), b=document.getElementById('msnd'); if(a){ a.textContent='🎵 MÚSICA '+volTxt(MUSV); b.textContent='🔊 EFECTOS '+volTxt(SNDV); } } document.getElementById('pcan').textContent='♪ '+(G.remoteMode?(G.rSong||'CANCIÓN'):SONGS[songIdx][0])+'  ▶'; }
 function setMusV(v){ MUSV=Math.max(0,Math.min(5,v|0)); MUS=MUSV>0; try{ localStorage.setItem('dominoMusVol',MUSV); localStorage.setItem('dominoMusica',MUS?'1':'0'); }catch(_){} musLabel(); broadcast(); }
 function setMus(v){ setMusV(v?(MUSV||4):0); }
 function setSndV(v){ SNDV=Math.max(0,Math.min(5,v|0)); SND=SNDV>0; try{ localStorage.setItem('dominoSndVol',SNDV); localStorage.setItem('dominoSonido',SND?'1':'0'); }catch(_){} applySnd(); musLabel(); broadcast(); }
@@ -3977,10 +4035,10 @@ function startRemote(){
   try{ KikoApp.ctrlStart(''); }catch(_){}
 }
 document.getElementById('rscan').addEventListener('click',()=>{ const st=document.getElementById('rst');
-  if(window.KikoApp&&KikoApp.scanQR){ st.textContent='Apunta al QR "CONECTAR A LA MESA"...'; try{ KikoApp.scanQR(); }catch(_){} } else st.textContent='Actualiza la app para usar el escáner.'; });
+  if(window.KikoApp&&KikoApp.scanQR){ st.textContent='Apunta al QR que dice "📺 TV"...'; try{ KikoApp.scanQR(); }catch(_){} } else st.textContent='Actualiza la app para usar el escáner.'; });
 window.kikoQR=(t)=>{ const st=document.getElementById('rst'); t=String(t||'');
   if(t.startsWith('DCMESA:')){ const ips=t.slice(7).split(',').map(x=>x.trim()).filter(x=>/^\d+\.\d+\.\d+\.\d+$/.test(x)).join(','); if(ips){ st.textContent='Conectando a la mesa...'; try{ KikoApp.ctrlStart(ips); }catch(_){} return; } }
-  if(t==='ERR') st.textContent='No se pudo abrir el escáner. Escribe la dirección que sale en la mesa.'; else if(t) st.textContent='Ese QR no es el de CONECTAR A LA MESA.'; else st.textContent='Escaneo cancelado.'; };
+  if(t==='ERR') st.textContent='No se pudo abrir el escáner. Escribe la dirección que sale en la mesa.'; else if(t) st.textContent='Ese QR no es el que dice "📺 TV".'; else st.textContent='Escaneo cancelado.'; };
 document.getElementById('rpair').addEventListener('click',()=>{ document.getElementById('rst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('rgo').addEventListener('click',()=>{ const ip=document.getElementById('rip').value.trim(); if(ip) try{ KikoApp.ctrlStart(ip); }catch(_){} });
 document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
@@ -4030,27 +4088,31 @@ function becomeTable(){
 }
 function becomeSolo(){
   isTV=false; G.nPlayers=4; G.human=[true,false,false,false]; G.names=['TÚ',botName(1),botName(2),botName(3)];
-  document.getElementById('mplay').textContent='JUGAR CONTRA LA MÁQUINA'; document.getElementById('hand').hidden=false; document.getElementById('mtv').hidden=true;
+  document.getElementById('mplay').textContent='JUGAR CONTRA LOS BOTS'; document.getElementById('hand').hidden=false; document.getElementById('mtv').hidden=true;
   showSub(); layout();
 }
 document.getElementById('pmesa').addEventListener('click',()=>{ initAudio(); becomeTable(); });
 document.getElementById('ptab').addEventListener('click',()=>{ initAudio(); isTV=false; document.getElementById('hand').hidden=false; openProfile(); });
 document.getElementById('psolo').addEventListener('click',()=>{ initAudio(); becomeSolo(); });
 const guide=document.getElementById('guide');
-document.getElementById('pguia').addEventListener('click',()=>{ guide.hidden=false; guide.scrollTop=0; document.getElementById('gclose').classList.add('focus'); });
+const VIDEO_URL='https://github.com/capoteadonis1979/kiko-juego/releases/download/tutorial/tutorial_domino.mp4';
+document.getElementById('gvbtn').addEventListener('click',()=>{ try{ if(window.KikoApp&&KikoApp.openUrl){ KikoApp.openUrl(VIDEO_URL); return; } }catch(_){} window.open(VIDEO_URL,'_blank'); });
+document.getElementById('pguia').addEventListener('click',()=>{ const v=document.getElementById('gvqr'); if(!v.innerHTML) try{ v.innerHTML=qrSVG(VIDEO_URL); }catch(_){} guide.hidden=false; guide.scrollTop=0; document.getElementById('gclose').classList.add('focus'); });
 document.getElementById('gclose').addEventListener('click',()=>{ guide.hidden=true; });
 function updateTvMenu(){
   if(!isTV) return;
   const n=Object.keys(peers).length;
-  document.getElementById('lip').innerHTML='En cada cel abre <b style="font-size:1em;letter-spacing:0">Dominó Cubano</b> y toca <b style="font-size:1em;letter-spacing:0">JUGADOR</b>. Luego <b style="font-size:1em;letter-spacing:0">ESCANEAR QR</b> y apunta al QR de la derecha.<br><span style="color:#ffd23a">⚠ La mesa y todos los jugadores tienen que estar en la MISMA red Wi-Fi.</span><br>Dirección de la mesa: <b>'+(G.ip||'...')+'</b> · Jugadores conectados: '+n+' de 4';
+  document.getElementById('lip').innerHTML='Escanea el QR <b>📺 TV</b> con tu teléfono para sentarte<br><small>Misma Wi-Fi · Mesa '+(G.ip||'...')+' · '+n+' de 4 conectados</small>';
   const par=G.mode==='parejas';
   document.querySelectorAll('#lseats .lseat').forEach(d=>{ const s=+d.dataset.s, on=G.remote[s]!=null;
     const act=isAct(s); d.className='lseat'+(on?' on':'')+(par?(s%2===0?' pA':' pB'):' c'+s)+(lobSel===s?' sel':'')+(act?'':' off'); d.innerHTML='';
     const i=document.createElement('i'); if(on&&G.photos[s]) i.style.backgroundImage='url('+G.photos[s].src+')'; else i.textContent=on?'👤':'🤖';
+    const st=document.createElement('span'); st.className='lchair'; st.append(i);
+    const nm=document.createElement('span'); nm.className='lnm';
     const b=document.createElement('b'); b.textContent=act?(on?G.names[s]:botName(s)):(on?G.names[s]:'SIN JUGADOR');
-    const sm=document.createElement('small'); sm.textContent=act?((par?(s%2===0?'ROJOS · ':'AZULES · '):'')+(on?'conectado':'máquina · libre')):'no juega';
-    d.append(i,b,sm); });
-  document.getElementById('lmid').innerHTML=par?'<b style="color:#ff6a5a">● ROJOS: arriba y abajo</b><b style="color:#5aa0ff">● AZULES: izquierda y derecha</b>Elige una silla y pulsa OK: cambiar nombre o de silla':'<b>Cada uno juega solo</b>Elige una silla y pulsa OK: cambiar nombre o de silla';
+    const sm=document.createElement('small'); sm.textContent=act?(on?'teléfono':'libre'):'no juega';
+    nm.append(b,sm); d.append(st,nm); });
+  document.getElementById('lmid').innerHTML='<em>DOMINÓ</em>'+(par?'<b>PAREJAS<br>2 CONTRA 2</b><small><span style="color:#ff8a7a">● ROJOS</span> arriba y abajo<br><span style="color:#8ab8ff">● AZULES</span> a los lados</small>':'<b>INDIVIDUAL<br>'+G.nPlayers+' JUGADORES</b><small>Cada uno juega solo</small>');
   const lp=document.getElementById('lpar'), li=document.getElementById('lind');
   lp.classList.toggle('on',par); li.classList.toggle('on',!par); lp.classList.toggle('dim',!par); li.classList.toggle('dim',par);
   lp.textContent=(par?'✔ ':'')+'MODO PAREJAS'; li.textContent=(!par?'✔ ':'')+'INDIVIDUAL'; lp.classList.toggle('dis',G.nPlayers<4);
@@ -4137,16 +4199,16 @@ function openBots(){
   const rows=document.getElementById('bnrows'); rows.innerHTML='';
   const seats=isTV?[0,1,2,3]:[1,2,3], lab=isTV?['ABAJO','DERECHA','ARRIBA','IZQUIERDA']:['','DERECHA','ENFRENTE','IZQUIERDA'];
   for(const st of seats){ const r=document.createElement('div'); r.className='row'; const l=document.createElement('label'); l.textContent=lab[st]; const i=document.createElement('input');
-    i.maxLength=14; i.dataset.s=st; i.value=BOTN[st]; i.placeholder='MÁQUINA '+(isTV?st+1:st); i.autocomplete='off'; r.append(l,i); rows.appendChild(r); }
+    i.maxLength=14; i.dataset.s=st; i.value=BOTN[st]; i.placeholder='BOT '+(isTV?st+1:st); i.autocomplete='off'; r.append(l,i); rows.appendChild(r); }
   bnEl.hidden=false; ovFoc(bnEl,0);
 }
 const SEATLAB=['DE ABAJO','DE LA DERECHA','DE ARRIBA','DE LA IZQUIERDA'];
 function openSeatOp(s){ soSeat=s; const on=G.remote[s]!=null; document.getElementById('sotit').textContent='SILLA '+SEATLAB[s];
-  document.getElementById('sonm').innerHTML=on?'<b>'+G.names[s]+'</b><br>Su nombre lo pone él en su cel':'<b>'+botName(s)+'</b> · máquina';
+  document.getElementById('sonm').innerHTML=on?'<b>'+G.names[s]+'</b><br>Su nombre lo pone él en su cel':'<b>'+botName(s)+'</b> · bot';
   document.getElementById('soname').hidden=on; soEl.hidden=false; ovFoc(soEl,0); }
 function askSeatName(s){ const cur=BOTN[s]||'';
-  try{ if(window.KikoApp&&KikoApp.askText){ KikoApp.askText('Nombre de la máquina '+SEATLAB[s].toLowerCase(),cur,'seat'+s); return; } }catch(_){}
-  const v=prompt('Nombre de la máquina '+SEATLAB[s].toLowerCase(),cur); if(v!==null) window.kikoText('seat'+s,v); }
+  try{ if(window.KikoApp&&KikoApp.askText){ KikoApp.askText('Nombre del bot '+SEATLAB[s].toLowerCase(),cur,'seat'+s); return; } }catch(_){}
+  const v=prompt('Nombre del bot '+SEATLAB[s].toLowerCase(),cur); if(v!==null) window.kikoText('seat'+s,v); }
 window.kikoText=(tag,v)=>{ if(v==null) return; if(String(tag).startsWith('seat')){ const s=+String(tag).slice(4); BOTN[s]=String(v).trim().toUpperCase().slice(0,14);
   try{ localStorage.setItem('dominoBots',JSON.stringify(BOTN)); }catch(_){} if(G.remote[s]==null) G.names[s]=botName(s); updateTvMenu(); broadcast(); } };
 document.getElementById('soname').addEventListener('click',()=>{ soEl.hidden=true; askSeatName(soSeat); });
@@ -4160,7 +4222,7 @@ document.getElementById('bnok').addEventListener('click',()=>{
   for(let x=0;x<4;x++) if(G.remote[x]==null&&!(x===0&&!isTV)) G.names[x]=botName(x);
   bnEl.hidden=true; updateTvMenu(); broadcast();
 });
-/* ===== licencia: 1 semana gratis; después 3 partidas al día o comprarla ===== */
+/* ===== licencia: 1 hora de juego gratis; después 3 partidas al día o comprarla ===== */
 function sha256(str){ str=unescape(encodeURIComponent(str)); const rot=(v,a)=>(v>>>a)|(v<<(32-a)), mw=Math.pow(2,32), words=[], bl=str.length*8;
   let hash=sha256.h=sha256.h||[]; const k=sha256.k=sha256.k||[]; let pl=k.length; const ic={};
   for(let c=2;pl<64;c++){ if(!ic[c]){ for(let i=0;i<313;i+=c) ic[i]=c; hash[pl]=(Math.pow(c,.5)*mw)|0; k[pl++]=(Math.pow(c,1/3)*mw)|0; } }
@@ -4189,9 +4251,13 @@ let T0=Date.now(); try{ const v=+localStorage.getItem('dominoInicio'); if(v>0) T
 const today=()=>{ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 function usedToday(){ try{ const j=JSON.parse(localStorage.getItem('dominoHoy')||'{}'); return j.d===today()?(j.n|0):0; }catch(_){ return 0; } }
 function licOK(){ return !!(LIC&&(LIC.perm||Date.now()<=LIC.until)); }
-function trialDays(){ const now=Date.now(); if(now<T0) return 0; return Math.max(0,7-Math.floor((now-T0)/86400000)); }
+const TRIAL_MS=3600000; let USO=0; try{ USO=Math.max(0,+localStorage.getItem('dominoUso')||0); }catch(_){}
+function trialLeft(){ return Math.max(0,TRIAL_MS-USO); }
+function trialDays(){ return trialLeft()>0?1:0; }
+// cuenta solo el tiempo jugando de verdad (partida en marcha, sin pausa, en la mesa)
+setInterval(()=>{ try{ if(licOK()||trialLeft()<=0) return; if(!menu.hidden||!G||G.remoteMode||G.paused||document.hidden) return; USO+=10000; localStorage.setItem('dominoUso',String(USO)); }catch(_){} },10000);
 function licInfo(){ if(licOK()) return LIC.perm?'✔ ACTIVADA PARA SIEMPRE':'✔ ACTIVADA HASTA EL '+new Date(LIC.until).toLocaleDateString('es-ES');
-  const d=trialDays(); if(d>0) return 'PRUEBA GRATIS: '+(d===1?'QUEDA 1 DÍA':'QUEDAN '+d+' DÍAS')+' SIN LÍMITE';
+  const ml=Math.ceil(trialLeft()/60000); if(ml>0) return 'PRUEBA GRATIS: '+(ml>=60?'1 HORA DE JUEGO':(ml===1?'QUEDA 1 MINUTO':'QUEDAN '+ml+' MINUTOS')+' DE JUEGO');
   const r=Math.max(0,3-usedToday()); return 'HOY TE '+(r===1?'QUEDA 1 PARTIDA GRATIS':'QUEDAN '+r+' PARTIDAS GRATIS')+' DE 3'; }
 function updLic(){ document.getElementById('lic').textContent=licInfo(); }
 function canStart(){ if(licOK()||trialDays()>0) return true; const u=usedToday(); if(u<3){ try{ localStorage.setItem('dominoHoy',JSON.stringify({d:today(),n:u+1})); }catch(_){} updLic(); return true; }
@@ -4204,7 +4270,7 @@ function pwStep(n){ ['pwstep1','pwstep2','pwstep3'].forEach((id,i)=>pwEl(id).hid
 function pwMsg(t,ok){ const m=pwEl('pwmsg'); m.style.color=ok?'#7dffa8':'#ffb0a0'; m.textContent=t||''; }
 function showPay(title){ pwEl('pwt').textContent=title; pwEl('pwp').textContent=licInfo(); pwEl('pwdev').textContent=DEV;
   pwEl('pwin').value=''; pwMsg('');
-  if(!SALES_URL){ pwEl('pwstep1').hidden=pwEl('pwstep2').hidden=pwEl('pwstep3').hidden=true; pwEl('pwhave').open=true; pwMsg('Para comprar escribe a capoteapps@gmail.com con el código de tu equipo.',true); }
+  if(!SALES_URL){ pwEl('pwstep1').hidden=pwEl('pwstep2').hidden=pwEl('pwstep3').hidden=true; pwEl('pwhave').open=true; pwMsg('Para comprar escribe por WhatsApp (+244 926 815 829) o a capoteapps@gmail.com con el código de tu equipo.',true); }
   else { pwEl('pwhave').open=false; let o=null; try{ o=JSON.parse(localStorage.getItem('dominoOrder')||'null'); }catch(_){} if(o&&o.plan&&o.met&&o.r&&Date.now()-o.t<48*3600e3){ PW.plan=o.plan; PW.met=o.met; pwShow(o.r); } else pwStep(1); }
   payEl.hidden=false; ovFoc(payEl,0); }
 async function salesGet(q){ const u=SALES_URL+'?'+Object.entries(Object.assign({app:'domino',id:DEV},q)).map(([a,b])=>a+'='+encodeURIComponent(b)).join('&');
@@ -4230,6 +4296,10 @@ pwEl('pwback2').addEventListener('click',()=>{ try{ localStorage.removeItem('dom
 setTimeout(()=>{ try{ if(SALES_URL&&!licOK()&&localStorage.getItem('dominoOrder')) pwCheck(false); }catch(_){} },3000);
 document.getElementById('pact').addEventListener('click',()=>showPay('ACTIVAR DOMINÓ CUBANO'));
 document.getElementById('pwno').addEventListener('click',()=>{ payEl.hidden=true; });
+// WhatsApp para pagar desde Angola (mensaje con el código del equipo)
+const WA_NUM='244926815829';
+document.getElementById('pwwa').addEventListener('click',()=>{ const u='https://wa.me/'+WA_NUM+'?text='+encodeURIComponent('Hola, quiero comprar Dominó Cubano. Código de mi equipo: '+DEV);
+  try{ if(window.KikoApp&&KikoApp.openUrl){ KikoApp.openUrl(u); return; } }catch(_){} window.open(u,'_blank'); });
 document.getElementById('pwok').addEventListener('click',()=>{ const r=checkCode(document.getElementById('pwin').value), m=document.getElementById('pwmsg');
   if(!r){ m.style.color='#ffb0a0'; m.textContent='CÓDIGO NO VÁLIDO: revísalo y escríbelo otra vez'; return; }
   if(r.until&&Date.now()>r.until){ m.style.color='#ffb0a0'; m.textContent='ESE CÓDIGO YA VENCIÓ'; return; }
