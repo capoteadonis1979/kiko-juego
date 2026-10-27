@@ -480,8 +480,9 @@ body.solo #drtxt small{font-size:12px}
       </ul>
       <h3>5 · Reglas: dobles, meta y ganar</h3>
       <ul>
-        <li><b>Dobles</b> (o 6 con un dado): <b>vuelves a tirar</b>. Al <b>tercer doble seguido</b>, tu ficha <b>más avanzada entra directa a la meta</b> y pasa el turno.</li>
+        <li><b>Dobles</b> (o 6 con un dado): <b>vuelves a tirar</b>. Al <b>tercer doble seguido</b>, tu ficha <b>más avanzada vuelve a casa</b> y pasa el turno.</li>
         <li>Con un dado: si tienes las 4 fichas fuera de casa, <b>el 6 vale 7</b>.</li>
+        <li><b>Recta final</b>: cuando todas las fichas que te quedan están en los <b>últimos 9 renglones</b> antes de la meta, tiras con <b>un solo dado</b>.</li>
         <li>Al final de la vuelta entras por <b>tu pasillo</b> (de tu color) hasta la <b>meta</b> (la estrella). Hay que llegar con la <b>cuenta exacta</b>. Cada ficha que llega <b>cuenta 10</b>.</li>
         <li>Si no puedes usar un número (ni el 20 ni el 10), se pierde.</li>
         <li><b>Gana</b> el primero que mete sus <b>4 fichas</b> en la meta.</li>
@@ -3095,13 +3096,12 @@ function nextPlayer(){ const A=ACT(); let i=A.indexOf(G.turn); for(let n=0;n<4;n
 // tirar: se llama cuando el dado ya cayó en la mesa (la animación lo decide antes)
 function rolled(vals){
   const k=G.turn; G.dice=vals.slice(); G.toks=[];
-  const two=G.nDice===2, doble=two?vals[0]===vals[1]:vals[0]===6;
+  const two=vals.length===2, doble=two?vals[0]===vals[1]:(G.nDice===1&&vals[0]===6);
   if(doble){ G.dbl++; }
-  if(doble&&G.dbl>=3){   // tercer doble seguido: la ficha más avanzada entra directa a la meta
+  if(doble&&G.dbl>=3){   // tercer doble seguido: la ficha más avanzada vuelve a casa y pasa el turno
     let bi=-1; G.pos[k].forEach((p,i)=>{ if(p>=0&&p<META&&(bi<0||p>G.pos[k][bi])) bi=i; });
-    if(bi>=0){ G.pos[k][bi]=META; G.last={k,i:bi}; say('¡TRES '+(two?'DOBLES':'SEISES')+'! LA FICHA '+(bi+1)+' DE '+G.names[k]+' ENTRA A LA META',160); metaSound();
-      if(G.pos[k].every(p=>p===META)){ G.order.push(k); G.winner=k; G.state='over'; G.phase='over'; say('¡GANA '+G.names[k]+'!',99999); chime(true); try{ histSave(); }catch(_){} broadcast(); return; } }
-    else say('¡TRES '+(two?'DOBLES':'SEISES')+'! NO TIENE FICHAS FUERA',140);
+    if(bi>=0){ const fr=pieceXY(k,bi,G.pos[k][bi]); G.pos[k][bi]=CASA; G.fx.push({t:'casa',k,i:bi,f:G.frame,fr}); say('¡TRES '+(two?'DOBLES':'SEISES')+'! LA FICHA '+(bi+1)+' DE '+G.names[k]+' A CASA',160); boomCasa(); }
+    else say('¡TRES '+(two?'DOBLES':'SEISES')+'! PIERDE EL TURNO',140);
     G.doble=false; G.phase='wait'; G.waitT=150; broadcast(); return; }
   G.doble=doble; G.mustOpen=doble;
   if(two){ G.toks.push({id:'a',v:vals[0],kind:'die'},{id:'b',v:vals[1],kind:'die'}); }
@@ -3180,7 +3180,7 @@ function pieceXY(k,i,p){
   let same=[]; if(p<=ULTCALLE){ const a=absOf(k,p); for(const q of ACT()) G.pos[q].forEach((pp,j)=>{ if(pp>=0&&pp<=ULTCALLE&&absOf(q,pp)===a) same.push(q*4+j); }); }
   else G.pos[k].forEach((pp,j)=>{ if(pp===p) same.push(k*4+j); });
   if(same.length<2) return [x,y];
-  const n=same.indexOf(k*4+i), off=(n===0?-1:1)*0.33*BUU; return vert?[x+off,y]:[x,y+off];
+  const n=same.indexOf(k*4+i), off=(n===0?-1:1)*0.45*BUU; /* puente: una al lado de la otra, sin montarse */ return vert?[x+off,y]:[x,y+off];
 }
 let BOARD=null, BOARDS=0;
 function boardImage(sc){ if(BOARD&&BOARDS===sc) return BOARD; const c=document.createElement('canvas'); c.width=Math.round((BS+BUU*2)*sc); c.height=c.width; const x=c.getContext('2d'); x.scale(sc,sc); x.translate(BUU,BUU); drawBoard(x,0,0,BS); BOARD=c; BOARDS=sc; return c; }
@@ -3319,14 +3319,16 @@ function drawTable(){
 function pieceXYp(k,i,p){ if(p>=META) return metaSlot(k,i); if(p<=ULTCALLE) return cellCenter(...TRACK[absOf(k,p)-1]); return cellCenter(...PASILLO[k][p-64]); }
 
 /* ================= JUGAR: tirar, elegir y el panel del teléfono ================= */
+// en los últimos 9 renglones antes de la meta se tira con un solo dado (si todas las fichas que le quedan están ahí)
+function nDiceFor(k){ if(G.nDice!==2) return G.nDice; const rest=G.pos[k].filter(p=>p!==META); return rest.length&&rest.every(p=>p>=0&&META-p<=9)?1:2; }
 function doRoll(k,pw,aim,spin){ if(G.state!=='play'||G.phase!=='roll'||G.turn!==k||G.paused) return false;
-  const vals=[...Array(G.nDice)].map(()=>1+Math.floor(Math.random()*6)); G.phase='rolling'; throwDice(k,vals,pw,aim,spin); broadcast(); return true; }
+  const vals=[...Array(nDiceFor(k))].map(()=>1+Math.floor(Math.random()*6)); G.phase='rolling'; throwDice(k,vals,pw,aim,spin); broadcast(); return true; }
 function setSel(k,tok){ if(G.turn===k&&G.phase==='move'){ G.sel=tok||null; } }
 // lo que ve cada jugador en su teléfono
 function pieceLabel(k,m){ if(m.from===CASA) return 'SACAR'+(m.eat?' y COME':''); if(m.to>=META) return 'A LA META 🏁'; if(m.to>ULTCALLE) return 'pasillo '+(m.to-63); return 'casilla '+absOf(k,m.to)+(m.eat?' · COME':''); }
 function viewFor(s){
   const v={seat:s,color:s,name:G.names[s],meta:G.pos[s].filter(p=>p===META).length,phase:G.state==='over'?'over':G.phase,turn:G.turn===s&&G.state==='play',
-    dice:G.dice,nDice:G.nDice,toks:[],opts:{},who:G.names[G.turn],whoC:G.turn,msg:G.msgT>0?G.msg:'',over:G.state==='over',winner:G.winner,state:G.state};
+    dice:G.dice,nDice:(G.state==='play'?nDiceFor(s):G.nDice),toks:[],opts:{},who:G.names[G.turn],whoC:G.turn,msg:G.msgT>0?G.msg:'',over:G.state==='over',winner:G.winner,state:G.state};
   if(v.turn&&G.phase==='move'){ const L=legal(s);
     v.toks=G.toks.map(t=>({id:t.id,v:t.v,kind:t.kind,any:L[t.id].some(Boolean)}));
     for(const id in L) v.opts[id]=L[id].map((m,i)=>{ const p=G.pos[s][i]; return m?{ok:1,l:pieceLabel(s,m)}:{ok:0,l:p===CASA?'en casa':p>=META?'en la meta':'no puede'}; }); }
@@ -3347,7 +3349,7 @@ function renderPanel(force){
   const ph=G.remoteMode?(PR.photo||''):(G.photos[0]&&G.photos[0].src||PR.photo||''); const pe=document.getElementById('pmeph'); pe.style.backgroundImage=ph?'url('+ph+')':''; pe.textContent=ph?'':'👤';
   const roll=document.getElementById('droll'), mv=document.getElementById('dmove'), wt=document.getElementById('dwait');
   if(!G.remoteMode&&v.turn&&v.phase==='roll'&&roll.hidden){ try{ navigator.vibrate&&navigator.vibrate([150,90,150]); }catch(_){} }
-  roll.hidden=!(v.turn&&v.phase==='roll'); mv.hidden=!(v.turn&&v.phase==='move'); wt.hidden=!roll.hidden||!mv.hidden;
+  roll.hidden=!(v.turn&&v.phase==='roll'); try{ CD[1].el.style.display=v.nDice===1?'none':''; }catch(_){} mv.hidden=!(v.turn&&v.phase==='move'); wt.hidden=!roll.hidden||!mv.hidden;
   if(!mv.hidden){
     if(!v.toks.some(t=>t.id===selTok&&t.any)) selTok=(v.toks.find(t=>t.any)||{}).id||null;
     const tb=document.getElementById('dtoks'); tb.innerHTML='';
@@ -3432,7 +3434,7 @@ function cupLoop(t){ requestAnimationFrame(cupLoop);
     const sp=Math.hypot(d.vx,d.vy); if(sp>260&&Math.random()<sp/4000) d.face=1+Math.floor(Math.random()*6);
   });
   // choque entre los dos dados
-  const [p,q]=CD; if(!p.out){ const dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), mn=s*1.05; if(dd<mn&&dd>0){ const nx=dx/dd, ny=dy/dd, ov=(mn-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
+  const [p,q]=CD; if(!p.out&&q.el.style.display!=='none'){ const dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), mn=s*1.05; if(dd<mn&&dd>0){ const nx=dx/dd, ny=dy/dd, ov=(mn-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
     const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny; if(rv<0){ p.vx+=rv*nx*0.9; p.vy+=rv*ny*0.9; q.vx-=rv*nx*0.9; q.vy-=rv*ny*0.9; hits=Math.max(hits,-rv); p.va+=rv*0.01; q.va-=rv*0.01; } } }
   // sonido y vibración según la fuerza del golpe: más fuerte agitas, más suenan
   if(hits>W*0.4&&t-SH.lastHit>40){ SH.lastHit=t; diceHit(Math.min(1,hits/(W*5))); if(hits>W*1.5) try{ navigator.vibrate&&navigator.vibrate(Math.min(40,10+hits/(W*0.3)|0)); }catch(_){} }
