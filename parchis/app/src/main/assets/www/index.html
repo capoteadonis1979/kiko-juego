@@ -3150,6 +3150,8 @@ function pieceXY(k,i,p){
 }
 let BOARD=null, BOARDS=0;
 function boardImage(sc){ if(BOARD&&BOARDS===sc) return BOARD; const c=document.createElement('canvas'); c.width=Math.round((BS+BUU*2)*sc); c.height=c.width; const x=c.getContext('2d'); x.scale(sc,sc); x.translate(BUU,BUU); drawBoard(x,0,0,BS); BOARD=c; BOARDS=sc; return c; }
+// color dueño de una casilla seguro: el de la casa que tiene al lado (las del medio, el de su entrada)
+function segOwner(c,r,n){ const e=ENTRADA.indexOf(n); if(e>=0) return e; const dc=c-9, dr=r-9; if(!dc||!dr) return -1; return dc>0?(dr>0?0:1):(dr<0?2:3); }
 function drawBoard(x,ox,oy,S){ const u=S/BU, R=(c,r)=>{ const [a,b,w,h]=cellRect(c,r); return [ox+a*u,oy+b*u,w*u,h*u]; };
   x.save(); x.fillStyle='#6b3a1c'; rr(x,ox-u*0.9,oy-u*0.9,S+u*1.8,S+u*1.8,u*0.9); x.fill();
   x.strokeStyle='#8a5028'; x.lineWidth=u*0.25; rr(x,ox-u*0.5,oy-u*0.5,S+u,S+u,u*0.6); x.stroke();
@@ -3160,7 +3162,7 @@ function drawBoard(x,ox,oy,S){ const u=S/BU, R=(c,r)=>{ const [a,b,w,h]=cellRect
   x.lineWidth=Math.max(1,u*0.05); x.strokeStyle='#5b4a32';
   TRACK.forEach(([c,r],i)=>{ const n=i+1, [X,Y,W,H]=R(c,r); let f='#fbf6ea'; const s=SALIDA.indexOf(n); if(s>=0) f=COL[s].c;
     x.fillStyle=f; x.fillRect(X,Y,W,H); x.strokeRect(X,Y,W,H);
-    if(SEGUROS.includes(n)&&s<0){ x.beginPath(); x.arc(X+W/2,Y+H/2,Math.min(W,H)*0.3,0,7); x.stroke(); }
+    if(SEGUROS.includes(n)&&s<0){ const ow=segOwner(c,r,n); if(ow>=0){ x.fillStyle=COL[ow].l; x.globalAlpha=0.85; x.fillRect(X,Y,W,H); x.globalAlpha=1; x.strokeRect(X,Y,W,H); } x.beginPath(); x.arc(X+W/2,Y+H/2,Math.min(W,H)*0.3,0,7); x.stroke(); }
     });
   PASILLO.forEach((p,k)=>p.forEach(([c,r])=>{ const [X,Y,W,H]=R(c,r); x.fillStyle=COL[k].l; x.fillRect(X,Y,W,H); x.strokeRect(X,Y,W,H); }));
   const cx=ox+PX(8)*u, cy=oy+PX(8)*u, cw=4.5*u, m=[cx+cw/2,cy+cw/2];
