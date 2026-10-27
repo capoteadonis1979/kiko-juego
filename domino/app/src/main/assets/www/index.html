@@ -76,6 +76,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #pbox h2{margin:0 0 6px;color:var(--gold);font-size:24px}
 #pbox button{font:700 19px var(--font);min-width:320px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg);display:flex;flex-direction:column;align-items:center;gap:2px}
 #pbox button.main{background:#2fbf71;border-color:#1a7a44}
+#msal{width:min(92vw,380px)}   /* mismo tamaño con SÍ o NO */
 #pbox button.pred,#exyes{background:#c62828!important;border-color:#ff8a80!important;color:#fff!important}
 #exitask{z-index:90}
 #pbox button small{font:500 12px var(--font);opacity:.85}
@@ -501,6 +502,8 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 <div id="mplayer"><button id="mprev">◀</button><button id="msong">♪ Pega la ficha, compay</button><button id="mnext">▶</button></div>
 <button id="mtvmus">📂 ELEGIR CARPETA DE MÚSICA</button>
 <p class="small">Elige una carpeta de la tele o del teléfono y sus canciones se añaden a la lista.</p>
+<button id="msal">SALIDA: 20 TANTOS SI PASAN · NO</button>
+<p class="small">Si sales y el siguiente no lleva: 20 tantos para tu pareja. Si tu compañero tampoco lleva, se anulan. (Solo en parejas)</p>
 <button id="cfgx" class="main">LISTO</button></div></div>
 <div id="hist" class="ov" hidden><div class="ovbox"><h2>📜 HISTORIAL DE PARTIDAS</h2>
 <div id="hlist"></div>
@@ -2822,7 +2825,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.11';
+const VERSION='v3.9.12';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3044,6 +3047,7 @@ function doPlay(seat,tile,side,force=0.5,slm=0){
   if(!G.ends){ item={a:t[0],b:t[1],side:'C'}; G.ends=[t[0],t[1]]; G.chain.push(item); }
   else if(side==='L'){ const out=t[0]===G.ends[0]?t[1]:t[0]; item={a:G.ends[0],b:out,side:'L'}; G.ends[0]=out; G.chain.unshift(item); }
   else { const out=t[0]===G.ends[1]?t[1]:t[0]; item={a:G.ends[1],b:out,side:'R'}; G.ends[1]=out; G.chain.push(item); }
+  G.sal=G.chain.length===1?{seat,n:0,got:false}:null;   // salida: se mira si pasan el 1º y el 2º
   item.seat=seat; item.dbl=t[0]===t[1];
   G.energy[seat]=clamp(G.energy[seat]+0.1,0,1);   // 10 niveles: cada ficha puesta sube uno (no se gasta al pegar)
   slm=slm>0?G.energy[seat]:0;                         // el golpetazo pega con todo el nivel acumulado
@@ -3098,7 +3102,7 @@ function drawSays(){
     ctx.save(); ctx.globalAlpha=al; ctx.translate(p.x,p.y); ctx.scale(sc,sc);
     if(x.type==='c'){
       ctx.rotate(Math.sin(t*0.25)*0.12); ctx.font='72px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(CARAS[x.i][0],0,-6+Math.sin(t*0.3)*4);
+      ctx.globalAlpha=1; ctx.fillStyle='#000'; ctx.fillText(CARAS[x.i][0],0,-6+Math.sin(t*0.3)*4); ctx.globalAlpha=al;
       ctx.font='700 14px '+F; ctx.lineWidth=4; ctx.strokeStyle='#111'; ctx.strokeText(G.names[x.seat],0,40); ctx.fillStyle='#fff'; ctx.fillText(G.names[x.seat],0,40);
     } else {
       const txt=FRASES[x.i][1]; ctx.font='700 20px '+F;
@@ -3264,8 +3268,6 @@ function drawFist(){
   } else if(st==='palma'){
     let lift=t<10?0.6:t<20?0.6+0.4*(t-10)/10:t<24?1-(t-20)/4:0;
     const P=at(E,k); handArm('palm',P.x,P.y,rot0,(f.hard?1.2:1)*(1+0.3*lift),E,{lift,flip:true});   // todos con la mano derecha
-    if(t>=24&&t<34){ const e=(t-24)/10; ctx.save(); ctx.strokeStyle='rgba(255,255,255,'+(0.9*(1-e))+')'; ctx.lineWidth=3; ctx.lineCap='round';
-      for(let q=0;q<8;q++){ const a=q/8*6.283+0.2, r0=52+e*26, r1=r0+16; ctx.beginPath(); ctx.moveTo(P.x+Math.cos(a)*r0,P.y+Math.sin(a)*r0*0.75); ctx.lineTo(P.x+Math.cos(a)*r1,P.y+Math.sin(a)*r1*0.75); ctx.stroke(); } ctx.restore(); }
     if(t===24) dust(P.x,P.y,18,2);
   } else if(st==='senalar'){
     const P=at(E,k), nx=seatPos(f.nx!=null?f.nx:nextAct(f.seat)), rp=Math.atan2(nx.y-P.y,nx.x-P.x)+Math.PI/2;
@@ -3494,6 +3496,10 @@ function doPass(seat,n,st){
   if(playable(seat).length) return false;
   st=PSTY.includes(st)?st:'toque';
   n=n>=2?2:1; G.passes++; G.energy[seat]=Math.max(0,G.energy[seat]-0.2);   // pasar baja 2 niveles
+  // regla de la salida (opción): pasa el 1º después de la salida = 20 tantos para los que salieron; si pasa también el 2º (el compañero) se anulan
+  if(G.optSal&&G.sal&&G.mode!=='sencillo'&&ACT().length===4){ G.sal.n++; const tm=teamOf(G.sal.seat);
+    if(G.sal.n===1){ G.scores[tm]+=20; G.sal.got=true; } else { if(G.sal.got) G.scores[tm]-=20; G.sal=null; } }
+  else G.sal=null;
   G.pc[seat]=(G.pc[seat]||0)+1; const hard=(st==='toque'||st==='palma')&&G.pc[seat]>=3;   // al 3er pase de la mano: puñetazo con empingue
   G.fist={seat,n,t:G.frame,tg:fistTarget(seat),hard,st,nx:nextAct(seat)};
   const hitH=(p,sh)=>{ knock1(p); G.shake=Math.max(G.shake,sh); jolt(Math.min(1.1,sh/20)); };
@@ -3997,6 +4003,9 @@ document.getElementById('prest').addEventListener('click',()=>pauseChoose('resta
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
 function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
 const exitEl=document.getElementById('exitask');
+try{ G.optSal=localStorage.getItem('dominoSalida20')==='1'; }catch(_){ G.optSal=false; }
+function salLabel(){ document.getElementById('msal').textContent='SALIDA: 20 TANTOS SI PASAN · '+(G.optSal?'SÍ':'NO'); }
+document.getElementById('msal').addEventListener('click',()=>{ G.optSal=!G.optSal; try{ localStorage.setItem('dominoSalida20',G.optSal?'1':'0'); }catch(_){} salLabel(); }); salLabel();
 function askExit(){ exitEl.hidden=false; try{ ovFoc(exitEl,0); }catch(_){} }   // pregunta antes de salir: así no se sale sin querer
 document.getElementById('exno').addEventListener('click',()=>{ exitEl.hidden=true; if(!pauseEl.hidden) pfoc(pauseBtns().indexOf(document.getElementById('pexit'))); });
 document.getElementById('exyes').addEventListener('click',()=>{ exitEl.hidden=true; salirApp(); });
