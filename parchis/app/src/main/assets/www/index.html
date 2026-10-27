@@ -2900,7 +2900,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.3.2';
+const VERSION='v1.3.3';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3024,6 +3024,11 @@ function diceThrowSound(pw){ if(!AC) return; for(let i=0;i<4;i++) diceHit(0.3+Ma
 function rattle(e){ if(!AC) return; const t=AC.currentTime, n=1+Math.floor(e*3);
   for(let i=0;i<n;i++){ const d=Math.random()*0.06; burst(t+d,0.015,3800+Math.random()*1500,4,0.25+e*0.5); ping(t+d,2400+Math.random()*900,0.02,0.05+e*0.08); } }
 function hopSound(){ if(!AC) return; const t=AC.currentTime; burst(t,0.025,1800,2.5,0.45); ping(t,900+Math.random()*120,0.04,0.12); }
+// escopetazo: golpe grave + chasquido + eco
+function gunShot(){ if(!AC||!SND) return; const t=AC.currentTime; burst(t,0.55,110,0.7,3.2,'lowpass'); burst(t,0.09,1900,0.9,2.6); burst(t+0.03,0.7,520,0.5,0.7,'lowpass'); burst(t+0.25,0.5,300,0.6,0.35,'lowpass'); }
+function gunCock(){ if(!AC||!SND) return; const t=AC.currentTime; burst(t,0.03,2600,4,0.6); burst(t+0.12,0.04,1800,4,0.7); }
+function fallWhistle(){ if(!AC||!SND) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type='sine'; o.frequency.setValueAtTime(1400,t+0.1); o.frequency.exponentialRampToValueAtTime(380,t+0.85);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.18,t+0.15); g.gain.exponentialRampToValueAtTime(0.0005,t+0.9); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.95); burst(t+0.92,0.25,120,0.8,1.6,'lowpass'); }
 function eatSound(){ if(!AC) return; const t=AC.currentTime; burst(t,0.25,140,0.8,2.2,'lowpass'); burst(t,0.05,2400,2,1.4); [0,0.12,0.24].forEach((d,i)=>ping(t+d,880-i*200,0.15,0.25)); }
 function metaSound(){ chime(true); }
 function boomCasa(){ if(!AC) return; const t=AC.currentTime; burst(t,0.4,90,0.7,2.4,'lowpass'); ping(t,300,0.4,0.3); }
@@ -3087,7 +3092,7 @@ function anyMove(k){ const L=legal(k); return Object.values(L).some(o=>o.some(Bo
 // ---------- turno ----------
 function startMatch(){
   G.pos=[[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]]; G.winner=-1; G.order=[]; G.matchNo++;
-  G.state='play'; G.anim=null; G.dAnim=null; G.fx=[]; G.paused=false; G.sel=null; G.startT=Date.now();
+  G.state='play'; G.anim=null; G.dAnim=null; G.gun=null; G.fx=[]; G.paused=false; G.sel=null; G.startT=Date.now();
   const A=ACT(); G.turn=A[Math.floor(Math.random()*A.length)]; G.dbl=0; G.last=null; beginTurn(true);
 }
 function beginTurn(fresh){ G.phase='roll'; G.dice=[]; G.toks=[]; G.mustOpen=false; if(fresh) G.dbl=0; G.aiT=55+Math.random()*40;
@@ -3122,12 +3127,16 @@ function doMove(k,tokId,i){
   const t=G.toks.find(x=>x.id===tokId);
   if(t.kind==='sum') G.toks=G.toks.filter(x=>x.id!=='a'&&x.id!=='b'); G.toks=G.toks.filter(x=>x.id!==tokId&&x.kind!=='sum');
   G.mustOpen=false; G.sel=null;
-  G.anim={m,t:0,step:0,dur:m.from===CASA?26:Math.max(10,m.path.length*8)}; G.phase='anim'; broadcast(); return true;
+  G.anim={m,t:0,step:0,dur:m.from===CASA?26:Math.max(10,m.path.length*8)}; G.phase='anim';
+  if(m.eat){ const [vx,vy]=pieceXY(m.eat.k,m.eat.i,G.pos[m.eat.k][m.eat.i]); G.gun={x:vx,y:vy,t0:G.frame,fire:-1}; gunCock(); }
+  broadcast(); return true;
 }
 function landedMove(){
   const m=G.anim.m; G.anim=null; const k=m.k;
   G.pos[k][m.i]=m.to; G.last={k,i:m.i};
-  if(m.eat){ const fr=pieceXY(m.eat.k,m.eat.i,G.pos[m.eat.k][m.eat.i]); G.pos[m.eat.k][m.eat.i]=CASA; G.fx.push({t:'casa',k:m.eat.k,i:m.eat.i,f:G.frame,fr}); G.toks.push({id:'x'+G.frame,v:20,kind:'bonus'}); say('¡'+G.names[k]+' SE COMIÓ A '+G.names[m.eat.k]+'! CUENTA 20',140); eatSound(); }
+  if(m.eat){ const fr=pieceXY(m.eat.k,m.eat.i,G.pos[m.eat.k][m.eat.i]); G.pos[m.eat.k][m.eat.i]=CASA; G.fx.push({t:'casa',k:m.eat.k,i:m.eat.i,f:G.frame+6,fr,life:62,jump:true}); G.toks.push({id:'x'+G.frame,v:20,kind:'bonus'}); say('¡'+G.names[k]+' SE COMIÓ A '+G.names[m.eat.k]+'! CUENTA 20',140);
+    if(G.gun) G.gun.fire=G.frame; gunShot(); setTimeout(fallWhistle,90);
+    G.fx.push({t:'cara',k,e:'😂',f:G.frame+66,life:170},{t:'cara',k:m.eat.k,e:'😭',f:G.frame+66,life:170}); }
   else if(m.to===META){ G.toks.push({id:'m'+G.frame,v:10,kind:'bonus'}); say('¡FICHA A LA META! CUENTA 10',120); metaSound(); }
   else if(m.from===CASA) say(G.names[k]+' SACA FICHA',70);
   if(G.pos[k].every(p=>p===META)){ G.order.push(k); G.winner=k; G.state='over'; G.phase='over'; say('¡GANA '+G.names[k]+'!',99999); chime(true); try{ histSave(); }catch(_){} broadcast(); return; }
@@ -3271,6 +3280,25 @@ function drawCard(k,X,Y){ const on=G.turn===k&&G.state==='play', act=isAct(k), C
 function fit(t,w,s){ ctx.font='800 '+s+'px '+FONT; t=String(t); while(t.length>3&&ctx.measureText(t).width>w) t=t.slice(0,-1); return t; }
 const FONT=getComputedStyle(document.body).fontFamily||'sans-serif';
 const CARDPOS=[[1130,610],[1130,132],[150,132],[150,610]];
+function drawGun(c,g,t,ft){
+  // la escopeta se pone al lado de la ficha, hacia fuera del centro del tablero, y apunta a ella
+  const cx=BOX+BS/2, cy=BOY+BS/2; let dx=g.x-cx, dy=g.y-cy; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
+  const D=150, gx=g.x+dx*D+dy*40, gy=g.y+dy*D-dx*40, ang=Math.atan2(g.y-gy,g.x-gx);
+  const app=Math.min(1,t/12), rec=ft>=0&&ft<10?(10-ft)*1.6:0, al=ft>24?(34-ft)/10:1;
+  c.save(); c.globalAlpha=Math.max(0,al)*app; c.translate(gx,gy); c.rotate(ang); c.translate(-rec-(1-app)*40,0);
+  c.fillStyle='rgba(0,0,0,.35)'; c.save(); c.translate(6,9); c.fillRect(-70,-7,150,14); c.restore();
+  // culata de madera
+  const wg=c.createLinearGradient(0,-14,0,14); wg.addColorStop(0,'#a8692e'); wg.addColorStop(1,'#5a3214'); c.fillStyle=wg;
+  c.beginPath(); c.moveTo(-78,-6); c.lineTo(-20,-9); c.lineTo(-12,-4); c.lineTo(-12,8); c.lineTo(-40,9); c.lineTo(-80,16); c.closePath(); c.fill();
+  // cañones
+  const mg=c.createLinearGradient(0,-9,0,9); mg.addColorStop(0,'#9aa3ad'); mg.addColorStop(0.5,'#3a4048'); mg.addColorStop(1,'#15181c'); c.fillStyle=mg;
+  c.fillRect(-14,-8,96,7); c.fillRect(-14,-1,96,7); c.fillStyle='#22262b'; c.fillRect(-16,-9,16,18); c.fillRect(30,-9,6,16);
+  c.fillStyle='#000'; c.beginPath(); c.arc(82,-4.5,2.6,0,7); c.arc(82,2.5,2.6,0,7); c.fill();
+  // fogonazo y humo
+  if(ft>=0&&ft<7){ c.globalAlpha=1-ft/7; c.fillStyle='#ffe066'; c.beginPath(); for(let q=0;q<10;q++){ const a=q/10*6.283, r=q%2?14:34+Math.random()*10; c.lineTo(88+Math.cos(a)*r,Math.sin(a)*r); } c.closePath(); c.fill();
+    c.fillStyle='#fff6cc'; c.beginPath(); c.arc(92,0,10,0,7); c.fill(); }
+  if(ft>=3){ c.globalAlpha=Math.max(0,0.5-(ft-3)/50); c.fillStyle='#d8d8d8'; for(let q=0;q<4;q++){ c.beginPath(); c.arc(92+q*9+ft*0.8,-q*4-ft*0.6,6+ft*0.5,0,7); c.fill(); } }
+  c.restore(); }
 function drawTable(){
   const c=ctx; c.setTransform(SC,0,0,SC,0,0);
   const bg=c.createRadialGradient(VW/2,VH/2,100,VW/2,VH/2,820); bg.addColorStop(0,'#17432b'); bg.addColorStop(1,'#0b1a12'); c.fillStyle=bg; c.fillRect(0,0,VW,VH);
@@ -3289,7 +3317,7 @@ function drawTable(){
     c.save(); c.shadowColor=COL[k].c; c.shadowBlur=10+beat*26; c.strokeStyle=COL[k].l; c.globalAlpha=0.35+beat*0.65; c.lineWidth=3+beat*4;
     c.beginPath(); c.arc(hx,hy,W*0.36,0,7); c.stroke(); c.restore(); }
   // fichas (la que se mueve, aparte)
-  const list=[]; for(const q of ACT()) for(let i=0;i<4;i++){ if(G.anim&&G.anim.m.k===q&&G.anim.m.i===i) continue; if(G.fx.some(f=>f.t==='casa'&&f.k===q&&f.i===i&&G.frame-f.f<40)) continue; const [x,y]=pieceXY(q,i,G.pos[q][i]); list.push([y,x,q,i]); }
+  const list=[]; for(const q of ACT()) for(let i=0;i<4;i++){ if(G.anim&&G.anim.m.k===q&&G.anim.m.i===i) continue; if(G.fx.some(f=>f.t==='casa'&&f.k===q&&f.i===i&&G.frame-f.f<(f.life||40))) continue; const [x,y]=pieceXY(q,i,G.pos[q][i]); list.push([y,x,q,i]); }
   list.sort((a,b)=>a[0]-b[0]).forEach(([y,x,q,i])=>drawPiece(c,x,y,pr,q,String(i+1)));
   // ficha que se está moviendo: salta de casilla en casilla
   if(G.anim){ const A=G.anim, m=A.m; let x,y,lift;
@@ -3298,7 +3326,14 @@ function drawTable(){
       x=a[0]+(b[0]-a[0])*u; y=a[1]+(b[1]-a[1])*u; lift=Math.sin(u*Math.PI)*0.8; }
     drawPiece(c,x,y,pr,m.k,String(m.i+1),lift); }
   // fichas comidas: vuelan a su casa
-  G.fx=G.fx.filter(f=>G.frame-f.f<40); for(const f of G.fx){ if(f.t!=='casa'||!f.fr) continue; const u=(G.frame-f.f)/40, [x1,y1]=homeSlot(f.k,f.i); const x=f.fr[0]+(x1-f.fr[0])*u, y=f.fr[1]+(y1-f.fr[1])*u; drawPiece(c,x,y,pr,f.k,String(f.i+1),Math.sin(u*Math.PI)*2); }
+  G.fx=G.fx.filter(f=>G.frame-f.f<(f.life||40)); for(const f of G.fx){ if(f.t!=='casa'||!f.fr) continue; const L=f.life||40, u=Math.max(0,(G.frame-f.f)/L), [x1,y1]=homeSlot(f.k,f.i); const x=f.fr[0]+(x1-f.fr[0])*u, y=f.fr[1]+(y1-f.fr[1])*u; drawPiece(c,x,y,pr,f.k,String(f.i+1),Math.sin(u*Math.PI)*(f.jump?3.4:2)); }
+  // caritas en las casas: se ríe el que comió y llora el comido
+  for(const f of G.fx){ if(f.t!=='cara') continue; const t=G.frame-f.f; if(t<0) continue; const u=BS/BU, [hc,hr]=HOME[f.k], W=8*u, hx=BOX+PX(hc)*u+W/2, hy=BOY+PX(hr)*u+W/2, L=f.life;
+    const sc=t<10?t/10*1.2:t<16?1.2-(t-10)/6*0.2:1, a=t>L-20?(L-t)/20:1;
+    c.save(); c.globalAlpha=Math.max(0,a); c.translate(hx,hy+Math.sin(t*0.35)*(f.e==='😂'?5:2)); c.rotate(f.e==='😂'?Math.sin(t*0.5)*0.12:0); c.scale(sc,sc);
+    c.fillStyle='#000'; c.font='110px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(f.e,0,4); c.restore(); }
+  // escopeta: aparece apuntando a la ficha que se van a comer y dispara cuando llega la otra
+  if(G.gun){ const g=G.gun, t=G.frame-g.t0, ft=g.fire<0?-1:G.frame-g.fire; if(ft>34) G.gun=null; else drawGun(c,g,t,ft); }
   // dados
   if(G.dAnim){ G.dAnim.D.forEach(d=>drawDie(c,d.x,d.y,46,d.face,d.a,d.z)); }
   // jugadores
