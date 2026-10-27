@@ -115,6 +115,7 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(0xFF0B1A12);
         WebSettings s = web.getSettings();
+        s.setTextZoom(100);   // el tamaño de letra del sistema no agranda el juego (no se recorta nada)
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);

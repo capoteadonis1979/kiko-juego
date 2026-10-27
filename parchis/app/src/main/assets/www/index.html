@@ -145,7 +145,7 @@ body.remote #powpct{font-size:12px;white-space:nowrap;min-width:58px;text-align:
 #pphoto{width:120px;height:120px;border-radius:50%;border:4px solid var(--gold);background:#1d3a52 center/cover no-repeat;display:grid;place-items:center;font-size:13px;text-align:center;color:#cfe;flex:none}
 #pform{display:flex;flex-direction:column;gap:10px;min-width:220px}
 #pname{font:700 20px var(--font);padding:10px 12px;border-radius:12px;border:3px solid #2c4c66;background:#0e2a3e;color:var(--fg)}
-#pgo{font:700 18px var(--font);padding:12px;border-radius:14px;border:3px solid #8a2418;background:var(--accent);color:#fff}
+#pgo{font:700 18px var(--font);padding:12px;border-radius:14px;border:3px solid #0f5a26;background:#22a04a;color:#fff}
 body.remote #tablebox{flex:0 0 auto;height:auto;padding:0}
 body.remote #t{display:none}
 body.remote #remotebar{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:0 14px;box-sizing:border-box}
@@ -249,6 +249,8 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #lbtns{display:grid!important;grid-template-columns:repeat(3,1fr);width:min(94vw,900px)}
 #lbtns button{min-width:0!important;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #cfg .row button{width:15em;min-width:0}
+#mdcol{width:min(90vw,30em);min-width:0!important;white-space:nowrap}
+:root{--d1:#fff;--d2:#d9d4c8;--dp:#1a1a1a}
 #pbox .prow button{width:155px;min-width:0}
 /* SALIR siempre abajo, en rojo, en todas las pantallas */
 #gsalir{position:fixed;right:10px;top:8px;z-index:80;font:800 14px var(--font);background:#c62828;color:#fff;border:2px solid #ff8a80;border-radius:10px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
@@ -258,7 +260,7 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 body.remote #power{bottom:auto!important}
 body.remote #tiles{left:112px!important}
 body.remote #rack{left:112px}
-#bmesa{left:auto!important;right:10px;top:10px;bottom:auto!important;background:#2b1a0d!important;font-size:15px!important;padding:6px 14px!important}
+#bmesa{left:var(--bml,8px)!important;right:auto!important;bottom:auto!important;top:var(--bmt,auto);background:#2b1a0d!important;font-size:15px!important;padding:6px 14px!important}
 #menu,.ov,#pause,#prof{padding-bottom:44px!important}
 #guide{padding-bottom:44px!important}
 /* historial */
@@ -336,7 +338,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 @media (max-height:460px){#menu h1{font-size:28px} #menu>p{display:none} #menu button.big{font-size:20px;padding:8px 14px} #menu button{font-size:15px;padding:8px 12px;min-width:240px} #pick button{min-width:280px}}
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
-#menu button.main{background:var(--accent);border-color:#8a2418}
+#menu button.main{background:#22a04a;border-color:#0f5a26}
 #menu #lplay,#menu #mplay{background:#2fbf71;border-color:#1a7a44}   /* empezar = verde (el rojo es solo para salir) */
 #menu button:focus{outline:none}
 #menu button.focus,#menu button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
@@ -360,9 +362,9 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #drtxt b{font-size:clamp(16px,3.4vw,24px);color:#ffd23a;text-shadow:0 2px 0 #000;line-height:1.2}
 #drtxt small{color:#ffe9a8}
 #btirar{font:800 18px var(--font);background:#c62828;color:#fff;border:3px solid #ff8a80;border-radius:14px;padding:10px 22px}
-.die{position:relative;display:inline-block;width:var(--s);height:var(--s);border-radius:18%;background:linear-gradient(135deg,#fff,#d9d4c8);box-shadow:2px 4px 0 rgba(0,0,0,.35);flex:0 0 auto}
-.die i{position:absolute;width:19%;height:19%;border-radius:50%;background:#1a1a1a;transform:translate(-50%,-50%)} .die i.r{width:24%;height:24%}
-#dcup .die{background:linear-gradient(135deg,#fff,#d9d4c8)}
+.die{position:relative;display:inline-block;width:var(--s);height:var(--s);border-radius:18%;background:linear-gradient(135deg,var(--d1),var(--d2));box-shadow:2px 4px 0 rgba(0,0,0,.35);flex:0 0 auto}
+.die i{position:absolute;width:19%;height:19%;border-radius:50%;background:var(--dp);transform:translate(-50%,-50%)} .die i.r{width:24%;height:24%}
+#dcup .die{background:linear-gradient(135deg,var(--d1),var(--d2))}
 #dmove h4{margin:2px 0;color:#ffd23a;font-size:15px}
 #dtoks{display:flex;gap:10px;flex-wrap:nowrap}
 .dtok{flex:1 1 0;min-width:0;height:64px;border-radius:14px;background:rgba(0,0,0,.3);border:3px solid rgba(255,255,255,.25);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:800 22px var(--font);padding:0 6px}
@@ -554,6 +556,7 @@ body.solo #drtxt small{font-size:12px}
 <div id="mplayer"><button id="mprev">◀</button><button id="msong">♪ Pega la ficha, compay</button><button id="mnext">▶</button></div>
 <button id="mtvmus">📂 ELEGIR CARPETA DE MÚSICA</button>
 <p class="small">Elige una carpeta de la tele o del teléfono y sus canciones se añaden a la lista.</p>
+<button id="mdcol">🎲 COLOR DE DADO: MARFIL</button>
 <button id="cfgx" class="main">LISTO</button></div></div>
 <div id="hist" class="ov" hidden><div class="ovbox"><h2>📜 HISTORIAL DE PARTIDAS</h2>
 <div id="hlist"></div>
@@ -2875,7 +2878,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.2.3';
+const VERSION='v1.2.4';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3187,12 +3190,17 @@ function drawPiece(x,X,Y,r,k,label,lift){ lift=lift||0; x.save();
   x.strokeStyle='rgba(255,255,255,.55)'; x.lineWidth=r*0.1; x.beginPath(); x.arc(X,Y,r*0.62,0,7); x.stroke();
   if(label){ x.fillStyle='#fff'; x.font='800 '+(r*0.95).toFixed(1)+'px sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.lineWidth=r*0.18; x.strokeStyle='rgba(0,0,0,.6)'; x.strokeText(label,X,Y+r*0.04); x.fillText(label,X,Y+r*0.04); }
   x.restore(); }
+// color de los dados (Configuración): se guarda en el aparato
+const DCOLS=[{n:'MARFIL',a:'#ffffff',b:'#d9d4c8',e:'#9a9384',p:'#1a1a1a'},{n:'ROJO',a:'#ef4b3f',b:'#a8211a',e:'#6e140f',p:'#ffffff'},{n:'AZUL',a:'#3d8bef',b:'#15468f',e:'#0d2c5c',p:'#ffffff'},
+  {n:'VERDE',a:'#2fb85a',b:'#0f5e27',e:'#093d19',p:'#ffffff'},{n:'NEGRO',a:'#4a4a4a',b:'#111111',e:'#000000',p:'#ffffff'},{n:'AMARILLO',a:'#ffe066',b:'#d9a400',e:'#8a6800',p:'#1a1a1a'}];
+let DCOL=0; try{ DCOL=Math.max(0,Math.min(DCOLS.length-1,+(localStorage.getItem('parchisDadoColor')||0)|0)); }catch(_){}
+function applyDCol(){ const c=DCOLS[DCOL], r=document.documentElement.style; r.setProperty('--d1',c.a); r.setProperty('--d2',c.b); r.setProperty('--dp',c.p); const b=document.getElementById('mdcol'); if(b) b.textContent='🎲 COLOR DE DADO: '+c.n; }
 const DPIPS={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
 function drawDie(x,X,Y,s,v,rot,lift){ lift=lift||0; x.save(); x.translate(X,Y); x.fillStyle='rgba(0,0,0,'+(0.38-lift*0.2)+')'; x.save(); x.translate(s*0.1+lift*s*0.5,s*0.14+lift*s*0.7); x.rotate(rot||0); rr(x,-s/2,-s/2,s,s,s*0.2); x.fill(); x.restore();
   x.translate(0,-lift*s*0.8); x.rotate(rot||0);
-  const g=x.createLinearGradient(-s/2,-s/2,s/2,s/2); g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#d9d4c8'); x.fillStyle=g; rr(x,-s/2,-s/2,s,s,s*0.2); x.fill();
-  x.strokeStyle='#9a9384'; x.lineWidth=s*0.03; x.stroke();
-  x.fillStyle='#1a1a1a'; (DPIPS[v]||[]).forEach(([a,b])=>{ x.beginPath(); x.arc(a*s*0.25,b*s*0.25,s*(v===1?0.12:0.085),0,7); x.fill(); });
+  const DC=DCOLS[DCOL], g=x.createLinearGradient(-s/2,-s/2,s/2,s/2); g.addColorStop(0,DC.a); g.addColorStop(1,DC.b); x.fillStyle=g; rr(x,-s/2,-s/2,s,s,s*0.2); x.fill();
+  x.strokeStyle=DC.e; x.lineWidth=s*0.03; x.stroke();
+  x.fillStyle=DC.p; (DPIPS[v]||[]).forEach(([a,b])=>{ x.beginPath(); x.arc(a*s*0.25,b*s*0.25,s*(v===1?0.12:0.085),0,7); x.fill(); });
   x.restore(); }
 /* ================= DADOS LANZADOS EN LA MESA ================= */
 // salen desde la esquina del jugador hacia el centro, chocan con el borde y entre ellos, y se paran
@@ -3247,9 +3255,9 @@ function drawTable(){
  } }); }
   // latido: la casa del jugador al que le toca late como un corazón
   if(G.state==='play'&&!G.paused){ const u=BS/BU, [hc,hr]=HOME[k], W=8*u, hx=BOX+PX(hc)*u+W/2, hy=BOY+PX(hr)*u+W/2;
-    const ph=(G.frame%60)/60, beat=Math.max(0,Math.sin(Math.min(1,ph/0.14)*Math.PI))*(ph<0.14?1:0)+Math.max(0,Math.sin(Math.min(1,Math.max(0,ph-0.2)/0.14)*Math.PI))*(ph>=0.2&&ph<0.34?0.7:0);
+    const beat=0.5-0.5*Math.cos(G.frame/150*Math.PI*2);   // sube y baja despacito (2,5 s)
     c.save(); c.shadowColor=COL[k].c; c.shadowBlur=10+beat*26; c.strokeStyle=COL[k].l; c.globalAlpha=0.35+beat*0.65; c.lineWidth=3+beat*4;
-    c.beginPath(); c.arc(hx,hy,W*0.36*(1+beat*0.07),0,7); c.stroke(); c.restore(); }
+    c.beginPath(); c.arc(hx,hy,W*0.36,0,7); c.stroke(); c.restore(); }
   // fichas (la que se mueve, aparte)
   const list=[]; for(const q of ACT()) for(let i=0;i<4;i++){ if(G.anim&&G.anim.m.k===q&&G.anim.m.i===i) continue; if(G.fx.some(f=>f.t==='casa'&&f.k===q&&f.i===i&&G.frame-f.f<40)) continue; const [x,y]=pieceXY(q,i,G.pos[q][i]); list.push([y,x,q,i]); }
   list.sort((a,b)=>a[0]-b[0]).forEach(([y,x,q,i])=>drawPiece(c,x,y,pr,q,String(i+1)));
@@ -3341,18 +3349,20 @@ function toScreen(x,y){ const t=scrAngle()*Math.PI/180, c=Math.cos(t), s=Math.si
 addEventListener('devicemotion',ev=>{ const g=ev.accelerationIncludingGravity; if(!g||g.x==null) return; SEN.has=true;
   SEN.f=toScreen(-g.x,-g.y);                         // inclinación + empujones: lo que sienten los dados
   const r=ev.rotationRate; if(r&&r.alpha!=null) SEN.rot=r.alpha;
+  SEN.grav=SEN.grav||[g.x,g.y,g.z]; for(let k=0;k<3;k++) SEN.grav[k]=SEN.grav[k]*0.92+[g.x,g.y,g.z][k]*0.08;
   const l=ev.acceleration; if(l&&l.x!=null) SEN.lin=[l.x,l.y,l.z];
-  else { SEN.grav=SEN.grav||[g.x,g.y,g.z]; for(let k=0;k<3;k++) SEN.grav[k]=SEN.grav[k]*0.9+[g.x,g.y,g.z][k]*0.1; SEN.lin=[g.x-SEN.grav[0],g.y-SEN.grav[1],g.z-SEN.grav[2]]; }
+  else SEN.lin=[g.x-SEN.grav[0],g.y-SEN.grav[1],g.z-SEN.grav[2]];
   const m=Math.hypot(...SEN.lin); SEN.e=SEN.e*0.85+m*0.15;
   if(canThrow()) checkThrow(m); });
 function canThrow(){ const v=myView(); return v&&v.turn&&v.phase==='roll'&&!handEl.hidden; }
 function checkThrow(m){ const now=performance.now(); if(now-SH.thrown<1200) return;
   if(SEN.e>3){ if(!SH.shaking){ SH.shaking=true; SH.shakeT=now; SH.peak=0; } SH.peak=Math.max(SH.peak,m); }
-  // lanzar: golpe hacia arriba (o hacia delante, a la tele); sacudir de lado a lado no lanza
-  const [lx,ly,lz]=SEN.lin, [sx,sy]=toScreen(lx,ly), up=Math.max(-sy,Math.abs(lz),0);
-  if(up>14&&up>0.65*m){ throwNow(Math.min(1.4,0.5+m/30),sx/(m||1)); return; }
-  // o al dejar de agitar después de un rato
-  if(SH.shaking&&SEN.e<1.3){ SH.shaking=false; if(now-SH.shakeT>600) throwNow(Math.min(1.3,0.5+SH.peak/30),0); } }
+  // lanzar SOLO con un golpe hacia arriba o hacia abajo (en vertical de verdad, según la gravedad);
+  // moverlo de lado a lado solo hace chocar los dados dentro, nunca los lanza
+  const G0=SEN.grav, gm=Math.hypot(...G0)||1, ux=G0[0]/gm, uy=G0[1]/gm, uz=G0[2]/gm, [lx,ly,lz]=SEN.lin;
+  const vert=lx*ux+ly*uy+lz*uz, hx=lx-vert*ux, hy=ly-vert*uy, hz=lz-vert*uz, hor=Math.hypot(hx,hy,hz);
+  if(Math.abs(vert)>13&&Math.abs(vert)>1.6*hor){ const sx=toScreen(hx,hy)[0]; throwNow(Math.min(1.4,0.5+Math.abs(vert)/30),clamp(sx/(Math.abs(vert)||1),-1,1)); }
+}
 function throwNow(pw,aim){ if(!canThrow()||performance.now()-SH.thrown<1200) return; SH.thrown=performance.now(); SH.shaking=false;
   const spin=Math.min(2,Math.abs(SEN.rot)/300+CD.reduce((s,d)=>s+Math.abs(d.va),0)/30);
   CD.forEach(d=>{ d.out=true; d.vy=-1800*pw; d.vx+=(aim||0)*600; d.va+=(Math.random()-0.5)*30; });
@@ -3391,11 +3401,15 @@ function cupLoop(t){ requestAnimationFrame(cupLoop);
   const [p,q]=CD; if(!p.out){ const dx=q.x-p.x, dy=q.y-p.y, dd=Math.hypot(dx,dy), mn=s*1.05; if(dd<mn&&dd>0){ const nx=dx/dd, ny=dy/dd, ov=(mn-dd)/2; p.x-=nx*ov; p.y-=ny*ov; q.x+=nx*ov; q.y+=ny*ov;
     const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny; if(rv<0){ p.vx+=rv*nx*0.9; p.vy+=rv*ny*0.9; q.vx-=rv*nx*0.9; q.vy-=rv*ny*0.9; hits=Math.max(hits,-rv); p.va+=rv*0.01; q.va-=rv*0.01; } } }
   // sonido y vibración según la fuerza del golpe: más fuerte agitas, más suenan
-  if(hits>90&&t-SH.lastHit>45){ SH.lastHit=t; diceHit(Math.min(1,hits/900)); if(hits>500) try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} }
+  if(hits>70&&t-SH.lastHit>40){ SH.lastHit=t; diceHit(Math.min(1,hits/700)); if(hits>250) try{ navigator.vibrate&&navigator.vibrate(Math.min(35,8+hits/40|0)); }catch(_){} }
   CD.forEach(d=>{ setFace(d,d.face); d.el.style.transform='translate('+(d.x-r)+'px,'+(d.y-r)+'px) rotate('+d.a+'rad)'; const ca=Math.cos(-d.a), sa=Math.sin(-d.a), ox=3, oy=5; d.el.style.boxShadow=(ox*ca-oy*sa).toFixed(1)+'px '+(ox*sa+oy*ca).toFixed(1)+'px 0 rgba(0,0,0,.35)'; d.el.style.opacity=d.out&&d.y<-s?0:1; });
 }
 requestAnimationFrame(cupLoop);
 
+// el inicio siempre entero: si no cabe (letra grande, pantalla pequeña), se achica todo junto sin recortar
+setInterval(()=>{ const m=document.getElementById('menu'); if(!m||m.hidden) return; const z=+(m.style.zoom||1), need=m.scrollHeight*z, have=m.clientHeight*z;
+  if(need>have+2) m.style.zoom=Math.max(0.6,z*have/need).toFixed(3); else if(z<1&&need<have*0.9) m.style.zoom=Math.min(1,z*1.05).toFixed(3); },300);
+applyDCol(); document.getElementById('mdcol').addEventListener('click',()=>{ DCOL=(DCOL+1)%DCOLS.length; try{ localStorage.setItem('parchisDadoColor',DCOL); }catch(_){} applyDCol(); });
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
 function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
@@ -3894,6 +3908,7 @@ function layout(){
   const s=Math.max(0.2,Math.min(W/VW,H/VH));
   cv.style.width=Math.floor(VW*s)+'px'; cv.style.height=Math.floor(VH*s)+'px';
   const ns=clamp(s*(window.devicePixelRatio||1),0.5,3); if(Math.abs(ns-SC)>0.05){ SC=ns; cv.width=Math.round(VW*SC); cv.height=Math.round(VH*SC); BOARD=null; }
+  try{ const r=cv.getBoundingClientRect(), k=r.width/VW, bm=document.getElementById('bmesa'); bm.style.setProperty('--bml',(r.left+(CARDPOS[3][0]-135)*k)+'px'); bm.style.setProperty('--bmt',(r.top+(CARDPOS[3][1]+58)*k)+'px'); }catch(_){}
   renderPanel();
 }
 addEventListener('resize',layout); layout();
