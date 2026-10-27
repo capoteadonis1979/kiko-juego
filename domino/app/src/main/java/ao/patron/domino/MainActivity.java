@@ -246,7 +246,7 @@ public class MainActivity extends Activity {
         if (isFinishing() || avisando) return; avisando = true;
         new AlertDialog.Builder(this)
             .setTitle("Versión nueva " + v)
-            .setMessage("Hay una versión nueva del Dominó Cubano (tienes la " + miVersion() + ").\n¿La instalo ahora?")
+            .setMessage("Hay una versión nueva del Dominó Cubano TV (tienes la " + miVersion() + ").\n¿La instalo ahora?")
             .setPositiveButton("ACTUALIZAR", (d, w) -> descargar(v))
             .setNegativeButton("DESPUÉS", null)
             .setOnDismissListener(d -> avisando = false)
@@ -281,7 +281,7 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
             esperaPermiso = true;
             new AlertDialog.Builder(this)
-                .setMessage("Para actualizar, activa \"Permitir de esta fuente\" (instalar apps desconocidas) para Dominó Cubano y vuelve atrás.")
+                .setMessage("Para actualizar, activa \"Permitir de esta fuente\" (instalar apps desconocidas) para Dominó Cubano TV y vuelve atrás.")
                 .setPositiveButton("ABRIR AJUSTES", (d, w) -> {
                     try { startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()))); }
                     catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS)); } catch (Exception ignored) { } }
