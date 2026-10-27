@@ -2900,7 +2900,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v1.3.3';
+const VERSION='v1.3.4';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3121,21 +3121,21 @@ function afterTokens(){
   G.phase='move'; G.sel=null; G.aiT=45+Math.random()*35; broadcast();
 }
 // mover (desde el teléfono, el bot o la pantalla): tokId 'a' | 'b' | 's' | 'x20'...
+const STEPF=15;   // fotogramas por casilla (más despacio, se ve cada paso)
 function doMove(k,tokId,i){
   if(G.state!=='play'||G.phase!=='move'||G.turn!==k||G.anim) return false;
   const L=legal(k), o=L[tokId]; if(!o||!o[i]) return false; const m=o[i];
   const t=G.toks.find(x=>x.id===tokId);
   if(t.kind==='sum') G.toks=G.toks.filter(x=>x.id!=='a'&&x.id!=='b'); G.toks=G.toks.filter(x=>x.id!==tokId&&x.kind!=='sum');
   G.mustOpen=false; G.sel=null;
-  G.anim={m,t:0,step:0,dur:m.from===CASA?26:Math.max(10,m.path.length*8)}; G.phase='anim';
-  if(m.eat){ const [vx,vy]=pieceXY(m.eat.k,m.eat.i,G.pos[m.eat.k][m.eat.i]); G.gun={x:vx,y:vy,t0:G.frame,fire:-1}; gunCock(); }
+  G.anim={m,t:0,step:0,dur:m.from===CASA?30:Math.max(10,m.path.length*STEPF)}; G.phase='anim';
   broadcast(); return true;
 }
 function landedMove(){
   const m=G.anim.m; G.anim=null; const k=m.k;
   G.pos[k][m.i]=m.to; G.last={k,i:m.i};
-  if(m.eat){ const fr=pieceXY(m.eat.k,m.eat.i,G.pos[m.eat.k][m.eat.i]); G.pos[m.eat.k][m.eat.i]=CASA; G.fx.push({t:'casa',k:m.eat.k,i:m.eat.i,f:G.frame+6,fr,life:62,jump:true}); G.toks.push({id:'x'+G.frame,v:20,kind:'bonus'}); say('¡'+G.names[k]+' SE COMIÓ A '+G.names[m.eat.k]+'! CUENTA 20',140);
-    if(G.gun) G.gun.fire=G.frame; gunShot(); setTimeout(fallWhistle,90);
+  if(m.eat){ const fr=pieceXY(m.eat.k,m.eat.i,G.pos[m.eat.k][m.eat.i]); G.pos[m.eat.k][m.eat.i]=CASA; G.fx.push({t:'patada',k,i:m.i,to:fr,f:G.frame,life:22},{t:'casa',k:m.eat.k,i:m.eat.i,f:G.frame+16,fr,life:62,jump:true}); G.toks.push({id:'x'+G.frame,v:20,kind:'bonus'}); say('¡'+G.names[k]+' SE COMIÓ A '+G.names[m.eat.k]+'! CUENTA 20',140);
+    setTimeout(()=>{ try{ diceHit(1); diceHit(0.7); }catch(_){} },260); setTimeout(fallWhistle,330);
     G.fx.push({t:'cara',k,e:'😂',f:G.frame+66,life:170},{t:'cara',k:m.eat.k,e:'😭',f:G.frame+66,life:170}); }
   else if(m.to===META){ G.toks.push({id:'m'+G.frame,v:10,kind:'bonus'}); say('¡FICHA A LA META! CUENTA 10',120); metaSound(); }
   else if(m.from===CASA) say(G.names[k]+' SACA FICHA',70);
@@ -3317,12 +3317,13 @@ function drawTable(){
     c.save(); c.shadowColor=COL[k].c; c.shadowBlur=10+beat*26; c.strokeStyle=COL[k].l; c.globalAlpha=0.35+beat*0.65; c.lineWidth=3+beat*4;
     c.beginPath(); c.arc(hx,hy,W*0.36,0,7); c.stroke(); c.restore(); }
   // fichas (la que se mueve, aparte)
-  const list=[]; for(const q of ACT()) for(let i=0;i<4;i++){ if(G.anim&&G.anim.m.k===q&&G.anim.m.i===i) continue; if(G.fx.some(f=>f.t==='casa'&&f.k===q&&f.i===i&&G.frame-f.f<(f.life||40))) continue; const [x,y]=pieceXY(q,i,G.pos[q][i]); list.push([y,x,q,i]); }
+  const list=[]; for(const q of ACT()) for(let i=0;i<4;i++){ if(G.anim&&G.anim.m.k===q&&G.anim.m.i===i) continue; if(G.fx.some(f=>f.t==='casa'&&f.k===q&&f.i===i&&G.frame-f.f<(f.life||40))) continue; let [x,y]=pieceXY(q,i,G.pos[q][i]); const pk=G.fx.find(f=>f.t==='patada'&&f.k===q&&f.i===i); if(pk){ const u=(G.frame-pk.f)/pk.life, b=u<0.6?Math.sin(u/0.6*Math.PI):0; x+=(pk.to[0]-x)*0.55*b; y+=(pk.to[1]-y)*0.55*b; } list.push([y,x,q,i]); }
+  for(const f of G.fx){ if(f.t!=='rastro') continue; const a=1-(G.frame-f.f)/f.life; if(a<=0) continue; c.save(); c.globalAlpha=0.45*a; c.fillStyle=COL[f.k].c; c.beginPath(); c.arc(f.x,f.y,pr*0.9,0,7); c.fill(); c.restore(); }
   list.sort((a,b)=>a[0]-b[0]).forEach(([y,x,q,i])=>drawPiece(c,x,y,pr,q,String(i+1)));
   // ficha que se está moviendo: salta de casilla en casilla
   if(G.anim){ const A=G.anim, m=A.m; let x,y,lift;
     if(m.from===CASA){ const u=Math.min(1,A.t/A.dur), [x0,y0]=homeSlot(m.k,m.i), [x1,y1]=pieceXYp(m.k,m.i,0); x=x0+(x1-x0)*u; y=y0+(y1-y0)*u; lift=Math.sin(u*Math.PI)*1.2; }
-    else { const n=m.path.length, f=Math.min(n-0.0001,A.t/8), st=Math.floor(f), u=f-st; const a=st===0?pieceXYp(m.k,m.i,m.from):pieceXYp(m.k,m.i,m.path[st-1]), b=pieceXYp(m.k,m.i,m.path[st]);
+    else { const n=m.path.length, f=Math.min(n-0.0001,A.t/STEPF), st=Math.floor(f), u=f-st; const a=st===0?pieceXYp(m.k,m.i,m.from):pieceXYp(m.k,m.i,m.path[st-1]), b=pieceXYp(m.k,m.i,m.path[st]);
       x=a[0]+(b[0]-a[0])*u; y=a[1]+(b[1]-a[1])*u; lift=Math.sin(u*Math.PI)*0.8; }
     drawPiece(c,x,y,pr,m.k,String(m.i+1),lift); }
   // fichas comidas: vuelan a su casa
@@ -3331,9 +3332,9 @@ function drawTable(){
   for(const f of G.fx){ if(f.t!=='cara') continue; const t=G.frame-f.f; if(t<0) continue; const u=BS/BU, [hc,hr]=HOME[f.k], W=8*u, hx=BOX+PX(hc)*u+W/2, hy=BOY+PX(hr)*u+W/2, L=f.life;
     const sc=t<10?t/10*1.2:t<16?1.2-(t-10)/6*0.2:1, a=t>L-20?(L-t)/20:1;
     c.save(); c.globalAlpha=Math.max(0,a); c.translate(hx,hy+Math.sin(t*0.35)*(f.e==='😂'?5:2)); c.rotate(f.e==='😂'?Math.sin(t*0.5)*0.12:0); c.scale(sc,sc);
-    c.fillStyle='#000'; c.font='110px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(f.e,0,4); c.restore(); }
+    c.fillStyle='#000'; c.font='64px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(f.e,0,4); c.restore(); }
   // escopeta: aparece apuntando a la ficha que se van a comer y dispara cuando llega la otra
-  if(G.gun){ const g=G.gun, t=G.frame-g.t0, ft=g.fire<0?-1:G.frame-g.fire; if(ft>34) G.gun=null; else drawGun(c,g,t,ft); }
+
   // dados
   if(G.dAnim){ G.dAnim.D.forEach(d=>drawDie(c,d.x,d.y,46,d.face,d.a,d.z)); }
   // jugadores
@@ -3800,6 +3801,9 @@ function geoBest(b,c,dir){
       const side=vert?Math.max(0,q.left-rc.right,rc.left-q.right):Math.max(0,q.top-rc.bottom,rc.top-q.bottom);
       const sc=main+side*2.2+(vert?Math.abs(dx):Math.abs(dy))*0.01; if(sc<bs){ bs=sc; best=x; } }
     if(best) break; }
+  // arriba del todo: un toque más hacia arriba salta directo al último botón de abajo (p. ej. SALIR)
+  if(!best&&dir==='up'){ const rc=c.getBoundingClientRect(), cx=rc.left+rc.width/2; let bb=-1e9;
+    for(const x of b){ if(x===c) continue; const q=x.getBoundingClientRect(); if(!q.width) continue; const sc=q.bottom*1000-Math.abs(q.left+q.width/2-cx); if(sc>bb){ bb=sc; best=x; } } }
   return best; }
 function menuMove(d,dir){ const b=menuBtns(); if(!b.length) return; const c=curBtn(); if(!c||(c.offsetParent===null&&c.id!=='gsalir')){ setFocusBtn(document.getElementById(defId())||b[0]); return; }
   const best=geoBest(b,c,dir||(d>0?'down':'up')); setFocusBtn(best||c); }
@@ -3971,9 +3975,9 @@ function update(){
   stepDice();
   const A=G.dAnim; if(G.phase==='rolling'&&A&&A.done&&G.frame-A.doneT>18){ rolled(A.vals); }
   if(G.anim){ const a=G.anim; a.t++;
-    if(a.m.from!==CASA&&a.t%8===0&&a.t<=a.m.path.length*8) hopSound();
+    if(a.m.from!==CASA&&a.t%STEPF===0&&a.t<=a.m.path.length*STEPF){ hopSound(); const st=a.t/STEPF, p0=st===1?a.m.from:a.m.path[st-2]; const [tx,ty]=pieceXYp(a.m.k,a.m.i,p0); G.fx.push({t:'rastro',k:a.m.k,x:tx,y:ty,f:G.frame,life:150}); }   // sombrita en cada casilla que pisa
     if(a.m.from===CASA&&a.t===a.dur) diceHit(0.4);
-    const end=a.m.from===CASA?a.dur:a.m.path.length*8; if(a.t>=end) landedMove(); return; }
+    const end=a.m.from===CASA?a.dur:a.m.path.length*STEPF; if(a.t>=end) landedMove(); return; }
   if(G.phase==='wait'){ if(--G.waitT<=0) endTurnStep(); return; }
   if(G.phase==='move'&&!G.toks.length){ G.phase='wait'; G.waitT=20; return; }
   if(isBot(G.turn)){ if(--G.aiT>0) return;

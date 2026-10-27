@@ -2825,7 +2825,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.12';
+const VERSION='v3.9.13';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4364,6 +4364,9 @@ function geoBest(b,c,dir){
       const side=vert?Math.max(0,q.left-rc.right,rc.left-q.right):Math.max(0,q.top-rc.bottom,rc.top-q.bottom);
       const sc=main+side*2.2+(vert?Math.abs(dx):Math.abs(dy))*0.01; if(sc<bs){ bs=sc; best=x; } }
     if(best) break; }
+  // arriba del todo: un toque más hacia arriba salta directo al último botón de abajo (p. ej. SALIR)
+  if(!best&&dir==='up'){ const rc=c.getBoundingClientRect(), cx=rc.left+rc.width/2; let bb=-1e9;
+    for(const x of b){ if(x===c) continue; const q=x.getBoundingClientRect(); if(!q.width) continue; const sc=q.bottom*1000-Math.abs(q.left+q.width/2-cx); if(sc>bb){ bb=sc; best=x; } } }
   return best; }
 function menuMove(d,dir){ const b=menuBtns(); if(!b.length) return; const c=curBtn(); if(!c||(c.offsetParent===null&&c.id!=='gsalir')){ setFocusBtn(document.getElementById(defId())||b[0]); return; }
   const best=geoBest(b,c,dir||(d>0?'down':'up')); setFocusBtn(best||c); }
