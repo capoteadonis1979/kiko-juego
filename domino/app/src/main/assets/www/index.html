@@ -53,6 +53,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 @keyframes ink{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 #libpage .fin{color:#c8281e;font-size:26px;text-align:center}
 #libpage .palos{letter-spacing:2px}
+#bvirar{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:58;font:700 22px var(--font);background:#2fbf71;color:#fff;border:3px solid #1a7a44;border-radius:16px;padding:14px 26px;box-shadow:0 6px 14px rgba(0,0,0,.5)}
 #libnext{position:absolute;right:14px;bottom:12px;z-index:2;font:700 17px var(--font);background:#2fbf71;color:#fff;border:3px solid #1a7a44;border-radius:12px;padding:10px 16px;box-shadow:0 4px 10px rgba(0,0,0,.4)}
 #libx{position:absolute;right:14px;top:10px;font:700 16px var(--font);background:#5a3a1a;color:#fff;border:2px solid #8a5a2a;border-radius:10px;padding:2px 12px;z-index:2}
 #passbox{position:fixed;left:0;right:0;top:0;bottom:0;z-index:60;background:rgba(120,14,10,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;touch-action:none}
@@ -360,6 +361,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
+    <button id="bvirar" hidden>VIRAR MIS FICHAS</button>
     <div id="passbox" hidden><b>NO LLEVAS FICHA</b><div id="pbtns"><button data-st="azar">👊 PASO<small>toca en cualquier parte para pasar</small></button></div><i id="passn"></i></div>
     <div id="seatbox" hidden><b>ELIGE TU SILLA</b><div id="seatgrid"></div><small>Tu pareja es siempre el de enfrente</small></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
@@ -2825,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.16';
+const VERSION='v3.9.17';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3484,7 +3486,11 @@ function endHand(winner,tranque){
   G.lastWinner=wseat;
   G.result={winner:wseat,team,tranque,all:pts,tot};
   G.cnt={t0:G.frame,list,sum:0,next:0,done:false};
-  G.state='handover'; G.timer=130+list.length*28+300;
+  G.state='handover'; G.timer=130+list.length*28+300; G.rev=null; G.revWait=false;
+  if(tranque){   // tranque: se viran las fichas; los bots primero el que más tiene, las personas cuando quieran
+    G.rev=[null,null,null,null]; G.revWait=true; G.cnt.t0=1e9;
+    ACT().filter(x=>!G.human[x]).sort((a,b)=>tot[b]-tot[a]).forEach((x,k)=>{ G.rev[x]=G.frame+50+k*55; });
+  }
   say(tranque?(team<0?'TRANQUE: EMPATE':'TRANQUE: GANA '+(sen?G.names[wseat]:TEAMN()[team])):(G.names[wseat]+' SE PEGÓ'),110);
   chime(sen?(wseat===0&&!isTV):team===0);
   if(sen?G.pscores.some(v=>v>=G.target):(G.scores[0]>=G.target||G.scores[1]>=G.target)){ G.over=true; try{ histSave(); }catch(_){}
@@ -3774,7 +3780,7 @@ function drawSeat(s){
   // fichas boca abajo de los demás
   if(s!==0||!showLocalHand()){
     const horiz=s%2===0, step=22;   // misma separación arriba/abajo y a los lados
-    const c=G.cnt, hs=c&&G.state==='handover'?G.frame-c.t0:-1, up=hs>=110;
+    const c=G.cnt, hs=c&&G.state==='handover'?G.frame-c.t0:-1, up=hs>=110||(G.state==='handover'&&G.rev&&G.rev[s]!=null&&G.frame>=G.rev[s]);
     for(let i=0;i<n;i++){
       if(up&&c.list.some((x,k)=>x.s===s&&x.ti===i&&hs>=130+k*28)) continue;   // ya se fue al centro a contar
       ctx.save();
@@ -3959,6 +3965,11 @@ function nextLabel(){ return (G.remoteMode?G.rOver:G.over)?'NUEVA PARTIDA ▶':'
 setInterval(()=>{ const b=document.getElementById('libnext'); const ok=canNext(); b.hidden=!ok; if(ok) b.textContent=nextLabel(); },300);
 document.getElementById('libnext').addEventListener('click',()=>{ if(!canNext()) return; if(G.remoteMode){ netSend({t:'ctl',a:'next'}); G.rCntDone=false; } else nextHandOrMenu(); libEl.hidden=true; });
 // ---- pasar con 1 o 2 toques ----
+function virar(s){ if(G.state!=='handover'||!G.revWait||!G.rev||G.rev[s]!=null) return; G.rev[s]=G.frame; clack(0.6); broadcast(); }
+const virEl=document.getElementById('bvirar');
+function canVirar(){ return G.remoteMode?!!G.rVirar:(!isTV&&G.state==='handover'&&G.revWait&&G.rev&&G.human[0]&&G.rev[0]==null); }
+setInterval(()=>{ virEl.hidden=!canVirar(); },200);
+virEl.addEventListener('click',()=>{ if(!canVirar()) return; if(G.remoteMode){ netSend({t:'virar'}); G.rVirar=false; } else virar(0); virEl.hidden=true; });
 const passbox=document.getElementById('passbox'); let passTaps=0, passTm=null, passShown=false;
 function mustPass(){ return G.remoteMode?!!G.rMust:(G.state==='play'&&G.turn===0&&G.human[0]&&!G.fly&&!(G.passT>0)&&!playable(0).length); }
 function checkPassBox(){ const m=mustPass(); if(m&&!passShown){ try{ navigator.vibrate&&navigator.vibrate([80,60,80]); }catch(_){} passTaps=0; document.getElementById('passn').textContent=''; }
@@ -3971,7 +3982,7 @@ document.querySelectorAll('#pbtns button').forEach(b=>b.addEventListener('pointe
   passTaps=Math.min(2,passTaps+1); document.getElementById('passn').textContent='✊'.repeat(passTaps); clearTimeout(passTm);
   passTm=setTimeout(()=>{ const n=passTaps; passTaps=0; if(n) sendPass(n,'toque'); },650); }));
 // tocar en cualquier parte de la pantalla también pasa (no solo el botón)
-document.body.appendChild(passbox);   // fuera de cualquier caja: tapa la pantalla entera
+document.body.appendChild(virEl); document.body.appendChild(passbox);   // fuera de cualquier caja: tapa la pantalla entera
 function passAnywhere(e){ if(passbox.hidden||!mustPass()) return; if(e.target&&e.target.closest&&e.target.closest('#pbtns')) return;
   e.preventDefault(); e.stopPropagation(); passBlock=performance.now()+700; initAudio(); try{ navigator.vibrate&&navigator.vibrate(40); }catch(_){} clearTimeout(passTm); passTaps=0; const r=Math.random(); sendPass(Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); }
 // tocar en cualquier parte de la pantalla pasa (también con dedo: touchstart por si el teléfono no manda pointerdown)
@@ -4119,7 +4130,7 @@ function broadcast(){
 function stateFor(s){
   const turn=G.turn===s&&G.state==='play';
   const must=G.state==='play'&&G.turn===s&&!G.fly&&!(G.passT>0)&&!playable(s).length;
-  return {t:'state',seat:s,join:!!(G.joinWait&&G.joinWait[s]===true),mus:MUS,snd:SND,musv:MUSV,sndv:SNDV,song:SONGS[songIdx][0],must,over:!!G.over,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
+  return {t:'state',seat:s,join:!!(G.joinWait&&G.joinWait[s]===true),mus:MUS,snd:SND,musv:MUSV,sndv:SNDV,song:SONGS[songIdx][0],must,over:!!G.over,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),virar:!!(G.state==='handover'&&G.revWait&&G.rev&&G.rev[s]==null),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
     score:G.mode==='sencillo'?('TÚ '+G.pscores[s]+' · MÁX '+Math.max(...G.pscores)):(s%2===0?G.scores[0]+' – '+G.scores[1]:G.scores[1]+' – '+G.scores[0])};
 }
 // en la tele: llega un móvil
@@ -4144,6 +4155,7 @@ window.kikoMsg=(id,line)=>{
   if(o.t==='join'){ if(G.joinWait&&G.joinWait[seat]){ if(o.now){ G.joinWait[seat]=false; G.human[seat]=true; say(G.names[seat]+' COGE LA MANO',90); } else say(G.names[seat]+' ENTRA EN LA PRÓXIMA MANO',90); G.joinWait[seat]=o.now?false:'next'; broadcast(); } return; }
   if(G.joinWait&&G.joinWait[seat]&&(o.t==='play'||o.t==='pass')) return;
   if(o.t==='exp'){ expShow(seat,o.k?1:0); return; }
+  if(o.t==='virar'){ virar(seat); return; }
   if(o.t==='pass'){ doPass(seat,o.n|0,o.st); return; }
   if(o.t==='ctl'){ if(o.a==='song'){ if(!MUS) setMusV(4); songNext(1); return; } if(o.a==='mus'){ setMus(!!o.v); return; } if(o.a==='snd'){ setSnd(!!o.v); return; } if(o.a==='musv'){ setMusV(+o.v); return; } if(o.a==='sndv'){ setSndV(+o.v); return; } if(o.a==='pause'){ G.paused=true; G.pausedBy=seat; say(G.names[seat]+' PUSO PAUSA',99999); return; } if(o.a==='resume'){ if(pauseEl.hidden){ G.paused=false; } G.msgT=0; return; }
     if(o.a==='restart'||o.a==='new') gameAction(o.a); else if(o.a==='next'&&G.state==='handover'&&G.cnt&&G.cnt.done) nextHandOrMenu(); return; }
@@ -4166,7 +4178,7 @@ window.kikoFromTV=(line)=>{
     G.rMust=!!o.must; G.rOver=!!o.over; setTimeout(checkPassBox,0);
     document.getElementById('joinbox').hidden=!o.join; G.rMus=o.mus!==false; G.rSnd=o.snd!==false; if(o.musv!=null) G.rMusV=o.musv; if(o.sndv!=null) G.rSndV=o.sndv; if(o.song&&o.song!==G.rSong){ G.rSong=o.song; if(!pauseEl.hidden) musLabel(); }
     if(o.lobby&&G.remoteMode){ renderSeatBox(o.lobby,o.seat); seatbox.hidden=false; } else seatbox.hidden=true;
-    if(o.cntDone&&!G.rCntDone) setTimeout(()=>openLibreta(true),400); G.rCntDone=!!o.cntDone;
+    if(o.cntDone&&!G.rCntDone) setTimeout(()=>openLibreta(true),400); G.rCntDone=!!o.cntDone; G.rVirar=!!o.virar;
     G.rEnergy=+o.energy||0; G.rEnds=o.ends; G.rTurn=o.turn; G.rMsg=o.msg; G.rScore=o.score;
     document.getElementById('rends').textContent=o.ends?('A los '+o.ends[0]+'  ·  a los '+o.ends[1]):'Mesa vacía';
     if(o.turn&&!wasTurn){ try{ navigator.vibrate&&navigator.vibrate([40,60,40]); }catch(_){} }
@@ -4543,6 +4555,10 @@ function update(){
     if(G.passT>0){ G.passT--; if(G.passT===0) nextTurn(); return; }
     if(!G.human[G.turn]&&!(G.turn===0&&G.drink)&&!(G.turn===1&&G.smoke)){ if(--G.aiT<=0){ const c=aiChoose(G.turn); if(c) doPlay(G.turn,c.t,c.side,0.3+Math.random()*0.5); else { const r=Math.random(); doPass(G.turn,Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); } } }
   } else if(G.state==='handover'){
+    if(G.revWait&&G.cnt){ const A=ACT();
+      A.forEach(x=>{ if(G.rev[x]===G.frame) clack(0.6); });
+      if(A.every(x=>G.rev[x]!=null)&&G.frame>=Math.max(...A.map(x=>G.rev[x]))+45){ G.revWait=false; G.cnt.t0=G.frame-60; G.timer=70+G.cnt.list.length*28+300; broadcast(); }
+      return; }
     const c=G.cnt; if(c&&!c.done){ const hs=G.frame-c.t0;
       while(c.next<c.list.length&&hs>=130+c.next*28+16){ c.sum+=pips(c.list[c.next].t); c.next++; clack(0.45); }
       if(c.next>=c.list.length&&hs>=130+c.list.length*28+16){ c.done=true; broadcast(); if(!isTV&&!G.remoteMode) openLibreta(true); } }
