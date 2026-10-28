@@ -68,6 +68,35 @@ public class MainActivity extends Activity implements SensorEventListener {
     private int evCount = 0;
     private float quiet = 0, rawMax = 0; private boolean cool = false; private long lastDbg = 0;
 
+    // ===== Inclinar el teléfono a los lados: el muñeco se mueve al instante =====
+    private Sensor incSensor; private boolean incOn = false, incGrav = false; private float incF = 0; private int incLast = 999; private long incJs = 0;
+    private void sendX(final String line) {
+        tx.execute(() -> { OutputStream o = ctrlOut; if (o == null) return; try { o.write(line.getBytes()); o.flush(); } catch (Exception ex) { ctrlOut = null; } });
+    }
+    private final SensorEventListener incL = new SensorEventListener() {
+        @Override public void onSensorChanged(SensorEvent e) {
+            float gx = e.values[0], gy = e.values[1], gz = e.values[2]; float g = (float) Math.sqrt(gx * gx + gy * gy + gz * gz); if (g < 1) return;
+            float sv = -gx / g;                                   // inclinar a la derecha = positivo
+            incF = incGrav ? sv : incF * 0.35f + sv * 0.65f;      // filtro mínimo para que no tiemble, sin retraso
+            float a = Math.abs(incF), v = a < 0.07f ? 0 : Math.min(1f, (a - 0.07f) / 0.25f); if (incF < 0) v = -v;
+            int q = Math.round(v * 20);                           // pasos de 0,05: solo se manda cuando cambia
+            if (q != incLast) { incLast = q; sendX("x " + String.format(java.util.Locale.US, "%.2f", q / 20f) + "\n"); }
+            long now = System.currentTimeMillis();
+            if (now - incJs > 33) { incJs = now; js("window.kikoGyro&&kikoGyro(" + String.format(java.util.Locale.US, "%.3f,%.2f", incF, q / 20f) + ")"); }
+        }
+        @Override public void onAccuracyChanged(Sensor s, int a) { }
+    };
+    private void gyroOn(boolean on) {
+        runOnUiThread(() -> {
+            if (sm == null) sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sm == null) return;
+            if (incSensor == null) { incSensor = sm.getDefaultSensor(Sensor.TYPE_GRAVITY); incGrav = incSensor != null; if (incSensor == null) incSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); }
+            if (on && !incOn && incSensor != null) { incLast = 999; sm.registerListener(incL, incSensor, SensorManager.SENSOR_DELAY_FASTEST); incOn = true; }
+            else if (!on && incOn) { sm.unregisterListener(incL); incOn = false; incLast = 999; sendX("x 0\n"); }
+            if (on && incSensor == null) js("window.kikoGyroNo&&kikoGyroNo()");
+        });
+    }
+
     private Sensor pickSensor() {
         Sensor l = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         linReal = l != null;
@@ -184,8 +213,15 @@ public class MainActivity extends Activity implements SensorEventListener {
     private void handle(Socket c, int id) {
         try (BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()))) {
             String line;
+            int axSl = -1;
             while ((line = r.readLine()) != null) {
                 String[] p = line.trim().split(" ");
+                if (p.length >= 2 && p[0].equals("x")) {   // inclinación del teléfono: -1 .. 1
+                    float v; try { v = Float.parseFloat(p[1]); } catch (Exception ex) { continue; }
+                    final int sl = slot(id, false); if (sl < 0) continue; axSl = sl;
+                    final String code = "window.kikoAx&&kikoAx(" + String.format(java.util.Locale.US, "%.2f", v) + "," + sl + ")";
+                    runOnUiThread(() -> js(code)); continue;
+                }
                 if (p.length < 2 || !p[0].matches("left|right|up|down|a|b|start")) continue;
                 final String k = p[0];
                 final boolean down = p[1].equals("1");
@@ -193,6 +229,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if (sl < 0) continue;
                 runOnUiThread(() -> tecla(k, down, sl));
             }
+            if (axSl >= 0) { final int sl = axSl; runOnUiThread(() -> js("window.kikoAx&&kikoAx(0," + sl + ")")); }
         } catch (Exception ignored) { }
         try { c.close(); } catch (Exception ignored) { }
         nClients.decrementAndGet(); notifyNet();
@@ -318,6 +355,10 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         @JavascriptInterface
         public void ctrlStop() { ctrlGen++; closeCtrl(); }
+
+        // mando por inclinación (giroscopio)
+        @JavascriptInterface
+        public void gyro(boolean on) { gyroOn(on); }
 
         // al empezar un partido de 2, el primero que pulse es el jugador 1
         @JavascriptInterface
@@ -531,6 +572,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     protected void onPause() {
         if (tiltOn && sm != null) sm.unregisterListener(this);
+        if (incOn && sm != null) { sm.unregisterListener(incL); sendX("x 0\n"); incLast = 999; }
         js("window.kikoPause&&kikoPause()");
         if (web != null) web.onPause();
         super.onPause();
@@ -541,6 +583,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         super.onResume();
         if (web != null) web.onResume();
         if (tiltOn && sm != null && linSensor != null) { vel = 0; lastNs = 0; sm.registerListener(this, linSensor, SensorManager.SENSOR_DELAY_GAME); }
+        if (incOn && sm != null && incSensor != null) sm.registerListener(incL, incSensor, SensorManager.SENSOR_DELAY_FASTEST);
         pantallaCompleta();
         if (esperaPermiso && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) { esperaPermiso = false; instalar(); }
         else if (!esperaPermiso && web != null && web.getProgress() >= 100) buscarActualizacion();

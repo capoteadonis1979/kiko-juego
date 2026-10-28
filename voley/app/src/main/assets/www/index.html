@@ -55,6 +55,16 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 #mvinfo{font:600 11px var(--pix);color:#9ccaff}
 #tap{flex:1;min-height:110px;border-radius:24px;background:var(--a);border:3px solid #8a2418;display:grid;place-items:center;font:700 22px var(--pix);color:#fff;text-align:center;touch-action:none;user-select:none}
 #tap.on{filter:brightness(1.3)}
+#gyro{flex:1;display:flex;flex-direction:column;gap:12px;min-height:0}
+#gyrobox{flex:1;min-height:200px;border-radius:24px;background:#163248;border:3px solid #2c4c66;display:grid;grid-template-columns:64px 1fr 64px;grid-template-rows:1fr auto;align-items:center;gap:8px;padding:12px;position:relative;touch-action:none;transition:background .25s,border-color .25s}
+#gyrobox.jp{background:#2a6a3e;border-color:#8aff6a;transition:none}
+#gyrobox .tz{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:var(--btn);border:2px solid #2c4c66;font-size:24px}
+#gyrobox .tz.on{background:#2fbf71;border-color:#1a7a44}
+#gytrack{height:14px;border-radius:7px;background:#0e2233;position:relative}
+#gybub{position:absolute;top:-17px;left:50%;width:48px;height:48px;margin-left:-24px;border-radius:50%;background:#ffe070;box-shadow:0 0 0 4px #7a3a00}
+#gyhint{grid-column:1/4;text-align:center;font:700 13px var(--pix);color:#9ccaff}
+#gybtns{display:flex;justify-content:center}
+#gybtns .pk{width:96px;height:56px;font-size:16px}
 #tiltbtns{display:flex;gap:10px;align-items:center;justify-content:space-between}
 #tiltbtns .pk{width:64px;height:56px;font-size:16px}
 #tiltbtns button{font:700 13px var(--pix);background:#2f7fe0;color:#fff;border:2px solid #1c4c94;border-radius:12px;padding:14px 12px}
@@ -89,7 +99,11 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <div id="pad" hidden>
   <div id="padtop"><button id="padexit">SALIR</button><button id="padpair">EMPAREJAR</button><button id="padmode">BOTONES</button><span id="padst">Buscando la tele...</span><div class="padman" hidden><input id="padip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Direccion de la tele"><button id="padgo">CONECTAR</button></div></div>
-  <div id="tilt">
+  <div id="gyro">
+    <div id="gyrobox"><div class="tz" id="gyl">&#9664;</div><div id="gytrack"><i id="gybub"></i></div><div class="tz" id="gyr">&#9654;</div><span id="gyhint">INCLINA EL TELÉFONO PARA MOVERTE · TOCA LA PANTALLA PARA SALTAR</span></div>
+    <div id="gybtns"><div data-k="start" class="pk">START</div></div>
+  </div>
+  <div id="tilt" hidden>
     <div id="drag"><div class="tz" id="tzl">&#9664;</div><div id="dragtrack"><i id="dragknob"></i></div><div class="tz" id="tzr">&#9654;</div><i id="dot"></i><span id="draghint">TOCA PARA SALTAR · DEJA EL DEDO Y DESLIZA PARA MOVERTE</span></div>
     <div id="tiltbtns"><div data-k="up" class="pk">&#9650;</div><div data-k="down" class="pk">&#9660;</div><div data-k="start" class="pk">START</div></div>
   </div>
@@ -101,7 +115,7 @@ body{background:var(--bg);color:var(--fg);overflow:hidden;touch-action:none;-web
 </div>
 <script>
 (()=>{
-const VERSION='v1.18.0';
+const VERSION='v1.19.0';
 const VW=480, VH=270, GY=236, NX=240, NT=150, GRAV=0.105;
 const cv=document.getElementById('g'), ctx=cv.getContext('2d');
 let SC=1;
@@ -197,6 +211,8 @@ addEventListener('blur',()=>{ for(const s of [0,1]) for(const k of BTN){ keys[s]
 // puente con la app Android: cada mando físico tiene su jugador
 let padUsed=false;
 function usePad(){ if(!padUsed){ padUsed=true; layout(); } }
+const AXV=[0,0];   // inclinación de cada teléfono
+window.kikoAx=(v,slot)=>{ AXV[slot?1:0]=clamp(+v||0,-1,1); if(v){ initAudio(); usePad(); } };
 window.kikoKey=(k,down,slot)=>{ const s=slot?1:0; if(k in bridge[s]){ bridge[s][k]=down?1:0; if(down) latch[s][k]=1; if(down){ initAudio(); usePad(); } } };
 
 const ctl=document.getElementById('ctl'), dpad=document.getElementById('dpad'), kl=document.getElementById('kl'), kr=document.getElementById('kr'), bA=document.getElementById('bA'), bB=document.getElementById('bB'), pz=document.getElementById('pz');
@@ -346,13 +362,14 @@ function touch(p){
 }
 function collideBlob(p){
   // el muñeco son dos círculos: cuerpo y cabeza
-  for(const [oy,r] of [[BH*0.38,BW*0.5],[BH*0.78,BW*0.36]]){
+  for(const [oy,r,part] of [[BH*0.38,BW*0.5,0],[BH*0.78,BW*0.36,1]]){
     const cx=p.x, cy=p.y-oy, dx=ball.x-cx, dy=ball.y-cy, d=Math.hypot(dx,dy);
     if(d<r+BALLR){
       const nx=dx/(d||1), ny=dy/(d||1);
       ball.x=cx+nx*(r+BALLR+0.5); ball.y=cy+ny*(r+BALLR+0.5);
       if(p.cd===0){
         if(!touch(p)) return true;
+        p.jel={f:G.frame,nx,ny,part}; ball.jel={f:G.frame,nx,ny};   // efecto gelatina: se hunde donde pega la bola y la bola se aplasta
         const sp=5.7+(p.on?0:0.5);
         ball.vx=nx*sp+p.vx*0.25; ball.vy=ny*sp+Math.min(0,p.vy)*0.25;
         if(ny>0.3&&!p.on){ S.spike(); G.flash=5; } else S.bump();
@@ -390,10 +407,10 @@ function updBall(){
 }
 
 /* ================= JUGADORES ================= */
-function movePlayer(p,left,right,jump,maxV){
-  const t=(right?1:0)-(left?1:0);
+function movePlayer(p,left,right,jump,maxV,ax){
+  const t=ax?ax:(right?1:0)-(left?1:0);   // ax: inclinación del teléfono (-1..1)
   p.vx=t*maxV;
-  if(t) p.face=t;
+  if(t) p.face=t>0?1:-1;
   if(jump&&p.on){ p.vy=-7.2; p.on=false; S.jump(); }
   if(!p.on){ p.vy+=jump||p.vy>0?0.28:0.5; }
   p.y+=p.vy; p.x+=p.vx;
@@ -461,7 +478,7 @@ function update(){
       if(G.paused) break;
       for(const p of players){
         if(G.state==='point'){ movePlayer(p,false,false,false,0); continue; }
-        if(isHuman(p.team)){ const s=inp[p.team]; movePlayer(p,s.left,s.right,s.a||s.b||s.up,3.0); }
+        if(isHuman(p.team)){ const s=inp[p.team], ax=G.mode===1&&p.team===0?(AXV[0]||AXV[1]):AXV[p.team]; movePlayer(p,s.left,s.right,s.a||s.b||s.up,3.0,ax); }
         else aiControl(p);
       }
       if(G.state==='serve'){ G.timer++; updBall(); }
@@ -618,12 +635,16 @@ function drawPlayer(p){
     if(t%12===0) S.move();
   }
   ctx.save(); ctx.translate(x,y-h*0.5); ctx.rotate(rot); ctx.translate(-x,-(y-h*0.5));
-  ctx.fillStyle=tc.d; ctx.beginPath(); ctx.ellipse(x,y-h*0.45,w*0.5+1,h*0.45+1,0,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x,y-h*0.72,w*0.38+1,h*0.3+1,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle=tc.c; ctx.beginPath(); ctx.ellipse(x,y-h*0.45,w*0.5,h*0.45,0,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(x,y-h*0.72,w*0.38,h*0.3,0,0,Math.PI*2); ctx.fill();
+  // gelatina: la parte golpeada (cuerpo o cabeza) se hunde hacia dentro donde pegó la bola y rebota temblando
+  const EL=[[x,y-h*0.45,w*0.5,h*0.45],[x,y-h*0.72,w*0.38,h*0.3]];
+  if(p.jel){ const tj=G.frame-p.jel.f; if(tj>26) p.jel=null; else { const k=0.3*Math.exp(-tj/6)*Math.cos(tj*0.8), e=EL[p.jel.part], ax=Math.abs(p.jel.nx), ay=Math.abs(p.jel.ny);
+    e[0]-=p.jel.nx*k*e[2]*0.6; e[1]-=p.jel.ny*k*e[3]*0.6; e[2]*=1-k*ax+k*0.45*ay; e[3]*=1-k*ay+k*0.45*ax; } }
+  ctx.fillStyle=tc.d; ctx.beginPath(); ctx.ellipse(EL[0][0],EL[0][1],EL[0][2]+1,EL[0][3]+1,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(EL[1][0],EL[1][1],EL[1][2]+1,EL[1][3]+1,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=tc.c; ctx.beginPath(); ctx.ellipse(EL[0][0],EL[0][1],EL[0][2],EL[0][3],0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(EL[1][0],EL[1][1],EL[1][2],EL[1][3],0,0,Math.PI*2); ctx.fill();
   if(tc.c2){ ctx.save(); ctx.beginPath(); ctx.rect(x-w,y-h*0.42,w*2,h); ctx.clip();
-    ctx.fillStyle=tc.c2; ctx.beginPath(); ctx.ellipse(x,y-h*0.45,w*0.5,h*0.45,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+    ctx.fillStyle=tc.c2; ctx.beginPath(); ctx.ellipse(EL[0][0],EL[0][1],EL[0][2],EL[0][3],0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
   ctx.fillStyle=tc.hi; ctx.beginPath(); ctx.ellipse(x-w*0.16,y-h*0.8,w*0.1,h*0.12,-0.5,0,Math.PI*2); ctx.fill();
   drawFlag(G.flag[p.team],x-w*0.16,y-h*0.3,w*0.32,w*0.21,false);
   const ex=x+face*w*0.12, ey=y-h*0.66;
@@ -692,12 +713,15 @@ function drawBall(){
     ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(ax,top+hA+8,5,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#7a3a00'; ctx.lineWidth=1; ctx.stroke();
     if(y<-r) return;
   }
+  let bk=0, ba=0; if(ball.jel){ const tb=G.frame-ball.jel.f; if(tb>18) ball.jel=null; else { bk=0.22*Math.exp(-tb/4)*Math.cos(tb*0.9); ba=Math.atan2(ball.jel.ny,ball.jel.nx); } }
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ba); ctx.scale(1-bk,1+bk*0.6); ctx.rotate(-ba); ctx.translate(-x,-y);
   circ(x,y,r,'#ffffff');
   ctx.save(); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.clip(); ctx.translate(x,y); ctx.rotate(ball.rot);
   ctx.fillStyle='#f2b630'; ctx.beginPath(); ctx.ellipse(-r*0.2,-r*0.9,r*1.1,r*0.45,0.3,0,Math.PI*2); ctx.fill();
   ctx.fillStyle='#2f7fe0'; ctx.beginPath(); ctx.ellipse(r*0.3,r*0.8,r*1.1,r*0.45,0.3,0,Math.PI*2); ctx.fill();
   ctx.restore();
   ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(x,y,r-0.5,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
 }
 function drawHUD(){
   // cada jugador tiene su marcador en su esquina de arriba
@@ -789,9 +813,9 @@ function openPad(){
   padOpen=true; stopMusic(); padEl.hidden=false; document.getElementById('wrap').hidden=true;
   padSt.textContent='Buscando la tele en tu Wi-Fi...'; padIp.parentNode.hidden=true;
   try{ KikoApp.ctrlStart(''); }catch(_){}
-  setTilt(tiltOn);
+  setPadMode(padModeN);
 }
-function closePad(){ setDir(0); try{ KikoApp.setPortrait(false); }catch(_){} padOpen=false; try{ KikoApp.ctrlStop(); }catch(_){} padEl.hidden=true; document.getElementById('wrap').hidden=false; G.sel=0; layout(); }
+function closePad(){ setDir(0); try{ KikoApp.gyro(false); }catch(_){} try{ KikoApp.setPortrait(false); }catch(_){} padOpen=false; try{ KikoApp.ctrlStop(); }catch(_){} padEl.hidden=true; document.getElementById('wrap').hidden=false; G.sel=0; layout(); }
 window.kikoCtrl=(m)=>{
   if(m.startsWith('OK:')){ padSt.textContent='Conectado a la tele ('+m.slice(3)+')'; padSt.className='ok'; padIp.parentNode.hidden=true; }
   else if(m.startsWith('ERR:')){ padSt.textContent=m.slice(4); padSt.className='err'; padIp.parentNode.hidden=false; }
@@ -838,13 +862,24 @@ function jumpNow(){ dragEl.classList.add('jp'); setTimeout(()=>dragEl.classList.
 const dragEnd=e=>{ if(e.pointerId!==dId) return; dId=null; dot.classList.remove('on'); setDir(0); knobAt(0);
   if(!dMoved&&performance.now()-dT0<260) jumpNow(); };
 dragEl.addEventListener('pointerup',dragEnd); dragEl.addEventListener('pointercancel',dragEnd); dragEl.addEventListener('lostpointercapture',dragEnd);
-function setTilt(on){
-  tiltOn=on; setDir(0);
-  document.getElementById('tilt').hidden=!on; document.getElementById('padmain').hidden=on;
-  document.getElementById('padmode').textContent=on?'BOTONES':'ARRASTRAR';
-  try{ KikoApp.setPortrait(on); }catch(_){}
+// modos del mando: 0 = inclinar el teléfono (giroscopio), 1 = arrastrar el dedo, 2 = botones
+let padModeN=0; const MODEN=['GIROSCOPIO','ARRASTRAR','BOTONES'];
+function setPadMode(m){
+  padModeN=m; tiltOn=m!==2; setDir(0);
+  document.getElementById('gyro').hidden=m!==0; document.getElementById('tilt').hidden=m!==1; document.getElementById('padmain').hidden=m!==2;
+  document.getElementById('padmode').textContent=MODEN[(m+1)%3];
+  try{ KikoApp.gyro(m===0&&padOpen); }catch(_){}
+  try{ KikoApp.setPortrait(m!==2); }catch(_){}
 }
-document.getElementById('padmode').addEventListener('click',()=>setTilt(!tiltOn));
+function setTilt(on){ setPadMode(on?padModeN===2?0:padModeN:2); }
+document.getElementById('padmode').addEventListener('click',()=>setPadMode((padModeN+1)%3));
+// inclinación que mide el teléfono (llega del sensor ~30 veces por segundo): mueve la bolita y enciende la flecha
+const gyl=document.getElementById('gyl'), gyr=document.getElementById('gyr'), gybub=document.getElementById('gybub'), gyrobox=document.getElementById('gyrobox');
+let gyDir=0;
+window.kikoGyro=(raw,v)=>{ gybub.style.left=(50+clamp(raw/0.35,-1,1)*46)+'%'; const d=v<0?-1:v>0?1:0; if(d!==gyDir){ gyDir=d; gyl.classList.toggle('on',d<0); gyr.classList.toggle('on',d>0); if(d){ try{ navigator.vibrate&&navigator.vibrate(6); }catch(_){} } } };
+window.kikoGyroNo=()=>{ document.getElementById('gyhint').textContent='ESTE TELÉFONO NO TIENE SENSOR: CAMBIA A ARRASTRAR'; };
+// tocar en cualquier parte del recuadro salta (al momento, sin esperar a soltar)
+gyrobox.addEventListener('pointerdown',e=>{ e.preventDefault(); gyrobox.classList.add('jp'); setTimeout(()=>gyrobox.classList.remove('jp'),160); ctrl('a',true); setTimeout(()=>ctrl('a',false),140); try{ navigator.vibrate&&navigator.vibrate(12); }catch(_){} });
 const kb0=window.kikoBack; window.kikoBack=()=>{ if(padOpen){ closePad(); return true; } return kb0(); };
 
 /* ================= PANTALLA ================= */
