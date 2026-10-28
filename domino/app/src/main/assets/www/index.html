@@ -2825,7 +2825,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.15';
+const VERSION='v3.9.16';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3783,7 +3783,7 @@ function drawSeat(s){
       if(up){ const t=G.hands[s][i]; drawTile(ctx,t[0],t[1],40,20,true); } else drawTile(ctx,0,0,36,18,false); ctx.restore();
     }
   }
-  // foto con aro del color de la pareja + nombre, centrados entre las fichas y el borde de la pantalla
+  // foto con aro del color de la pareja
   const label=G.names[s], ph=G.photos[s], R=19, col=seatColor(s);
   ctx.textBaseline='middle'; ctx.lineJoin='round';
   const face=(x,y)=>{
@@ -3792,19 +3792,22 @@ function drawSeat(s){
     if(ph) ctx.drawImage(ph,x-R,y-R,R*2,R*2);
     else { ctx.fillStyle='#2b1a0d'; ctx.fillRect(x-R,y-R,R*2,R*2); ctx.fillStyle='#fff6e0'; ctx.font='700 20px '+font; ctx.textAlign='center'; ctx.fillText((label.trim()[0]||'?'),x,y+1); }
     ctx.restore(); ctx.strokeStyle=col; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(x,y,R,0,7); ctx.stroke(); };
-  const name=(t,x,y,align,maxW)=>{ let fs=14; ctx.font='700 '+fs+'px '+font; while(fs>9&&ctx.measureText(t).width>maxW){ fs--; ctx.font='700 '+fs+'px '+font; }
-    const w=ctx.measureText(t).width; ctx.textAlign='center'; const cx=align==='left'?x+w/2:x;
-    if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,cx-w/2-7,y-10,w+14,20,10); ctx.fill(); ctx.fillStyle='#3a2600'; ctx.fillText(t,cx,y+1); }
-    else { ctx.lineWidth=3; ctx.strokeStyle='rgba(30,14,4,.85)'; ctx.strokeText(t,cx,y+1); ctx.fillStyle='#fff6e0'; ctx.fillText(t,cx,y+1); }
-    return w; };
-  // arriba/abajo: a un costado de la fila; a los lados: encima de la columna. Siempre separada de las fichas
+  // nombre como antes: en el borde de madera, centrado con las fichas; a los lados en vertical (se lee de arriba abajo)
+  ctx.font='700 14px '+font;
+  const txt=(t,x,y)=>{ if(me){ ctx.fillStyle='#3a2600'; ctx.fillText(t,x,y); } else { ctx.lineWidth=3; ctx.strokeStyle='rgba(30,14,4,.85)'; ctx.strokeText(t,x,y); ctx.fillStyle='#fff6e0'; ctx.fillText(t,x,y); } };
   if(s===0||s===2){
-    const y=s===0?VH-36:36, half=9/2*22+11, x=VW/2-half-12-R;   // sitio fijo (fila de 10), no se mueve al jugar
-    face(x,y); ctx.font='700 14px '+font; const tw=Math.min(ctx.measureText(label).width,140); name(label,x-R-10-tw,y,'left',140);
+    const y=s===0?VH-13:13, tw=ctx.measureText(label).width;
+    if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,VW/2-tw/2-8,y-11,tw+16,22,11); ctx.fill(); }
+    ctx.textAlign='center'; txt(label,VW/2,y+1);
   } else {
-    const x=s===1?VW-40:40, half=9/2*22+11, y=VH/2-half-14-R-20;
-    face(x,y); name(label,x,y+R+12,'center',72);
+    const x=s===1?VW-13:13, L=[...label], step=c=>c===' '?8:15, H=L.reduce((n,c)=>n+step(c),0); let y=VH/2-H/2;
+    if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,x-11,y-8,22,H+16,11); ctx.fill(); }
+    ctx.textAlign='center'; for(const c of L){ const h=step(c); if(c!==' ') txt(c,x,y+h/2+1); y+=h; }
   }
+  // carita casi pegada a las fichas (sitio fijo, fila de 10): arriba/abajo a la izquierda de la fila, a los lados encima de la columna
+  const edge=9/2*22+9+5;
+  if(s===0||s===2) face(VW/2-edge-R,s===0?VH-54:54);
+  else face(s===1?VW-54:54,VH/2-edge-R);
   ctx.restore();
 }
 function showLocalHand(){ return !isTV; }
