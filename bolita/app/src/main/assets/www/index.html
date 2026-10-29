@@ -31,10 +31,10 @@ h1{margin:0;font-size:min(6.2vw,32px);white-space:nowrap;color:#ffd23a;text-shad
   <div id="tm"><button data-m="1" class="on">1 MIN</button><button data-m="2">2 MIN</button><button data-m="3">3 MIN</button></div>
   <div id="stats"></div>
 </div>
-<div id="over"><h2 id="oh">CENTRA E GANHA KWANZAS</h2><p id="op">Sostén el teléfono como te sea cómodo y toca <b>EMPEZAR</b>. Inclínalo para llevar la bolita al círculo dorado del centro.<br>Cada segundo que la aguantes dentro ganas <b>50 Kz</b>, hasta que se acabe el tiempo.</p><button id="go">EMPEZAR</button></div>
-<div id="ver">v1.3.0</div>
+<div id="over"><h2 id="oh">CENTRA E GANHA KWANZAS</h2><p id="op">Pon el teléfono horizontal, como un nivel de agua, y toca <b>EMPEZAR</b>. Inclínalo para llevar la bolita al círculo dorado del centro.<br>Cada segundo que la aguantes dentro ganas <b>50 Kz</b>, hasta que se acabe el tiempo.</p><button id="go">EMPEZAR</button></div>
+<div id="ver">v1.3.1</div>
 <script>
-const VERSION='v1.3.0';
+const VERSION='v1.3.1';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d'), info=document.getElementById('info'), over=document.getElementById('over'), goBtn=document.getElementById('go'), stats=document.getElementById('stats');
 // niveles: tamaño del círculo del centro, sensibilidad y "viento" (un temblor que obliga a corregir: no vale dejar el teléfono quieto en la mesa)
@@ -69,8 +69,8 @@ addEventListener('devicemotion',ev=>{ if(NAT) return; const g=ev.accelerationInc
   for(let k=0;k<3;k++) GR[k]=GR[k]*0.5+[g.x,g.y,g.z][k]*0.5; });
 function tilt(){ // devuelve la fuerza en pantalla (x derecha, y abajo)
   if(!HAS) return [KEY.x*4,KEY.y*4];
-  if(!G0&&state==='play') G0=GR.slice();   // el sensor llegó después de empezar: esa posición es el cero
-  const b=G0||[0,0,9.8], dx=GR[0]-b[0], dy=GR[1]-b[1], t=scrAngle()*Math.PI/180, c=Math.cos(t), s=Math.sin(t);
+  const b=[0,0,9.8],   // horizontal de verdad, como un nivel de agua (no la posición al empezar)
+    dx=GR[0]-b[0], dy=GR[1]-b[1], t=scrAngle()*Math.PI/180, c=Math.cos(t), s=Math.sin(t);
   const x=-dx, y=dy; return [x*c-y*s, x*s+y*c]; }
 // para probar sin sensores: flechas del teclado o arrastrar el dedo
 const KEY={x:0,y:0};
@@ -116,11 +116,9 @@ function update(){ frame++;
   const L=LV[lvl], f=tilt(), dt=1/60, RP=0.005/BR;   // RP: radio del plato en metros
   wind.va+=(Math.random()-0.5)*0.02; wind.va*=0.95; wind.a+=wind.va; wind.m+=((Math.random()<0.01?Math.random():wind.m)-wind.m)*0.02;
   const fx=f[0]+Math.cos(wind.a)*L.w*(0.4+wind.m), fy=f[1]+Math.sin(wind.a)*L.w*(0.4+wind.m);   // m/s² en el plano
-  const CRR=0.01, g=9.81, ax=5/7*fx, ay=5/7*fy, rr=5/7*CRR*g;   // frenado por rodadura
+  const g=9.81, ax=5/7*fx, ay=5/7*fy;   // sin "imán": cualquier inclinación la mueve, suave
   let vx=B.vx*RP*60, vy=B.vy*RP*60;   // velocidad en m/s
-  const sp=Math.hypot(vx,vy), fa=Math.hypot(ax,ay);
-  if(sp<0.004&&fa<=rr){ vx=0; vy=0; }   // quieto: la inclinación no vence el roce
-  else { vx+=ax*dt; vy+=ay*dt; const s2=Math.hypot(vx,vy); if(s2>0){ const k=Math.max(0,s2-rr*dt)/s2; vx*=k; vy*=k; } }
+  vx+=ax*dt; vy+=ay*dt; const s2=Math.hypot(vx,vy); if(s2>0){ const k=Math.max(0,s2-5/7*0.002*g*dt)/s2*0.997; vx*=k; vy*=k; }   // roce muy pequeño del paño
   B.vx=vx/RP/60; B.vy=vy/RP/60; B.x+=B.vx; B.y+=B.vy;
   const d=Math.hypot(B.x,B.y), br=BR;
   if(d>1-br){ const nx=B.x/d, ny=B.y/d; B.x=nx*(1-br); B.y=ny*(1-br); const dot=B.vx*nx+B.vy*ny; if(dot>0){ B.vx-=1.5*dot*nx; B.vy-=1.5*dot*ny; if(dot>0.004) tone(180,0.08,clamp(dot*25,0.05,0.4),'triangle'); } }   // rebota en el borde
