@@ -2830,7 +2830,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.29';
+const VERSION='v3.9.30';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3049,6 +3049,7 @@ function doPlay(seat,tile,side,force=0.5,slm=0,noPh=false){
   const h=G.hands[seat], idx=h.findIndex(t=>same(t,tile)); if(idx<0) return false;
   const opts=canPlay(h[idx]); if(!opts.length) return false;
   if(!opts.includes(side)) side=opts[0];
+  if(G.ends&&G.ends[0]===G.ends[1]&&opts.length>1){ const nL=G.chain.filter(x=>x.side==='L').length, nR=G.chain.filter(x=>x.side==='R').length; side=nL<nR?'L':nR<nL?'R':(Math.random()<0.5?'L':'R'); }   // cabezas iguales: al lado con menos fichas
   if(slm>0&&!noPh&&G.optFr){ G.pend={seat,tile,side,force,slm,t:G.frame+55}; G.phr={seat,txt:phraseFor(h[idx],side),t:G.frame}; broadcast(); return true; }   // primero la frase, después la ficha
   const t=h.splice(idx,1)[0]; G.lastPlayed=G.lastPlayed||[]; G.lastPlayed[seat]=t;
   let item;
@@ -4090,6 +4091,7 @@ function askSide(t,lvl,go){
   const ends=G.remoteMode?G.rEnds:G.ends; if(!ends){ go('L'); return; }
   const box=document.getElementById('sidebox'); const bl=document.getElementById('sideL'), br=document.getElementById('sideR');
   const same2=ends[0]===ends[1];
+  if(same2){ go('L'); return; }   // las dos cabezas iguales: no pregunta, la mesa la pone donde mejor quepa
   bl.textContent='A LOS '+ends[0]+(same2?' (IZQUIERDA)':''); br.textContent='A LOS '+ends[1]+(same2?' (DERECHA)':'');
   document.getElementById('sidelvl').textContent=lvl>0.05?('GOLPETAZO NIVEL '+Math.round(lvl*10)):'';
   box.hidden=false;
