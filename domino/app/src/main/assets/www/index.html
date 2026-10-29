@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.21';
+const VERSION='v3.9.22';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3587,8 +3587,8 @@ function drawFistV(){
 }
 function hsOK(){ return G.state==='handover'&&G.cnt&&(G.cnt.done||!G.human.some(Boolean))&&G.frame-G.cnt.t0>60; }
 // dónde está cada ficha en el puesto de un jugador
-function revPos(s,i,n){ const d=(i-(n-1)/2)*24;
-  return [{x:VW/2+d,y:VH-104,a:Math.PI/2},{x:VW-112,y:VH/2+d,a:0},{x:VW/2+d,y:104,a:Math.PI/2},{x:112,y:VH/2+d,a:0}][s]; }
+function revPos(s,i,n){ const pos=seatPos(s), d=(i-(n-1)/2)*22;   // en el tranque las fichas se viran en su sitio, en el borde
+  return s%2===0?{x:pos.x+d,y:pos.y+(s===0?-18:18),a:Math.PI/2}:{x:pos.x+(s===1?-14:14),y:pos.y+d,a:0}; }
 function revealed(s){ return !!(G.trq&&G.rev&&G.rev[s]!=null&&G.frame>=G.rev[s]); }
 function seatTilePos(s,ti){ if(revealed(s)) return revPos(s,ti,G.hands[s].length);
   const pos=seatPos(s), n=G.hands[s].length, horiz=s%2===0, step=22;
@@ -3610,14 +3610,14 @@ function drumStop(){ if(!drumOn) return; try{ const t=AC.currentTime; drumOn.g.g
 function drumHit(big){ if(!AC) return; const t=AC.currentTime; boom(big?1:0.55);
   for(let k=0;k<(big?3:1);k++) burst(t+k*0.02,big?0.9:0.5,7000,0.4,big?1.3:0.8,'highpass');   // platillo
   burst(t,0.12,260,1,big?2.2:1.4,'lowpass'); }
+function popSnd(){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type='sine'; o.frequency.setValueAtTime(260,t); o.frequency.exponentialRampToValueAtTime(900,t+0.08);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.5,t+0.01); g.gain.exponentialRampToValueAtTime(0.0005,t+0.14); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.16); }
 function bonk(){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type='square'; o.frequency.setValueAtTime(700,t); o.frequency.exponentialRampToValueAtTime(140,t+0.18);
   g.gain.setValueAtTime(0.35,t); g.gain.exponentialRampToValueAtTime(0.0005,t+0.22); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.25); burst(t,0.08,400,1,1.4,'lowpass'); }
-// carita: antes de virarse, delante de sus fichas; al virarse, las fichas salen hacia delante y la carita se queda atrás,
-// entre las fichas y el borde de la pantalla, en el mismo medio del lugar de cada jugador
-function facePos(s){ const back=[{x:VW/2,y:VH-53},{x:VW-53,y:VH/2},{x:VW/2,y:53},{x:53,y:VH/2}][s], front=[{x:VW/2,y:VH-104},{x:VW-112,y:VH/2},{x:VW/2,y:104},{x:112,y:VH/2}][s];
-  const r=G.rev&&G.rev[s]!=null?clamp((G.frame-G.rev[s])/20,0,1):0, e=r*r*(3-2*r); return {x:front.x+(back.x-front.x)*e,y:front.y+(back.y-front.y)*e}; }
-// carita de dibujo animada: sm = sonrisa (-1 triste .. 1 alegre), op = boca abierta, ang = bravo (0..1), lk = hacia dónde mira
-function moodFace(x,y,R,o){ const f=G.frame; ctx.save(); ctx.translate(x,y); if(o.rot) ctx.rotate(o.rot); if(o.sq) ctx.scale(1+o.sq*0.25,1-o.sq*0.25);
+// carita: aparece con un ¡pum! delante de las fichas (que se quedan en el borde), en el medio del lugar de cada jugador
+function facePos(s){ return [{x:VW/2,y:VH-110},{x:VW-118,y:VH/2},{x:VW/2,y:110},{x:118,y:VH/2}][s]; }
+function facePop(s){ const T=G.trq; if(!T) return 1; const t=(G.frame-T.t0-12-s*6)/18; if(t<=0) return 0; if(t>=1) return 1; return t<0.6?(t/0.6)*1.3:1.3-(t-0.6)/0.4*0.3; }
+function moodFace(x,y,R,o){ const f=G.frame; ctx.save(); ctx.translate(x,y); if(o.pop!=null){ if(o.pop<=0){ ctx.restore(); return; } ctx.scale(o.pop,o.pop); } if(o.rot) ctx.rotate(o.rot); if(o.sq) ctx.scale(1+o.sq*0.25,1-o.sq*0.25);
   const red=o.ang||0; const g=ctx.createRadialGradient(-R*0.3,-R*0.35,R*0.2,0,0,R);
   g.addColorStop(0,red>0.3?'#ffb08a':'#fff3a0'); g.addColorStop(1,red>0.3?'#e8452c':'#f5b800');
   ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.arc(2,4,R,0,7); ctx.fill();
@@ -3661,7 +3661,7 @@ function drawTrqTiles0(){
       ctx.restore(); } }
 }
 function drawTrq(){
-  const T=G.trq; if(!T||G.state!=='handover') return; const A=ACT(), f=G.frame, c=G.cnt, hs=c?f-c.t0:-1, R=27;
+  const T=G.trq; if(!T||G.state!=='handover') return; const A=ACT(), f=G.frame, c=G.cnt, hs=c?f-c.t0:-1, R=30;
   // cartel
   if(T.fin==null){ const p=1+Math.sin(f*0.12)*0.04, F=getComputedStyle(document.body).fontFamily;
     ctx.save(); ctx.translate(VW/2,VH/2); ctx.scale(p,p); ctx.font='700 30px '+F; ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -3671,11 +3671,11 @@ function drawTrq(){
   const sen=G.mode==='sencillo', r=G.result, tot=T.tot;
   if(T.fin==null){
     for(const s of A){ const p=facePos(s);
-      if(!revealed(s)){ moodFace(p.x+Math.sin(f*0.9+s)*1.2,p.y,R,{sm:-0.05,op:0.55+Math.sin(f*0.15+s)*0.15,wor:true,lk:Math.sin(f*0.07+s*2)}); continue; }
+      if(!revealed(s)){ moodFace(p.x+Math.sin(f*0.9+s)*1.2,p.y,R,{sm:-0.05,op:0.55+Math.sin(f*0.15+s)*0.15,wor:true,lk:Math.sin(f*0.07+s*2),pop:facePop(s)}); continue; }
       // ya se viró: se alegra o se pone triste según a cuántos les gana de los que ya se viraron
       let sc=0; for(const o of A) if(o!==s&&revealed(o)) sc+=Math.sign(tot[o]-tot[s]);
       const tg=clamp(sc/3,-1,1); T.mood[s]+=(tg-T.mood[s])*0.06; const m=T.mood[s];
-      moodFace(p.x,p.y+(m>0.3?-Math.abs(Math.sin(f*0.18))*4*m:0),R,{sm:m*0.95,op:m>0?m*0.4:0,tear:m<-0.6,wor:Math.abs(m)<0.2}); }
+      moodFace(p.x,p.y+(m>0.3?-Math.abs(Math.sin(f*0.18))*4*m:0),R,{sm:m*0.95,op:m>0?m*0.4:0,tear:m<-0.6,wor:Math.abs(m)<0.2,pop:facePop(s)}); }
     return; }
   const t=f-T.fin;
   if(r.team<0){ for(const s of A){ const p=facePos(s); moodFace(p.x,p.y,R,{sm:0,op:0.3,wor:true,lk:Math.sin(f*0.05)}); } return; }
@@ -3686,8 +3686,8 @@ function drawTrq(){
   { const p=facePos(W); moodFace(p.x,p.y-(W===2?-1:1)*Math.abs(Math.sin(f*0.2))*7,R*1.08,{sm:1,op:1}); }   // salta hacia la mesa, sin tapar su nombre
   // su pareja: alegre, aplaude y le señala con el dedito
   if(P>=0){ const p=facePos(P), q=facePos(W); moodFace(p.x,p.y-Math.abs(Math.sin(f*0.2+1))*4,R,{sm:0.9,op:0.6});
-    const cl=Math.abs(Math.sin(f*0.35)), sd=(P===1||P===2)?-1:1;   // aplaude a un lado y señala con el dedito desde el otro
-    FXQ.push(()=>{ emo('👏',p.x+sd*(R+20),p.y+4,26+cl*10,0); pointAt({x:p.x-sd*(R+22),y:p.y},q,30,0); }); }
+    const cl=Math.abs(Math.sin(f*0.35)), dx=q.x-p.x, dy=q.y-p.y, dl=Math.hypot(dx,dy)||1, ux=dx/dl, uy=dy/dl;   // señala hacia el ganador y aplaude al lado
+    FXQ.push(()=>{ pointAt(p,q,30,R+22); emo('👏',p.x-uy*(R+22),p.y+ux*(R+22),26+cl*10,0); }); }
   // los que pierden: primero tristes, después bravos y se echan la culpa; al que peor salió su compañero le da un cocotazo
   for(const s of L){ const p=facePos(s), o=L.find(x=>x!==s), q=o!=null?facePos(o):null, lk=q?Math.sign(q.x-p.x||q.y-p.y):0;
     let sq=0; if(s===worst&&hitter>=0&&t>=175&&t<200) sq=Math.sin((t-175)/25*Math.PI);
@@ -4672,6 +4672,7 @@ function update(){
     if(!G.human[G.turn]&&!(G.turn===0&&G.drink)&&!(G.turn===1&&G.smoke)){ if(--G.aiT<=0){ const c=aiChoose(G.turn); if(c) doPlay(G.turn,c.t,c.side,0.3+Math.random()*0.5); else { const r=Math.random(); doPass(G.turn,Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); } } }
   } else if(G.state==='handover'){
     if(G.revWait&&G.cnt){ const A=ACT(), T=G.trq;
+      A.forEach(x=>{ if(G.frame===T.t0+12+x*6) popSnd(); });
       A.forEach(x=>{ if(G.rev[x]!=null&&G.frame===G.rev[x]+20){ drumStop(); clack(0.9); clack(0.6,0.05); drumHit(false); T.hit=G.frame; } });   // ¡tácata!
       if(T.fin==null){
         if(A.every(x=>G.rev[x]!=null)&&G.frame>=Math.max(...A.map(x=>G.rev[x]))+80){ T.fin=G.frame; drumStop(); drumHit(true); chime(T.win); say(T.say,110); broadcast(); }
