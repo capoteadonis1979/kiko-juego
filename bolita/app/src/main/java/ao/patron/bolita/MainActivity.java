@@ -714,11 +714,28 @@ public class MainActivity extends Activity {
         return super.dispatchKeyEvent(e);
     }
 
-    @Override
-    protected void onPause() { if (web != null) web.onPause(); super.onPause(); }
+    // ================= ACELERÓMETRO DIRECTO =================
+    // la bolita lee el sensor del teléfono directamente (en algunos teléfonos el navegador interno no da los sensores)
+    private android.hardware.SensorManager sm;
+    private long ultAcc = 0;
+    private final android.hardware.SensorEventListener accL = new android.hardware.SensorEventListener() {
+        @Override public void onSensorChanged(android.hardware.SensorEvent e) {
+            long t = System.currentTimeMillis(); if (t - ultAcc < 15 || web == null) return; ultAcc = t;
+            final String js = "window.kikoAcc&&kikoAcc(" + e.values[0] + "," + e.values[1] + "," + e.values[2] + ")";
+            web.post(() -> { if (web != null) web.evaluateJavascript(js, null); });
+        }
+        @Override public void onAccuracyChanged(android.hardware.Sensor s, int a) { }
+    };
+    private void accOn() { try { if (sm == null) sm = (android.hardware.SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        android.hardware.Sensor a = sm.getDefaultSensor(android.hardware.Sensor.TYPE_ACCELEROMETER);
+        if (a != null) sm.registerListener(accL, a, android.hardware.SensorManager.SENSOR_DELAY_GAME); } catch (Exception ignored) { } }
+    private void accOff() { try { if (sm != null) sm.unregisterListener(accL); } catch (Exception ignored) { } }
 
     @Override
-    protected void onResume() { super.onResume(); if (web != null) web.onResume(); pantallaCompleta();
+    protected void onPause() { accOff(); if (web != null) web.onPause(); super.onPause(); }
+
+    @Override
+    protected void onResume() { super.onResume(); if (web != null) web.onResume(); pantallaCompleta(); accOn();
         if (esperaPermiso && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) { esperaPermiso = false; instalar(); }
         else if (!esperaPermiso && web != null && web.getProgress() >= 100) buscarActualizacion(); }
 
