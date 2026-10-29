@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.25';
+const VERSION='v3.9.26';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3699,7 +3699,7 @@ function drawTrq(){
   // su pareja, desde su sitio: la alegría sube con las manos ganadas — 1 aplauso, 2 le da la mano, 3 le tira un beso, 4 abrazo
   if(P>=0){ const hP=facePos(P); let oP={sm:0.9,op:0.6,...pp(P)};
     if(wl===1){ const cl=Math.abs(Math.sin(f*0.35)), dx=hW.x-hP.x, dy=hW.y-hP.y, dl=Math.hypot(dx,dy)||1, ux=dx/dl, uy=dy/dl;
-      if(t>=20) FXQ.push(()=>{ pointAt(hP,hW,30,R+22); emo('👏',hP.x-uy*(R+22),hP.y+ux*(R+22),26+cl*10,0); }); }
+      if(t>=20&&t<100) FXQ.push(()=>pointAt(hP,hW,30,R+22)); else if(t>=100) FXQ.push(()=>emo('👏',hP.x+ux*(R+22),hP.y+uy*(R+22),26+cl*10,0)); }   // dos manos: primero lo señala, después aplaude
     else if(wl===2){ fly('🤝',hP,hW,30,80,34,50); if(t>=80){ FXQ.push(()=>emo('🤝',hW.x+R+16,hW.y-R*0.6+Math.sin(f*0.5)*5,32,0)); } }
     else if(wl===3){ oP={sm:0.2,op:0.5,...pp(P)}; fly('💋',hP,hW,30,90,28,60);
       if(t>=88) for(let j=0;j<4;j++){ const a=f*0.05+j*Math.PI/2; FXQ.push(()=>emo('❤️',hW.x+Math.cos(a)*(R*grow+14),hW.y+Math.sin(a)*(R*grow+10)-((f+j*13)%40)*0.4,16,0)); } }
