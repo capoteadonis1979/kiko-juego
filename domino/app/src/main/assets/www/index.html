@@ -77,7 +77,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #pbox h2{margin:0 0 6px;color:var(--gold);font-size:24px}
 #pbox button{font:700 19px var(--font);min-width:320px;padding:12px 18px;border-radius:14px;border:3px solid #8a5a2a;background:#5a3a1a;color:var(--fg);display:flex;flex-direction:column;align-items:center;gap:2px}
 #pbox button.main{background:#2fbf71;border-color:#1a7a44}
-#msal{width:min(92vw,380px)}   /* mismo tamaño con SÍ o NO */
+#msal,#mfr{width:min(92vw,380px)}   /* mismo tamaño con SÍ o NO */
 #pbox button.pred,#exyes{background:#c62828!important;border-color:#ff8a80!important;color:#fff!important}
 #exitask{z-index:90}
 #pbox button small{font:500 12px var(--font);opacity:.85}
@@ -494,6 +494,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o modo</small></button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
+  <button id="pcfg2">⚙️ CONFIGURACIÓN</button>
   <button id="pexit" class="pred">SALIR DEL JUEGO</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano TV → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
@@ -506,6 +507,8 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 <p class="small">Elige una carpeta de la tele o del teléfono y sus canciones se añaden a la lista.</p>
 <button id="msal">SALIDA: 20 TANTOS SI PASAN · NO</button>
 <p class="small">Si sales y el siguiente no lleva: 20 tantos para tu pareja. Si tu compañero tampoco lleva, se anulan. (Solo en parejas)</p>
+<button id="mfr">FRASES AL TIRAR DURO · SÍ</button>
+<p class="small">Al tirar la ficha duro (deslizando hacia arriba) sale la frase del número.</p>
 <button id="cfgx" class="main">LISTO</button></div></div>
 <div id="hist" class="ov" hidden><div class="ovbox"><h2>📜 HISTORIAL DE PARTIDAS</h2>
 <div id="hlist"></div>
@@ -2827,7 +2830,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.27';
+const VERSION='v3.9.28';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3016,7 +3019,7 @@ function dealHand(){
   try{ if(!G.remoteMode) libEl.hidden=true; }catch(_){}
   const d=newDeck(), A=ACT(); for(let s=0;s<4;s++){ const k=A.indexOf(s); G.hands[s]=k<0?[]:d.slice(k*10,k*10+10); }
   if(G.joinWait) for(let q=0;q<4;q++) if(G.joinWait[q]&&G.remote[q]!=null){ G.joinWait[q]=false; G.human[q]=true; }
-  G.passT=0; G.fist=null; G.cnt=null; G.trq=null; G.rev=null; G.revWait=false; drumStop(); G.pc=[0,0,0,0]; G.drink=null; G.smoke=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
+  G.passT=0; G.fist=null; G.cnt=null; G.pend=null; G.phr=null; G.salFx=null; G.slamN=[0,0,0,0]; G.lastPlayed=[]; G.trq=null; G.rev=null; G.revWait=false; drumStop(); G.pc=[0,0,0,0]; G.drink=null; G.smoke=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
   G.chain=[]; G.ends=null; G.passes=0; G.handNo++; G.anim=[]; G.fly=null; G.fallT=-1; G.cigT=-1; G.energy=[0,0,0,0]; G.fallHold=false; G.megaT=-1;   // se recogen la botella y el tabaco
   if(G.lastWinner<0){
     // primera mano: sale quien tenga el doble más alto
@@ -3041,12 +3044,13 @@ function leadMult(seat){
   let my,opp; if(G.mode==='sencillo'){ my=G.pscores[seat]; opp=Math.max(...ACT().filter(i=>i!==seat).map(i=>G.pscores[i])); } else { my=G.scores[teamOf(seat)]; opp=G.scores[1-teamOf(seat)]; }
   const d=my-opp; return d>0?1+Math.min(0.5,d/80):d<0?Math.max(0.7,1+d/150):1;
 }
-function doPlay(seat,tile,side,force=0.5,slm=0){
-  if(G.state!=='play'||seat!==G.turn||G.fly) return false;
+function doPlay(seat,tile,side,force=0.5,slm=0,noPh=false){
+  if(G.state!=='play'||seat!==G.turn||G.fly||(G.pend&&!noPh)) return false;
   const h=G.hands[seat], idx=h.findIndex(t=>same(t,tile)); if(idx<0) return false;
   const opts=canPlay(h[idx]); if(!opts.length) return false;
   if(!opts.includes(side)) side=opts[0];
-  const t=h.splice(idx,1)[0];
+  if(slm>0&&!noPh&&G.optFr){ G.pend={seat,tile,side,force,slm,t:G.frame+55}; G.phr={seat,txt:phraseFor(h[idx],side),t:G.frame}; broadcast(); return true; }   // primero la frase, después la ficha
+  const t=h.splice(idx,1)[0]; G.lastPlayed=G.lastPlayed||[]; G.lastPlayed[seat]=t;
   let item;
   if(!G.ends){ item={a:t[0],b:t[1],side:'C'}; G.ends=[t[0],t[1]]; G.chain.push(item); }
   else if(side==='L'){ const out=t[0]===G.ends[0]?t[1]:t[0]; item={a:G.ends[0],b:out,side:'L'}; G.ends[0]=out; G.chain.unshift(item); }
@@ -3054,7 +3058,7 @@ function doPlay(seat,tile,side,force=0.5,slm=0){
   G.sal=G.chain.length===1?{seat,n:0,got:false}:null;   // salida: se mira si pasan el 1º y el 2º
   item.seat=seat; item.dbl=t[0]===t[1];
   G.energy[seat]=clamp(G.energy[seat]+0.1,0,1);   // 10 niveles: cada ficha puesta sube uno (no se gasta al pegar)
-  slm=slm>0?G.energy[seat]:0;                         // el golpetazo pega con todo el nivel acumulado
+  slm=slm>0?Math.max(G.energy[seat],slm>=2?0.6:0):0;   // el golpetazo pega con todo el nivel acumulado (el bot, cuando decide tirar duro, con fuerza)
   if(slm) force=Math.max(force,slm); G.fly={item,seat,t:0,dur:slm>0.5?16:18+Math.round((1-force)*14),force,slam:slm}; G.passes=0;
   slide(0.12);
   return true;
@@ -3515,7 +3519,8 @@ function doPass(seat,n,st){
   n=n>=2?2:1; G.passes++; G.energy[seat]=Math.max(0,G.energy[seat]-0.2);   // pasar baja 2 niveles
   // regla de la salida (opción): pasa el 1º después de la salida = 20 tantos para los que salieron; si pasa también el 2º (el compañero) se anulan
   if(G.optSal&&G.sal&&G.mode!=='sencillo'&&ACT().length===4){ G.sal.n++; const tm=teamOf(G.sal.seat);
-    if(G.sal.n===1){ G.scores[tm]+=20; G.sal.got=true; } else { if(G.sal.got) G.scores[tm]-=20; G.sal=null; } }
+    if(G.sal.n===1){ G.scores[tm]+=20; G.sal.got=true; const S=G.sal.seat; G.salFx={t:G.frame,m:{[S]:1,[(S+2)%4]:1,[seat]:-1}}; }   // se alegran los que salieron, triste el que no lleva
+    else { if(G.sal.got) G.scores[tm]-=20; const S=G.sal.seat, o=(S+1)%4; G.salFx={t:G.frame,m:{[S]:-1,[(S+2)%4]:-1,[o]:0.7,[(o+2)%4]:0.7}}; G.sal=null; } }   // se anulan: alivio para los otros
   else G.sal=null;
   G.pc[seat]=(G.pc[seat]||0)+1; const hard=(st==='toque'||st==='palma')&&G.pc[seat]>=3;   // al 3er pase de la mano: puñetazo con empingue
   G.fist={seat,n,t:G.frame,tg:fistTarget(seat),hard,st,nx:nextAct(seat)};
@@ -3599,6 +3604,43 @@ function seatTilePos(s,ti){ if(revealed(s)) return revPos(s,ti,G.hands[s].length
   return horiz?{x:pos.x+(ti-(n-1)/2)*step,y:pos.y+(s===0?-18:18),a:Math.PI/2}:{x:pos.x+(s===1?-14:14),y:pos.y+(ti-(n-1)/2)*step,a:0}; }
 function cntSlot(i,N){ const per=30, row=Math.floor(i/per), m=Math.min(N-row*per,per); return {x:VW/2-(m-1)*14+(i%per)*28,y:VH/2+34+row*58}; }
 
+
+// ======== FRASES CUBANAS al tirar duro ========
+const NUMF=['¡La blanca que le gusta al negro!','¡Ahí va la uña!','¡El duque!','¡Trío Matamoros!','¡El cuarto de Tula!','¡Sin comer no se puede vivir!','¡Ceiba del agua!','¡La peste, la que no le gusta a nadie!','¡Ochoa!','¡Nuevecito de paquete!'];
+const DBLF={4:'¡Cuácara con cuácara!',6:'¡Caja de muerto!',9:'¡La puerca!'};
+function phraseFor(t,side){ let n; if(t[0]===t[1]){ n=t[0]; if(DBLF[n]) return DBLF[n]; return NUMF[n]; }
+  if(!G.ends) n=Math.max(t[0],t[1]); else n=side==='L'?G.ends[0]:G.ends[1]; return NUMF[n]||NUMF[t[0]]; }
+// el bot tira duro como una persona: salida con el doble 9 respaldado, al pegarse, o pasada la mitad con buena ocasión (lo que más lleva,
+// apoyar el número de su pareja o la racha ganadora). Como mucho dos tirones por mano.
+function botSlam(s,c){ G.slamN=G.slamN||[0,0,0,0]; if(G.slamN[s]>=2) return false;
+  const h=G.hands[s], t=c.t, dbl=t[0]===t[1]; let want=false;
+  if(!G.ends){ if(dbl&&t[0]===9&&h.some(x=>!same(x,t)&&(x[0]===9||x[1]===9))) want=true; }
+  else if(h.length===1) want=true;
+  else if(G.chain.length>=ACT().length*10*0.5){
+    const end=c.side==='L'?G.ends[0]:G.ends[1], out=t[0]===end?t[1]:t[0];
+    const cnt=h.filter(x=>!same(x,t)&&(x[0]===out||x[1]===out)).length;
+    const pt=G.lastPlayed&&G.lastPlayed[(s+2)%4], helps=G.mode!=='sencillo'&&pt&&(out===pt[0]||out===pt[1]);
+    const tm=teamOf(s), racha=G.mode!=='sencillo'&&G.mWin&&G.mWin[tm]>=2&&G.scores[tm]>G.scores[1-tm];
+    if(cnt>=2&&Math.random()<0.55) want=true; else if(helps&&Math.random()<0.4) want=true; else if(racha&&Math.random()<0.2) want=true; }
+  if(want) G.slamN[s]++; return want; }
+function phrSpot(seat,w,h){ const L=layoutChain(), ox=VW/2, oy=VH/2-6, R=[];
+  L.forEach(p=>{ if(!p) return; const hor=Math.abs(Math.cos(p.ang))>0.5, a=hor?TL:TW, b=hor?TW:TL; R.push([ox+p.x-a/2-8,oy+p.y-b/2-8,ox+p.x+a/2+8,oy+p.y+b/2+8]); });
+  const C=[[[VW/2,VH-140],[VW/2-210,VH-140],[VW/2+210,VH-140],[VW/2,VH-190]],[[VW-230,VH/2],[VW-230,VH/2-110],[VW-230,VH/2+110],[VW-300,VH/2]],
+           [[VW/2,140],[VW/2+210,140],[VW/2-210,140],[VW/2,190]],[[230,VH/2],[230,VH/2+110],[230,VH/2-110],[300,VH/2]]][seat];   // cerca del que la dice
+  for(const [x,y] of C){ const q=[x-w/2,y-h/2,x+w/2,y+h/2]; if(!R.some(t=>q[0]<t[2]&&q[2]>t[0]&&q[1]<t[3]&&q[3]>t[1])) return {x,y}; }
+  return {x:C[0][0],y:C[0][1]}; }
+function drawPhr(){ const p=G.phr; if(!p) return; const t=G.frame-p.t, life=95; if(t>life){ G.phr=null; return; }
+  const F=getComputedStyle(document.body).fontFamily; ctx.save(); ctx.font='700 22px '+F; const w=ctx.measureText(p.txt).width+36, hh=48;
+  if(!p.pos) p.pos=phrSpot(p.seat,w,hh); const sc=t<8?0.4+t/8*0.75:t<14?1.15-(t-8)/6*0.15:1, al=t>life-15?(life-t)/15:1;
+  ctx.globalAlpha=al; ctx.translate(p.pos.x,p.pos.y); ctx.scale(sc,sc);
+  ctx.fillStyle='#fffdf4'; ctx.strokeStyle='#111'; ctx.lineWidth=3; rr(ctx,-w/2,-hh/2,w,hh,16); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#2a1608'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(p.txt,0,1);
+  ctx.font='700 12px '+F; ctx.fillStyle='#8a5a2a'; ctx.fillText(G.names[p.seat],0,-hh/2-9); ctx.restore(); }
+// caritas de la salida de 20 tantos
+function drawSalFx(){ const S=G.salFx; if(!S) return; const t=G.frame-S.t; if(t>170||G.state!=='play'){ G.salFx=null; return; }
+  const P=[{x:VW/2,y:VH-128},{x:VW-128,y:VH/2},{x:VW/2,y:128},{x:128,y:VH/2}], k=t/16, pop=t<16?(k<0.6?k/0.6*1.3:1.3-(k-0.6)/0.4*0.3):t>150?(170-t)/20:1;
+  for(const s in S.m){ const m=S.m[s], p=P[s]; if(!isAct(+s)) continue;
+    moodFace(p.x,p.y-(m>0.5?Math.abs(Math.sin(G.frame*0.2))*5:0),26,m>0.5?{sm:1,op:0.9,pop}:m>0?{sm:0.5,op:0.2,pop}:{sm:-0.9,tear:true,pop}); } }
 // ======== TRANQUE EMOCIONANTE ========
 function dispS(){ return G.revWait&&G.trq?G.trq.old.s:G.scores; }
 function dispP(){ return G.revWait&&G.trq?G.trq.old.p:G.pscores; }
@@ -3719,7 +3761,9 @@ function drawTrq(){
   let oX=t<50?{sm:-0.9,tear:true}:{sm:-0.6,op:0.3,wor:true,ly:1}, oH=t<50?{sm:-0.9,tear:true}:{sm:-0.55,ang:Math.min(1,(t-50)/20),lk:Math.sign(dx)};
   let pX={x:hX.x,y:hX.y}; T.bonkAt=null;
   if(t>=50){
-    if(lv===1){ pX={x:hX.x-TDIR[X][0]*3,y:hX.y-TDIR[X][1]*3}; FXQ.push(()=>emo('☝️',hH.x+ux*(R+20),hH.y+uy*(R+20)-10,30,Math.sin(f*0.5)*0.45)); }
+    if(lv===1){ pX={x:hX.x-TDIR[X][0]*3,y:hX.y-TDIR[X][1]*3}; const bx=hH.x+ux*(R+26), by=hH.y+uy*(R+26);
+      if(t<140){ const hit=Math.abs(Math.sin((t-50)*0.25)); FXQ.push(()=>{ emo('✋',bx+8,by,28,0.3); emo('👊',bx-14+hit*10,by,26,0); }); }   // ahorita te doy...
+      else FXQ.push(()=>pointAt(hH,hX,30,R+22)); }   // ...y lo señala: para la próxima
     else if(lv===2){ const ear={x:hX.x-ux*(R+6),y:hX.y-uy*(R+6)-R*0.4}; fly('🤏',hH,ear,50,85,24,30);
       if(t>=85&&t<175){ const pull=Math.abs(Math.sin(f*0.3)); oX={sm:-0.9,op:0.5,tear:true,rot:-(ux>0?1:-1)*0.25*pull}; pX={x:hX.x-ux*pull*5,y:hX.y-uy*pull*5}; FXQ.push(()=>emo('🤏',ear.x,ear.y,24,0)); } }
     else if(lv===3){ const top={x:hX.x,y:hX.y-R*0.9}; fly('👊',hH,top,50,100,32,70); T.bonkAt=100;
@@ -3868,6 +3912,7 @@ function drawTable(){
   drawDrink();
   drawSmoke();
   drawChainLayer();
+  drawPhr(); drawSalFx();
   drawTrqTiles0(); drawTrq(); for(const fn of FXQ) fn(); FXQ.length=0;
   drawCounting();
   // mensaje: siempre encima y en un hueco sin fichas
@@ -3973,7 +4018,7 @@ function showLocalHand(){ return !isTV; }
 const tilesEl=document.getElementById('tiles'), turnmsg=document.getElementById('turnmsg');
 let handView=[], sel=null;   // en el móvil conectado, handView viene de la tele
 function myHand(){ return G.remoteMode?(G.rHand||[]):G.hands[0]; }
-function myTurn(){ return G.remoteMode?G.rTurn:(G.turn===0&&G.state==='play'&&!G.fly); }
+function myTurn(){ return G.remoteMode?G.rTurn:(G.turn===0&&G.state==='play'&&!G.fly&&!G.pend); }
 function myOpts(t){ if(G.remoteMode){ const e=G.rEnds; if(!e) return ['L']; const s=[]; if(t[0]===e[0]||t[1]===e[0]) s.push('L'); if(t[0]===e[1]||t[1]===e[1]) s.push('R'); return s; } return canPlay(t); }
 function tileCanvas(t,w,h){
   const c=document.createElement('canvas'); const dpr=Math.min(3,window.devicePixelRatio||1); c.width=w*dpr; c.height=h*dpr; c.style.width=w+'px'; c.style.height=h+'px';
@@ -4153,7 +4198,7 @@ function renderSeatBox(L,me){
 }
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pcfg2','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
 function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
@@ -4174,6 +4219,9 @@ function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp()
 const exitEl=document.getElementById('exitask');
 try{ G.optSal=localStorage.getItem('dominoSalida20')==='1'; }catch(_){ G.optSal=false; }
 function salLabel(){ document.getElementById('msal').textContent='SALIDA: 20 TANTOS SI PASAN · '+(G.optSal?'SÍ':'NO'); }
+try{ G.optFr=localStorage.getItem('dominoFrases')!=='0'; }catch(_){ G.optFr=true; }
+function frLabel(){ document.getElementById('mfr').textContent='FRASES AL TIRAR DURO · '+(G.optFr?'SÍ':'NO'); }
+document.getElementById('mfr').addEventListener('click',()=>{ G.optFr=!G.optFr; try{ localStorage.setItem('dominoFrases',G.optFr?'1':'0'); }catch(_){} frLabel(); }); frLabel();
 document.getElementById('msal').addEventListener('click',()=>{ G.optSal=!G.optSal; try{ localStorage.setItem('dominoSalida20',G.optSal?'1':'0'); }catch(_){} salLabel(); }); salLabel();
 function askExit(){ exitEl.hidden=false; try{ ovFoc(exitEl,0); }catch(_){} }   // pregunta antes de salir: así no se sale sin querer
 document.getElementById('exno').addEventListener('click',()=>{ exitEl.hidden=true; if(!pauseEl.hidden) pfoc(pauseBtns().indexOf(document.getElementById('pexit'))); });
@@ -4222,6 +4270,7 @@ document.getElementById('msnd').addEventListener('click',()=>{ initAudio(); setS
 const songOn=()=>{ initAudio(); if(MUSV===0) setMusV(4); };
 const cfgEl=document.getElementById('cfg');
 document.getElementById('pcfg').addEventListener('click',()=>{ initAudio(); musLabel(); cfgEl.hidden=false; try{ ovFocus=0; ovFoc(cfgEl,0); }catch(_){} });
+document.getElementById('pcfg2').addEventListener('click',()=>{ initAudio(); musLabel(); cfgEl.hidden=false; try{ ovFocus=0; ovFoc(cfgEl,0); }catch(_){} });
 document.getElementById('cfgx').addEventListener('click',()=>{ cfgEl.hidden=true; });
 document.getElementById('mprev').addEventListener('click',()=>{ songOn(); songNext(-1); });
 document.getElementById('mnext').addEventListener('click',()=>{ songOn(); songNext(1); });
@@ -4703,8 +4752,9 @@ function update(){
   for(const d of G.dust){ d.x+=d.vx; d.y+=d.vy; d.vx*=0.94; d.vy*=0.94; d.vy-=0.015; d.r+=0.18; d.life-=d.dec; } if(G.dust.length) G.dust=G.dust.filter(d=>d.life>0);
   if(G.fly){ G.fly.t++; if(G.fly.t>=G.fly.dur) landed(); return; }
   if(G.state==='play'){
+    if(G.pend){ if(G.frame>=G.pend.t){ const p=G.pend; G.pend=null; doPlay(p.seat,p.tile,p.side,p.force,p.slm,true); } return; }
     if(G.passT>0){ G.passT--; if(G.passT===0) nextTurn(); return; }
-    if(!G.human[G.turn]&&!(G.turn===0&&G.drink)&&!(G.turn===1&&G.smoke)){ if(--G.aiT<=0){ const c=aiChoose(G.turn); if(c) doPlay(G.turn,c.t,c.side,0.3+Math.random()*0.5); else { const r=Math.random(); doPass(G.turn,Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); } } }
+    if(!G.human[G.turn]&&!(G.turn===0&&G.drink)&&!(G.turn===1&&G.smoke)){ if(--G.aiT<=0){ const c=aiChoose(G.turn); if(c) doPlay(G.turn,c.t,c.side,0.3+Math.random()*0.5,botSlam(G.turn,c)?2:0); else { const r=Math.random(); doPass(G.turn,Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); } } }
   } else if(G.state==='handover'){
     if(G.revWait&&G.cnt){ const A=ACT(), T=G.trq;
       A.forEach(x=>{ if(G.frame===T.t0+22+x*6) popSnd(); });
