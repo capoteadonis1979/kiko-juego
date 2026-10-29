@@ -432,6 +432,17 @@ public class MainActivity extends Activity {
     private void ctrlStatus(String m) { js("window.kikoCtrl&&kikoCtrl(" + JSONObject.quote(m) + ")"); }
 
     public class Puente {
+        // vibración con fuerza (amplitud 1..255): cuanto más cerca del centro, más fuerte
+        @JavascriptInterface
+        public void vib(int ms, int amp) {
+            try {
+                android.os.Vibrator v = (android.os.Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                if (v == null || !v.hasVibrator()) return;
+                int a = Math.max(1, Math.min(255, amp));
+                if (Build.VERSION.SDK_INT >= 26) v.vibrate(android.os.VibrationEffect.createOneShot(Math.max(10, ms), v.hasAmplitudeControl() ? a : android.os.VibrationEffect.DEFAULT_AMPLITUDE));
+                else v.vibrate(Math.max(10, ms) * a / 255 + 5);
+            } catch (Exception ignored) { }
+        }
         @JavascriptInterface
         public boolean isTV() { return tv; }
 

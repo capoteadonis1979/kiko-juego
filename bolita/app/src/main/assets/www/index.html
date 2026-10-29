@@ -26,13 +26,13 @@ h1{margin:0;font-size:min(7.5vw,34px);color:#ffd23a;text-shadow:0 3px 0 #6b3a00;
   <div id="stats"></div>
 </div>
 <div id="over"><h2>BOLITA AL CENTRO</h2><p>Sostén el teléfono como te sea cómodo, toca <b>EMPEZAR</b> y, sin moverte de golpe, lleva la bolita al círculo dorado del centro.<br>Si la aguantas <b>3 segundos</b> dentro, ¡ganas el premio!</p><button id="go">EMPEZAR</button></div>
-<div id="ver">v1.0.0</div>
+<div id="ver">v1.1.0</div>
 <script>
-const VERSION='v1.0.0';
+const VERSION='v1.1.0';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d'), info=document.getElementById('info'), over=document.getElementById('over'), goBtn=document.getElementById('go'), stats=document.getElementById('stats');
 // niveles: tamaño del círculo del centro, sensibilidad y "viento" (un temblor que obliga a corregir: no vale dejar el teléfono quieto en la mesa)
-const LV=[{n:'FÁCIL',r:0.24,k:1.0,w:0.0},{n:'NORMAL',r:0.15,k:1.25,w:0.35},{n:'DIFÍCIL',r:0.095,k:1.55,w:0.75}];
+const LV=[{n:'FÁCIL',r:0.355,k:1.0,w:0.0},{n:'NORMAL',r:0.265,k:1.25,w:0.35},{n:'DIFÍCIL',r:0.21,k:1.55,w:0.75}];   // la bolita tiene que caber entera dentro del círculo
 let lvl=1; try{ const s=localStorage.getItem('bolLv'); if(s!==null&&+s>=0&&+s<=2) lvl=+s; }catch(_){}
 let ST={tries:0,wins:0}; try{ ST=Object.assign(ST,JSON.parse(localStorage.getItem('bolSt')||'{}')); }catch(_){}
 function saveSt(){ try{ localStorage.setItem('bolSt',JSON.stringify(ST)); }catch(_){} }
@@ -66,6 +66,14 @@ let drag=null; cv.addEventListener('pointerdown',e=>{ if(HAS) return; drag={x:e.
 addEventListener('pointermove',e=>{ if(!drag) return; KEY.x=clamp((e.clientX-drag.x)/60,-1.5,1.5); KEY.y=clamp((e.clientY-drag.y)/60,-1.5,1.5); });
 addEventListener('pointerup',()=>{ if(drag){ drag=null; KEY.x=0; KEY.y=0; } });
 
+// ---- vibración: el teléfono vibra más cuanto más cerca del centro está la bolita (al máximo en el mismo centro) ----
+const BR=0.14;   // radio de la bolita (el doble que antes)
+let lastBuzz=0;
+function buzz(d,L,inside){ if(state!=='play') return; const now=performance.now(); if(now-lastBuzz<120) return;
+  const zone=Math.max(0.6,L.r*2.2), k=inside?1:clamp(1-(d-L.r+BR)/zone,0,1); if(k<=0.02) return; lastBuzz=now;
+  const amp=Math.round(inside?255:20+k*k*200);
+  try{ if(window.KikoApp&&KikoApp.vib){ KikoApp.vib(110,amp); return; } }catch(_){}
+  try{ navigator.vibrate&&navigator.vibrate(Math.round(15+k*95)); }catch(_){} }
 // ---- juego ----
 let S=0, W=0, CX=0, CY=0, AR=0;   // tamaño del lienzo y del plato
 function fit(){ const r=cv.getBoundingClientRect(), d=Math.min(devicePixelRatio||1,2.5); cv.width=Math.round(r.width*d); cv.height=Math.round(r.height*d); S=cv.width; CX=S/2; CY=S/2; AR=S*0.46; }
@@ -84,9 +92,9 @@ function update(){ frame++;
   const wf=L.w*0.00028*(0.4+wind.m);
   B.vx+=f[0]*acc+Math.cos(wind.a)*wf; B.vy+=f[1]*acc+Math.sin(wind.a)*wf;
   B.vx*=0.985; B.vy*=0.985; B.x+=B.vx; B.y+=B.vy;
-  const d=Math.hypot(B.x,B.y), br=0.07;
+  const d=Math.hypot(B.x,B.y), br=BR;
   if(d>1-br){ const nx=B.x/d, ny=B.y/d; B.x=nx*(1-br); B.y=ny*(1-br); const dot=B.vx*nx+B.vy*ny; if(dot>0){ B.vx-=1.6*dot*nx; B.vy-=1.6*dot*ny; if(dot>0.004) tone(180,0.08,clamp(dot*40,0.05,0.4),'triangle'); } }
-  const inside=d<L.r-br*0.35;
+  const inside=d<L.r-br; buzz(d,L,inside);
   if(inside){ inT+=1/60; const left=Math.ceil(3-inT); if(left<lastSec&&left>0){ lastSec=left; tick(left); }
     info.innerHTML='¡Aguanta! <b style="font-size:1.4em;color:#ffd23a">'+Math.max(0,3-inT).toFixed(1)+'</b> s';
     if(inT>=3){ state='won'; winT=frame; ST.wins++; saveSt(); showStats(); winSound(); try{ navigator.vibrate&&navigator.vibrate([80,60,200]); }catch(_){}
@@ -108,10 +116,17 @@ function draw(){ const L=LV[lvl]; ctx.clearRect(0,0,S,S);
   if(inT>0||state==='won'){ const k=state==='won'?1:inT/3; ctx.strokeStyle='#7dff8a'; ctx.lineWidth=S*0.02; ctx.lineCap='round'; ctx.beginPath(); ctx.arc(0,0,tr+S*0.03,-Math.PI/2,-Math.PI/2+k*Math.PI*2); ctx.stroke(); }
   ctx.fillStyle='rgba(255,210,58,.9)'; ctx.font='700 '+Math.round(S*0.04)+'px Fredoka,system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; if(state!=='won'&&inT===0) ctx.fillText('🏆',0,0);
   // bolita (canica brillante) con su sombra
-  const bx=B.x*AR, by=B.y*AR, rr=AR*0.07;
+  const bx=B.x*AR, by=B.y*AR, rr=AR*BR;
   ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(bx+rr*0.25,by+rr*0.35,rr,rr*0.9,0,0,7); ctx.fill();
-  const bg=ctx.createRadialGradient(bx-rr*0.35,by-rr*0.4,rr*0.1,bx,by,rr); bg.addColorStop(0,'#ffffff'); bg.addColorStop(0.25,'#ff6b5a'); bg.addColorStop(1,'#8a120a');
+  // balín de rodamiento: acero cromado, con el paño y el cielo reflejados
+  const bg=ctx.createRadialGradient(bx-rr*0.3,by-rr*0.35,rr*0.05,bx,by,rr);
+  bg.addColorStop(0,'#ffffff'); bg.addColorStop(0.18,'#eef2f5'); bg.addColorStop(0.45,'#9aa4ad'); bg.addColorStop(0.7,'#5d666e'); bg.addColorStop(0.88,'#2c3238'); bg.addColorStop(1,'#15191c');
   ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(bx,by,rr,0,7); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(bx,by,rr,0,7); ctx.clip();
+  const gr=ctx.createLinearGradient(bx,by+rr*0.2,bx,by+rr); gr.addColorStop(0,'rgba(47,163,93,0)'); gr.addColorStop(1,'rgba(47,163,93,.55)'); ctx.fillStyle=gr; ctx.fillRect(bx-rr,by,rr*2,rr);   // el paño verde reflejado abajo
+  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(bx-rr*0.35,by-rr*0.42,rr*0.22,rr*0.12,-0.6,0,7); ctx.fill();   // brillo
+  ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(bx+rr*0.38,by+rr*0.3,rr*0.12,rr*0.06,-0.6,0,7); ctx.fill();
+  ctx.restore(); ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=Math.max(1,rr*0.04); ctx.beginPath(); ctx.arc(bx,by,rr,0,7); ctx.stroke();
   // confeti del premio
   if(state==='won') for(const c of conf){ ctx.save(); ctx.translate(c.x*AR,c.y*AR); ctx.rotate(c.r); ctx.fillStyle=c.c; ctx.fillRect(-S*0.008,-S*0.004,S*0.016,S*0.008); ctx.restore(); }
   ctx.restore();
