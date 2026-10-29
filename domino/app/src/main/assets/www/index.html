@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.23';
+const VERSION='v3.9.24';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3011,7 +3011,7 @@ const G=window.__D={state:'menu',hands:[[],[],[],[]],chain:[],ends:null,turn:0,p
 function newDeck(){ const d=[]; for(let a=0;a<=9;a++) for(let b=a;b<=9;b++) d.push([a,b]); for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; } return d; }
 function canPlay(t){ if(!G.ends) return ['L']; const s=[]; if(t[0]===G.ends[0]||t[1]===G.ends[0]) s.push('L'); if(t[0]===G.ends[1]||t[1]===G.ends[1]) s.push('R'); return s; }
 function playable(seat){ return G.hands[seat].filter(t=>canPlay(t).length); }
-function startMatch(){ G.rum=1; G.burn=0; G.ash=0; G.log=[]; G.matchNo=(G.matchNo||0)+1; G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.over=false; dealHand(); }
+function startMatch(){ G.mWin=[0,0]; G.mLose=[0,0]; G.rum=1; G.burn=0; G.ash=0; G.log=[]; G.matchNo=(G.matchNo||0)+1; G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.over=false; dealHand(); }
 function dealHand(){
   try{ if(!G.remoteMode) libEl.hidden=true; }catch(_){}
   const d=newDeck(), A=ACT(); for(let s=0;s<4;s++){ const k=A.indexOf(s); G.hands[s]=k<0?[]:d.slice(k*10,k*10+10); }
@@ -3485,6 +3485,7 @@ function endHand(winner,tranque){
   const oldS=G.scores.slice(), oldP=G.pscores.slice();   // en el tranque el marcador no cambia hasta que se vean las fichas
   if(team>=0){ if(sen) G.pscores[wseat]+=pts; else G.scores[team]+=pts; }
   G.lastWinner=wseat;
+  if(!sen&&team>=0){ G.mWin=G.mWin||[0,0]; G.mLose=G.mLose||[0,0]; G.mWin[team]++; G.mLose[1-team]++; }   // la alegría y el castigo suben con las manos ganadas/perdidas del partido
   G.result={winner:wseat,team,tranque,all:pts,tot};
   G.cnt={t0:G.frame,list,sum:0,next:0,done:false};
   G.state='handover'; G.timer=130+list.length*28+300; G.rev=null; G.revWait=false;
@@ -3586,8 +3587,10 @@ function drawFistV(){
 }
 function hsOK(){ return G.state==='handover'&&G.cnt&&((G.cnt.done||!G.human.some(Boolean))&&G.frame-G.cnt.t0>60||(G.trq&&G.trq.fin!=null&&G.frame-G.trq.fin>20)); }   // tras el tranque: tocar o el mando pasa a la próxima mano
 // dónde está cada ficha en el puesto de un jugador
-function revPos(s,i,n){ const pos=seatPos(s), d=(i-(n-1)/2)*22;   // en el tranque las fichas se viran en su sitio, en el borde
-  return s%2===0?{x:pos.x+d,y:pos.y+(s===0?-18:18),a:Math.PI/2}:{x:pos.x+(s===1?-14:14),y:pos.y+d,a:0}; }
+const TRQD=66, TDIR=[[0,-1],[-1,0],[0,1],[1,0]];
+function trqSlide(){ const T=G.trq; if(!T) return 0; const k=clamp((G.frame-T.t0)/18,0,1); return k*k*(3-2*k); }
+function revPos(s,i,n){ const pos=seatPos(s), d=(i-(n-1)/2)*22, m=TRQD*trqSlide(), ox=TDIR[s][0]*m, oy=TDIR[s][1]*m;   // en el tranque las fichas se corren hacia la mesa lo justo para la carita
+  return s%2===0?{x:pos.x+d+ox,y:pos.y+(s===0?-18:18)+oy,a:Math.PI/2}:{x:pos.x+(s===1?-14:14)+ox,y:pos.y+d+oy,a:0}; }
 function revealed(s){ return !!(G.trq&&G.rev&&G.rev[s]!=null&&G.frame>=G.rev[s]); }
 function seatTilePos(s,ti){ if(revealed(s)) return revPos(s,ti,G.hands[s].length);
   const pos=seatPos(s), n=G.hands[s].length, horiz=s%2===0, step=22;
@@ -3614,8 +3617,8 @@ function popSnd(){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator
 function bonk(){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type='square'; o.frequency.setValueAtTime(700,t); o.frequency.exponentialRampToValueAtTime(140,t+0.18);
   g.gain.setValueAtTime(0.35,t); g.gain.exponentialRampToValueAtTime(0.0005,t+0.22); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.25); burst(t,0.08,400,1,1.4,'lowpass'); }
 // carita: aparece con un ¡pum! delante de las fichas (que se quedan en el borde), en el medio del lugar de cada jugador
-function facePos(s){ return [{x:VW/2,y:VH-110},{x:VW-118,y:VH/2},{x:VW/2,y:110},{x:118,y:VH/2}][s]; }
-function facePop(s){ const T=G.trq; if(!T) return 1; const t=(G.frame-T.t0-12-s*6)/18; if(t<=0) return 0; if(t>=1) return 1; return t<0.6?(t/0.6)*1.3:1.3-(t-0.6)/0.4*0.3; }
+function facePos(s){ return [{x:VW/2,y:VH-60},{x:VW-60,y:VH/2},{x:VW/2,y:60},{x:60,y:VH/2}][s]; }
+function facePop(s){ const T=G.trq; if(!T) return 1; const t=(G.frame-T.t0-22-s*6)/18; if(t<=0) return 0; if(t>=1) return 1; return t<0.6?(t/0.6)*1.3:1.3-(t-0.6)/0.4*0.3; }
 function moodFace(x,y,R,o){ const f=G.frame; ctx.save(); ctx.translate(x,y); if(o.pop!=null){ if(o.pop<=0){ ctx.restore(); return; } ctx.scale(o.pop,o.pop); } if(o.rot) ctx.rotate(o.rot); if(o.sq) ctx.scale(1+o.sq*0.25,1-o.sq*0.25);
   const red=o.ang||0; const g=ctx.createRadialGradient(-R*0.3,-R*0.35,R*0.2,0,0,R);
   g.addColorStop(0,red>0.3?'#ffb08a':'#fff3a0'); g.addColorStop(1,red>0.3?'#e8452c':'#f5b800');
@@ -3625,7 +3628,7 @@ function moodFace(x,y,R,o){ const f=G.frame; ctx.save(); ctx.translate(x,y); if(
   // ojos
   for(const sx of [-1,1]){ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(sx*ex,ey,er*1.1,er*(o.sm>0.6?0.6:1.35),0,0,7); ctx.fill(); ctx.strokeStyle='#5a3400'; ctx.lineWidth=1.2; ctx.stroke();
     if(o.sm>0.6){ ctx.strokeStyle='#3a2200'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(sx*ex,ey+er*0.5,er*0.9,Math.PI*1.15,Math.PI*1.85); ctx.stroke(); }   // ojitos cerrados de risa
-    else { ctx.fillStyle='#2a1a00'; ctx.beginPath(); ctx.arc(sx*ex+lk*er*0.5,ey+(o.sm<-0.4?er*0.3:0),er*0.6,0,7); ctx.fill(); } }
+    else { ctx.fillStyle='#2a1a00'; ctx.beginPath(); ctx.arc(sx*ex+lk*er*0.5,ey+(o.sm<-0.4?er*0.3:0)+(o.ly||0)*er*0.5,er*0.6,0,7); ctx.fill(); } }
   // cejas
   ctx.strokeStyle='#5a3400'; ctx.lineWidth=2.6; ctx.lineCap='round';
   for(const sx of [-1,1]){ const by=ey-er*1.9; let a=0; if(red>0) a=0.5*red; else if(o.sm<-0.2) a=-0.45; else if(o.wor) a=-0.3;
@@ -3650,11 +3653,11 @@ function drawTrqTiles(){ drawTrqTiles0(); for(const fn of FXQ) fn(); FXQ.length=
 function drawTrqTiles0(){
   const T=G.trq; if(!T||G.state!=='handover') return; const A=ACT(), f=G.frame, c=G.cnt, hs=c?f-c.t0:-1;
   // fichas viradas delante de cada jugador: salen de su fila, giran (se ve el giro) y caen boca arriba, ¡tácata!
-  for(const s of A){ if(G.rev[s]==null||f<G.rev[s]) continue; const n=G.hands[s].length;
+  for(const s of A){ const n=G.hands[s].length, up=G.rev[s]!=null&&f>=G.rev[s];
+    if(!up){ for(let i=0;i<n;i++){ const b=revPos(s,i,n); ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.a); drawTile(ctx,0,0,36,18,false); ctx.restore(); } continue; }   // tapadas
     for(let i=0;i<n;i++){ if(c&&hs>=0&&c.list.some((x,k)=>x.s===s&&x.ti===i&&hs>=130+k*28)) continue;   // ya se fue a contar
       const k=clamp((f-G.rev[s]-i*0.8)/20,0,1), e=k*k*(3-2*k);
-      const pos=seatPos(s), horiz=s%2===0, st=22, a0=horiz?{x:pos.x+(i-(n-1)/2)*st,y:pos.y+(s===0?-18:18),a:Math.PI/2}:{x:pos.x+(s===1?-14:14),y:pos.y+(i-(n-1)/2)*st,a:0};
-      const b=revPos(s,i,n), X=a0.x+(b.x-a0.x)*e, Y=a0.y+(b.y-a0.y)*e, hop=Math.sin(k*Math.PI)*0.35, flipS=Math.abs(Math.cos(k*Math.PI));
+      const b=revPos(s,i,n), X=b.x, Y=b.y, hop=Math.sin(k*Math.PI)*0.35, flipS=Math.abs(Math.cos(k*Math.PI));
       ctx.save(); ctx.translate(X,Y); ctx.rotate(b.a); ctx.scale(1+hop,(1+hop)*Math.max(0.06,flipS));   // se ve el giro: la ficha se aplasta y vuelve boca arriba
       if(k<0.5) drawTile(ctx,0,0,36+4*e,18+2*e,false); else { const t=G.hands[s][i]; drawTile(ctx,t[0],t[1],40,20,true); }
       ctx.restore(); } }
@@ -3679,22 +3682,59 @@ function drawTrq(){
   const t=f-T.fin;
   if(r.team<0){ for(const s of A){ const p=facePos(s); moodFace(p.x,p.y,R,{sm:0,op:0.3,wor:true,lk:Math.sin(f*0.05)}); } return; }
   const W=r.winner, P=sen?-1:(W+2)%4, L=A.filter(x=>x!==W&&x!==P);
-  const worst=L.length?L.reduce((a,b)=>tot[b]>tot[a]?b:a,L[0]):-1, hitter=(!sen&&L.length===2)?L.find(x=>x!==worst):-1;
-  T.bonk=hitter>=0?1:null;
+  const X=L.length?L.reduce((a,b)=>tot[b]>tot[a]?b:a,L[0]):-1, H=(!sen&&L.length===2)?L.find(x=>x!==X):-1;
+  const ez=k=>{ k=clamp(k,0,1); return k*k*(3-2*k); }, mv=(a,b,k)=>({x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k});
+  const near=(from,to,d)=>{ const dx=from.x-to.x, dy=from.y-to.y, l=Math.hypot(dx,dy)||1; return {x:to.x+dx/l*d,y:to.y+dy/l*d}; };
+  const trip=(home,dest,g0,g1,b0,b1)=>t<g0?home:t<g1?mv(home,dest,ez((t-g0)/(g1-g0))):t<b0?dest:t<b1?mv(dest,home,ez((t-b0)/(b1-b0))):home;
+  const hW=facePos(W), wl=Math.max(1,Math.min(4,(G.mWin&&G.mWin[r.team])||1));
   // ganador: alegría de verdad
-  { const p=facePos(W); moodFace(p.x,p.y-(W===2?-1:1)*Math.abs(Math.sin(f*0.2))*7,R*1.08,{sm:1,op:1}); }   // salta hacia la mesa, sin tapar su nombre
-  // su pareja: alegre, aplaude y le señala con el dedito
-  if(P>=0){ const p=facePos(P), q=facePos(W); moodFace(p.x,p.y-Math.abs(Math.sin(f*0.2+1))*4,R,{sm:0.9,op:0.6});
-    const cl=Math.abs(Math.sin(f*0.35)), dx=q.x-p.x, dy=q.y-p.y, dl=Math.hypot(dx,dy)||1, ux=dx/dl, uy=dy/dl;   // señala hacia el ganador y aplaude al lado
-    FXQ.push(()=>{ pointAt(p,q,30,R+22); emo('👏',p.x-uy*(R+22),p.y+ux*(R+22),26+cl*10,0); }); }
-  // los que pierden: primero tristes, después bravos y se echan la culpa; al que peor salió su compañero le da un cocotazo
-  for(const s of L){ const p=facePos(s), o=L.find(x=>x!==s), q=o!=null?facePos(o):null, lk=q?Math.sign(q.x-p.x||q.y-p.y):0;
-    let sq=0; if(s===worst&&hitter>=0&&t>=120&&t<145) sq=Math.sin((t-120)/25*Math.PI);
-    if(t<60) moodFace(p.x,p.y,R,{sm:-0.9,tear:true});
-    else moodFace(p.x+Math.sin(f*0.8)*(t<120?1.5:0),p.y,R,{sm:-0.55,ang:Math.min(1,(t-60)/25),lk,sq});
-    if(s===worst&&hitter>=0&&t>=120) FXQ.push(()=>emo('💫',p.x,p.y-R-8,22,f*0.08)); }
-  if(hitter>=0&&t>=80&&t<160){ const a=facePos(hitter), b=facePos(worst); const k=t<120?(t-80)/40:1-(t-120)/40, e=k*k*(3-2*k);
-    FXQ.push(()=>emo('👊',a.x+(b.x-a.x)*e,a.y+(b.y-R*0.9-a.y)*e-Math.sin(k*Math.PI)*30,34,0,b.x<a.x)); }
+  let pW={x:hW.x,y:hW.y-(W===2?-1:1)*Math.abs(Math.sin(f*0.2))*7}, sqW=0;
+  // su pareja: la alegría sube con las manos que van ganando — 1 aplauso, 2 le da la mano, 3 le tira un beso, 4 abrazo apretado
+  if(P>=0){ const hP=facePos(P); let pP={x:hP.x,y:hP.y-Math.abs(Math.sin(f*0.2+1))*4}, oP={sm:0.9,op:0.6};
+    if(wl===1){ const cl=Math.abs(Math.sin(f*0.35)), dx=hW.x-hP.x, dy=hW.y-hP.y, dl=Math.hypot(dx,dy)||1, ux=dx/dl, uy=dy/dl;
+      FXQ.push(()=>{ pointAt(hP,hW,30,R+22); emo('👏',hP.x-uy*(R+22),hP.y+ux*(R+22),26+cl*10,0); }); }
+    else if(wl===2){ pP=trip(hP,near(hP,hW,2*R+8),30,70,170,210); pW=t>=70&&t<170?hW:pW;
+      if(t>=70&&t<170){ const m=mv(pP,hW,0.5); FXQ.push(()=>emo('🤝',m.x,m.y-6+Math.sin(f*0.5)*5,34,0)); } }
+    else if(wl===3){ oP={sm:0.2,op:0.5};
+      if(t>=40&&t<100){ const k=ez((t-40)/60), m=mv(hP,hW,k); FXQ.push(()=>emo('💋',m.x,m.y-Math.sin(k*Math.PI)*40,28,0)); }
+      if(t>=95) for(let j=0;j<4;j++){ const a=f*0.05+j*Math.PI/2; FXQ.push(()=>emo('❤️',hW.x+Math.cos(a)*(R+16),hW.y+Math.sin(a)*(R+12)-((f+j*13)%40)*0.4,16,0)); } }
+    else { pP=trip(hP,near(hP,hW,2*R-10),30,70,170,210);
+      if(t>=70&&t<170){ pW=hW; const sq=0.5+0.5*Math.sin(f*0.4); sqW=0.25*sq; oP={sm:1,op:0.8}; const m=mv(pP,hW,0.5);
+        FXQ.push(()=>{ emo('🤗',m.x,m.y-R-14,30,0); for(let j=0;j<3;j++) emo('❤️',m.x+(j-1)*22,m.y-R-36-((f+j*9)%30)*0.6,14,0); }); } }
+    moodFace(pP.x,pP.y,R,oP); }
+  moodFace(pW.x,pW.y,R*1.08,{sm:1,op:1,sq:sqW});
+  if(H<0){ for(const s of L){ const p=facePos(s); moodFace(p.x+Math.sin(f*0.8)*(t>=60&&t<140?1.5:0),p.y,R,t<60?{sm:-0.9,tear:true}:{sm:-0.55,ang:Math.min(1,(t-60)/25)}); } return; }
+  // los que pierden: el castigo al que peor salió sube con las manos perdidas — 1 lo amenaza y lo regaña, 2 le jala la oreja,
+  // 3 brinca y le da un cocotazo, 4 un puntapié, 5 o más: lo persigue corriendo por toda la mesa
+  const hX=facePos(X), hH=facePos(H), lv=Math.max(1,Math.min(5,(G.mLose&&G.mLose[teamOf(X)])||1));
+  let pX={x:hX.x,y:hX.y}, pH={x:hH.x,y:hH.y}, oX=t<50?{sm:-0.9,tear:true}:{sm:-0.6,op:0.3,wor:true,ly:1}, oH=t<50?{sm:-0.9,tear:true}:{sm:-0.55,ang:Math.min(1,(t-50)/20),lk:Math.sign(hX.x-hH.x)};
+  T.bonkAt=null;
+  if(t>=50){
+    if(lv===1){ const dx=hX.x-hH.x, dy=hX.y-hH.y, dl=Math.hypot(dx,dy)||1; pX={x:hX.x-TDIR[X][0]*4,y:hX.y-TDIR[X][1]*4};
+      FXQ.push(()=>emo('☝️',hH.x+dx/dl*(R+20),hH.y+dy/dl*(R+20)-10,30,Math.sin(f*0.5)*0.45)); }
+    else if(lv===2){ pH=trip(hH,near(hH,hX,2*R+4),50,85,175,210);
+      if(t>=85&&t<175){ oX={sm:-0.9,op:0.5,tear:true}; const dx=pH.x-hX.x, dy=pH.y-hX.y, dl=Math.hypot(dx,dy)||1, pull=Math.abs(Math.sin(f*0.3));
+        pX={x:hX.x+dx/dl*pull*6,y:hX.y+dy/dl*pull*6}; oX.rot=(dx>0?1:-1)*0.25*pull;
+        FXQ.push(()=>emo('🤏',hX.x+dx/dl*(R+6),hX.y+dy/dl*(R+6)-R*0.4,24,0)); } }
+    else if(lv===3){ const dest=near(hH,hX,2*R+2); T.bonkAt=100;
+      if(t<95){ const k=ez((t-50)/45); pH=mv(hH,dest,k); pH.y-=Math.abs(Math.sin(k*Math.PI*3))*26; } else if(t<150) pH=dest; else pH=mv(dest,hH,ez((t-150)/45));
+      if(t>=92&&t<112){ const k=(t-92)/20; FXQ.push(()=>emo('👊',hX.x,hX.y-R*1.6+k*R*0.9,32,0)); }
+      if(t>=100&&t<125) oX.sq=Math.sin((t-100)/25*Math.PI);
+      if(t>=100) FXQ.push(()=>emo('💫',hX.x,hX.y-R-8,22,f*0.08)); }
+    else if(lv===4){ const dest=near(hH,hX,2*R+6); pH=trip(hH,dest,50,85,160,200); T.bonkAt=105;
+      const dx=hX.x-dest.x, dy=hX.y-dest.y, dl=Math.hypot(dx,dy)||1;
+      if(t>=92&&t<112){ const k=(t-92)/20; FXQ.push(()=>emo('🦶',dest.x+dx/dl*(R+k*14),dest.y+dy/dl*(R+k*14)+8,30,(dx<0?-1:1)*(0.6-k*1.2),dx<0)); }
+      if(t>=105){ const k=1-ez((t-105)/45); pX={x:hX.x+dx/dl*36*k,y:hX.y+dy/dl*36*k-Math.sin(clamp((t-105)/20,0,1)*Math.PI)*16}; oX={sm:-0.9,op:0.7,tear:true}; }
+      if(t>=105&&t<125) FXQ.push(()=>emo('💥',hX.x+dx/dl*20,hX.y+dy/dl*20-R*0.5,30,0)); }
+    else { // persecución alrededor de la mesa
+      const cx=VW/2, cy=VH/2, rx=330, ry=178, a0=Math.atan2((hX.y-cy)/ry,(hX.x-cx)/rx);
+      const path=tt=>{ if(tt<0) return null; if(tt<15) return mv(hX,{x:cx+Math.cos(a0)*rx,y:cy+Math.sin(a0)*ry},ez(tt/15)); if(tt<135){ const a=a0+(tt-15)/120*Math.PI*2; return {x:cx+Math.cos(a)*rx,y:cy+Math.sin(a)*ry+Math.abs(Math.sin(tt*0.6))*-5}; }
+        if(tt<150) return mv({x:cx+Math.cos(a0)*rx,y:cy+Math.sin(a0)*ry},hX,ez((tt-135)/15)); return hX; };
+      const tx=t-50; pX=path(tx)||hX; oX={sm:-0.6,op:0.9,wor:true,lk:Math.sin(f*0.6)};
+      const th=tx-22; if(th<0){ const st=path(0); pH=mv(hH,st,ez(tx/22)); } else if(th<150) pH=path(th); else pH=mv(hX,hH,ez((th-150)/20));
+      if(tx<172) FXQ.push(()=>emo('👊',pH.x,pH.y-R-12,26,Math.sin(f*0.5)*0.4)); }
+  }
+  moodFace(pX.x,pX.y,R,oX); moodFace(pH.x,pH.y,R,oH);
 }
 // el conteo: las fichas van al centro una por una y se suman
 function drawCounting(){
@@ -3831,8 +3871,7 @@ function drawTable(){
   drawDrink();
   drawSmoke();
   drawChainLayer();
-  drawTrq();
-  drawTrqTiles();
+  drawTrqTiles0(); drawTrq(); for(const fn of FXQ) fn(); FXQ.length=0;
   drawCounting();
   // mensaje: siempre encima y en un hueco sin fichas
   if(false&&G.msgT>0&&!(G.state==='handover'&&G.cnt&&G.frame-G.cnt.t0>=110)){   // sin letreros en la mesa (pasó, se pegó...): se ve lo que pasa
@@ -3891,7 +3930,7 @@ function drawSeat(s){
   const pos=seatPos(s);
   ctx.save();
   // fichas boca abajo de los demás
-  if((s!==0||!showLocalHand())&&!revealed(s)){
+  if((s!==0||!showLocalHand())&&!(G.trq&&G.state==='handover')){
     const horiz=s%2===0, step=22;   // misma separación arriba/abajo y a los lados
     const c=G.cnt, hs=c&&G.state==='handover'?G.frame-c.t0:-1, up=hs>=110||(G.state==='handover'&&G.rev&&G.rev[s]!=null&&G.frame>=G.rev[s]);
     for(let i=0;i<n;i++){
@@ -4671,13 +4710,13 @@ function update(){
     if(!G.human[G.turn]&&!(G.turn===0&&G.drink)&&!(G.turn===1&&G.smoke)){ if(--G.aiT<=0){ const c=aiChoose(G.turn); if(c) doPlay(G.turn,c.t,c.side,0.3+Math.random()*0.5); else { const r=Math.random(); doPass(G.turn,Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); } } }
   } else if(G.state==='handover'){
     if(G.revWait&&G.cnt){ const A=ACT(), T=G.trq;
-      A.forEach(x=>{ if(G.frame===T.t0+12+x*6) popSnd(); });
+      A.forEach(x=>{ if(G.frame===T.t0+22+x*6) popSnd(); });
       A.forEach(x=>{ if(G.rev[x]!=null&&G.frame===G.rev[x]+20){ clack(0.9); clack(0.6,0.05); T.hit=G.frame; } });   // ¡tácata!
       if(T.fin==null){
         if(A.every(x=>G.rev[x]!=null)&&G.frame>=Math.max(...A.map(x=>G.rev[x]))+80){ T.fin=G.frame; chime(T.win); say(T.say,110); broadcast(); }
       }
-      else if(G.frame-T.fin===120&&T.bonk!=null) bonk();
-      else if(G.frame>=T.fin+200){ G.revWait=false; G.cnt.t0=G.frame-60; G.timer=70+G.cnt.list.length*28+300; broadcast(); }
+      else if(T.bonkAt!=null&&G.frame-T.fin===T.bonkAt) bonk();
+      else if(G.frame>=T.fin+220){ G.revWait=false; G.cnt.t0=G.frame-60; G.timer=70+G.cnt.list.length*28+300; broadcast(); }
       return; }
     const c=G.cnt; if(c&&!c.done){ const hs=G.frame-c.t0;
       while(c.next<c.list.length&&hs>=130+c.next*28+16){ c.sum+=pips(c.list[c.next].t); c.next++; clack(0.45); }
