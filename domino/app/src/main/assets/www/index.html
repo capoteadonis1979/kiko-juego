@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.24';
+const VERSION='v3.9.25';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3494,7 +3494,9 @@ function endHand(winner,tranque){
     G.rev=[null,null,null,null]; G.revWait=true; G.cnt.t0=1e9;
     G.trq={t0:G.frame,fin:null,tot:tot.slice(),old:{s:oldS,p:oldP},hit:-999,mood:[0,0,0,0],say:(team<0?'TRANQUE: EMPATE':'TRANQUE: GANA '+(sen?G.names[wseat]:TEAMN()[team])),win:(sen?(wseat===0&&!isTV):team===0)};
     ACT().filter(x=>!G.human[x]).sort((a,b)=>tot[b]-tot[a]).forEach((x,k)=>{ G.rev[x]=G.frame+110+k*120; });
-  } else {
+  } else {   // gane normal: también salen las caritas y se resalta al que ganó
+    G.rev=[null,null,null,null]; ACT().forEach(x=>{ G.rev[x]=G.frame; }); G.revWait=true; G.cnt.t0=1e9;
+    G.trq={t0:G.frame,fin:G.frame,tot:tot.slice(),old:{s:oldS,p:oldP},hit:-999,mood:[0,0,0,0],normal:true};
     say(G.names[wseat]+' SE PEGÓ',110);
     chime(sen?(wseat===0&&!isTV):team===0);
   }
@@ -3679,63 +3681,54 @@ function drawTrq(){
       const tg=clamp(sc/3,-1,1); T.mood[s]+=(tg-T.mood[s])*0.06; const m=T.mood[s];
       moodFace(p.x,p.y+(m>0.3?-Math.abs(Math.sin(f*0.18))*4*m:0),R,{sm:m*0.95,op:m>0?m*0.4:0,tear:m<-0.6,wor:Math.abs(m)<0.2,pop:facePop(s)}); }
     return; }
-  const t=f-T.fin;
-  if(r.team<0){ for(const s of A){ const p=facePos(s); moodFace(p.x,p.y,R,{sm:0,op:0.3,wor:true,lk:Math.sin(f*0.05)}); } return; }
+  const t=f-T.fin, pp=s=>({pop:facePop(s)});
+  // cartel del ganador
+  { const F=getComputedStyle(document.body).fontFamily, tx=r.team<0?'¡EMPATE!':'¡'+G.names[r.winner]+' GANÓ!', k=ez0(t/14), sc=(t<14?k*1.15:1+Math.sin(f*0.12)*0.03);
+    if(hs<110){ ctx.save(); ctx.translate(VW/2,VH/2); ctx.scale(sc,sc); ctx.font='700 32px '+F; ctx.textAlign='center'; ctx.textBaseline='middle';
+      const w=ctx.measureText(tx).width+48; ctx.fillStyle='rgba(20,10,4,.85)'; rr(ctx,-w/2,-31,w,62,18); ctx.fill(); ctx.strokeStyle='#8aff6a'; ctx.lineWidth=3; ctx.stroke();
+      ctx.lineWidth=6; ctx.strokeStyle='#111'; ctx.strokeText(tx,0,2); ctx.fillStyle='#8aff6a'; ctx.fillText(tx,0,2); ctx.restore(); } }
+  if(r.team<0){ for(const s of A){ const p=facePos(s); moodFace(p.x,p.y,R,{sm:0,op:0.3,wor:true,lk:Math.sin(f*0.05),...pp(s)}); } return; }
   const W=r.winner, P=sen?-1:(W+2)%4, L=A.filter(x=>x!==W&&x!==P);
   const X=L.length?L.reduce((a,b)=>tot[b]>tot[a]?b:a,L[0]):-1, H=(!sen&&L.length===2)?L.find(x=>x!==X):-1;
-  const ez=k=>{ k=clamp(k,0,1); return k*k*(3-2*k); }, mv=(a,b,k)=>({x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k});
-  const near=(from,to,d)=>{ const dx=from.x-to.x, dy=from.y-to.y, l=Math.hypot(dx,dy)||1; return {x:to.x+dx/l*d,y:to.y+dy/l*d}; };
-  const trip=(home,dest,g0,g1,b0,b1)=>t<g0?home:t<g1?mv(home,dest,ez((t-g0)/(g1-g0))):t<b0?dest:t<b1?mv(dest,home,ez((t-b0)/(b1-b0))):home;
+  const ez=ez0, mv=(a,b,k)=>({x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k});
+  // vuela algo de una carita a la otra (las caritas no se mueven de su sitio)
+  const fly=(e,a,b,t0,t1,size,arc,rot,flip)=>{ if(t<t0||t>=t1) return; const k=ez((t-t0)/(t1-t0)), m=mv(a,b,k); FXQ.push(()=>emo(e,m.x,m.y-Math.sin(k*Math.PI)*(arc||40),size,rot||0,flip)); };
   const hW=facePos(W), wl=Math.max(1,Math.min(4,(G.mWin&&G.mWin[r.team])||1));
-  // ganador: alegría de verdad
-  let pW={x:hW.x,y:hW.y-(W===2?-1:1)*Math.abs(Math.sin(f*0.2))*7}, sqW=0;
-  // su pareja: la alegría sube con las manos que van ganando — 1 aplauso, 2 le da la mano, 3 le tira un beso, 4 abrazo apretado
-  if(P>=0){ const hP=facePos(P); let pP={x:hP.x,y:hP.y-Math.abs(Math.sin(f*0.2+1))*4}, oP={sm:0.9,op:0.6};
+  // el que gana: crece y se ríe de verdad
+  const grow=1.25+Math.sin(f*0.2)*0.06;
+  // su pareja, desde su sitio: la alegría sube con las manos ganadas — 1 aplauso, 2 le da la mano, 3 le tira un beso, 4 abrazo
+  if(P>=0){ const hP=facePos(P); let oP={sm:0.9,op:0.6,...pp(P)};
     if(wl===1){ const cl=Math.abs(Math.sin(f*0.35)), dx=hW.x-hP.x, dy=hW.y-hP.y, dl=Math.hypot(dx,dy)||1, ux=dx/dl, uy=dy/dl;
-      FXQ.push(()=>{ pointAt(hP,hW,30,R+22); emo('👏',hP.x-uy*(R+22),hP.y+ux*(R+22),26+cl*10,0); }); }
-    else if(wl===2){ pP=trip(hP,near(hP,hW,2*R+8),30,70,170,210); pW=t>=70&&t<170?hW:pW;
-      if(t>=70&&t<170){ const m=mv(pP,hW,0.5); FXQ.push(()=>emo('🤝',m.x,m.y-6+Math.sin(f*0.5)*5,34,0)); } }
-    else if(wl===3){ oP={sm:0.2,op:0.5};
-      if(t>=40&&t<100){ const k=ez((t-40)/60), m=mv(hP,hW,k); FXQ.push(()=>emo('💋',m.x,m.y-Math.sin(k*Math.PI)*40,28,0)); }
-      if(t>=95) for(let j=0;j<4;j++){ const a=f*0.05+j*Math.PI/2; FXQ.push(()=>emo('❤️',hW.x+Math.cos(a)*(R+16),hW.y+Math.sin(a)*(R+12)-((f+j*13)%40)*0.4,16,0)); } }
-    else { pP=trip(hP,near(hP,hW,2*R-10),30,70,170,210);
-      if(t>=70&&t<170){ pW=hW; const sq=0.5+0.5*Math.sin(f*0.4); sqW=0.25*sq; oP={sm:1,op:0.8}; const m=mv(pP,hW,0.5);
-        FXQ.push(()=>{ emo('🤗',m.x,m.y-R-14,30,0); for(let j=0;j<3;j++) emo('❤️',m.x+(j-1)*22,m.y-R-36-((f+j*9)%30)*0.6,14,0); }); } }
-    moodFace(pP.x,pP.y,R,oP); }
-  moodFace(pW.x,pW.y,R*1.08,{sm:1,op:1,sq:sqW});
-  if(H<0){ for(const s of L){ const p=facePos(s); moodFace(p.x+Math.sin(f*0.8)*(t>=60&&t<140?1.5:0),p.y,R,t<60?{sm:-0.9,tear:true}:{sm:-0.55,ang:Math.min(1,(t-60)/25)}); } return; }
-  // los que pierden: el castigo al que peor salió sube con las manos perdidas — 1 lo amenaza y lo regaña, 2 le jala la oreja,
-  // 3 brinca y le da un cocotazo, 4 un puntapié, 5 o más: lo persigue corriendo por toda la mesa
-  const hX=facePos(X), hH=facePos(H), lv=Math.max(1,Math.min(5,(G.mLose&&G.mLose[teamOf(X)])||1));
-  let pX={x:hX.x,y:hX.y}, pH={x:hH.x,y:hH.y}, oX=t<50?{sm:-0.9,tear:true}:{sm:-0.6,op:0.3,wor:true,ly:1}, oH=t<50?{sm:-0.9,tear:true}:{sm:-0.55,ang:Math.min(1,(t-50)/20),lk:Math.sign(hX.x-hH.x)};
-  T.bonkAt=null;
+      if(t>=20) FXQ.push(()=>{ pointAt(hP,hW,30,R+22); emo('👏',hP.x-uy*(R+22),hP.y+ux*(R+22),26+cl*10,0); }); }
+    else if(wl===2){ fly('🤝',hP,hW,30,80,34,50); if(t>=80){ FXQ.push(()=>emo('🤝',hW.x+R+16,hW.y-R*0.6+Math.sin(f*0.5)*5,32,0)); } }
+    else if(wl===3){ oP={sm:0.2,op:0.5,...pp(P)}; fly('💋',hP,hW,30,90,28,60);
+      if(t>=88) for(let j=0;j<4;j++){ const a=f*0.05+j*Math.PI/2; FXQ.push(()=>emo('❤️',hW.x+Math.cos(a)*(R*grow+14),hW.y+Math.sin(a)*(R*grow+10)-((f+j*13)%40)*0.4,16,0)); } }
+    else { fly('🤗',hP,hW,30,85,34,50); oP={sm:1,op:0.8,...pp(P)};
+      if(t>=85){ FXQ.push(()=>{ emo('🤗',hW.x,hW.y-R*grow-16,34,0); for(let j=0;j<3;j++) emo('❤️',hW.x+(j-1)*24,hW.y-R*grow-40-((f+j*9)%30)*0.6,14,0); }); } }
+    moodFace(hP.x,hP.y-Math.abs(Math.sin(f*0.2+1))*4,R,oP); }
+  moodFace(hW.x,hW.y,R*grow,{sm:1,op:1,...pp(W)});
+  if(H<0){ for(const s of L){ const p=facePos(s); moodFace(p.x+Math.sin(f*0.8)*(t>=60&&t<140?1.5:0),p.y,R,t<60?{sm:-0.9,tear:true,...pp(s)}:{sm:-0.55,ang:Math.min(1,(t-60)/25),...pp(s)}); } return; }
+  // los que pierden, cada uno en su sitio: el castigo al que peor salió sube con las manos perdidas —
+  // 1 lo amenaza con el dedo, 2 le jala la oreja, 3 cocotazo, 4 puntapié, 5 o más le tira la chancleta una y otra vez
+  const hX=facePos(X), hH=facePos(H), lv=Math.max(1,Math.min(5,(G.mLose&&G.mLose[teamOf(X)])||1)); T.chanc=lv===5;
+  const dx=hX.x-hH.x, dy=hX.y-hH.y, dl=Math.hypot(dx,dy)||1, ux=dx/dl, uy=dy/dl;
+  let oX=t<50?{sm:-0.9,tear:true}:{sm:-0.6,op:0.3,wor:true,ly:1}, oH=t<50?{sm:-0.9,tear:true}:{sm:-0.55,ang:Math.min(1,(t-50)/20),lk:Math.sign(dx)};
+  let pX={x:hX.x,y:hX.y}; T.bonkAt=null;
   if(t>=50){
-    if(lv===1){ const dx=hX.x-hH.x, dy=hX.y-hH.y, dl=Math.hypot(dx,dy)||1; pX={x:hX.x-TDIR[X][0]*4,y:hX.y-TDIR[X][1]*4};
-      FXQ.push(()=>emo('☝️',hH.x+dx/dl*(R+20),hH.y+dy/dl*(R+20)-10,30,Math.sin(f*0.5)*0.45)); }
-    else if(lv===2){ pH=trip(hH,near(hH,hX,2*R+4),50,85,175,210);
-      if(t>=85&&t<175){ oX={sm:-0.9,op:0.5,tear:true}; const dx=pH.x-hX.x, dy=pH.y-hX.y, dl=Math.hypot(dx,dy)||1, pull=Math.abs(Math.sin(f*0.3));
-        pX={x:hX.x+dx/dl*pull*6,y:hX.y+dy/dl*pull*6}; oX.rot=(dx>0?1:-1)*0.25*pull;
-        FXQ.push(()=>emo('🤏',hX.x+dx/dl*(R+6),hX.y+dy/dl*(R+6)-R*0.4,24,0)); } }
-    else if(lv===3){ const dest=near(hH,hX,2*R+2); T.bonkAt=100;
-      if(t<95){ const k=ez((t-50)/45); pH=mv(hH,dest,k); pH.y-=Math.abs(Math.sin(k*Math.PI*3))*26; } else if(t<150) pH=dest; else pH=mv(dest,hH,ez((t-150)/45));
-      if(t>=92&&t<112){ const k=(t-92)/20; FXQ.push(()=>emo('👊',hX.x,hX.y-R*1.6+k*R*0.9,32,0)); }
-      if(t>=100&&t<125) oX.sq=Math.sin((t-100)/25*Math.PI);
-      if(t>=100) FXQ.push(()=>emo('💫',hX.x,hX.y-R-8,22,f*0.08)); }
-    else if(lv===4){ const dest=near(hH,hX,2*R+6); pH=trip(hH,dest,50,85,160,200); T.bonkAt=105;
-      const dx=hX.x-dest.x, dy=hX.y-dest.y, dl=Math.hypot(dx,dy)||1;
-      if(t>=92&&t<112){ const k=(t-92)/20; FXQ.push(()=>emo('🦶',dest.x+dx/dl*(R+k*14),dest.y+dy/dl*(R+k*14)+8,30,(dx<0?-1:1)*(0.6-k*1.2),dx<0)); }
-      if(t>=105){ const k=1-ez((t-105)/45); pX={x:hX.x+dx/dl*36*k,y:hX.y+dy/dl*36*k-Math.sin(clamp((t-105)/20,0,1)*Math.PI)*16}; oX={sm:-0.9,op:0.7,tear:true}; }
-      if(t>=105&&t<125) FXQ.push(()=>emo('💥',hX.x+dx/dl*20,hX.y+dy/dl*20-R*0.5,30,0)); }
-    else { // persecución alrededor de la mesa
-      const cx=VW/2, cy=VH/2, rx=330, ry=178, a0=Math.atan2((hX.y-cy)/ry,(hX.x-cx)/rx);
-      const path=tt=>{ if(tt<0) return null; if(tt<15) return mv(hX,{x:cx+Math.cos(a0)*rx,y:cy+Math.sin(a0)*ry},ez(tt/15)); if(tt<135){ const a=a0+(tt-15)/120*Math.PI*2; return {x:cx+Math.cos(a)*rx,y:cy+Math.sin(a)*ry+Math.abs(Math.sin(tt*0.6))*-5}; }
-        if(tt<150) return mv({x:cx+Math.cos(a0)*rx,y:cy+Math.sin(a0)*ry},hX,ez((tt-135)/15)); return hX; };
-      const tx=t-50; pX=path(tx)||hX; oX={sm:-0.6,op:0.9,wor:true,lk:Math.sin(f*0.6)};
-      const th=tx-22; if(th<0){ const st=path(0); pH=mv(hH,st,ez(tx/22)); } else if(th<150) pH=path(th); else pH=mv(hX,hH,ez((th-150)/20));
-      if(tx<172) FXQ.push(()=>emo('👊',pH.x,pH.y-R-12,26,Math.sin(f*0.5)*0.4)); }
+    if(lv===1){ pX={x:hX.x-TDIR[X][0]*3,y:hX.y-TDIR[X][1]*3}; FXQ.push(()=>emo('☝️',hH.x+ux*(R+20),hH.y+uy*(R+20)-10,30,Math.sin(f*0.5)*0.45)); }
+    else if(lv===2){ const ear={x:hX.x-ux*(R+6),y:hX.y-uy*(R+6)-R*0.4}; fly('🤏',hH,ear,50,85,24,30);
+      if(t>=85&&t<175){ const pull=Math.abs(Math.sin(f*0.3)); oX={sm:-0.9,op:0.5,tear:true,rot:-(ux>0?1:-1)*0.25*pull}; pX={x:hX.x-ux*pull*5,y:hX.y-uy*pull*5}; FXQ.push(()=>emo('🤏',ear.x,ear.y,24,0)); } }
+    else if(lv===3){ const top={x:hX.x,y:hX.y-R*0.9}; fly('👊',hH,top,50,100,32,70); T.bonkAt=100;
+      if(t>=100&&t<125) oX.sq=Math.sin((t-100)/25*Math.PI); if(t>=100) FXQ.push(()=>emo('💫',hX.x,hX.y-R-8,22,f*0.08)); }
+    else if(lv===4){ fly('🦶',hH,hX,50,100,32,30,0,ux<0); T.bonkAt=100;
+      if(t>=100){ const k=1-ez((t-100)/40); pX={x:hX.x+ux*10*k,y:hX.y+uy*10*k}; oX={sm:-0.9,op:0.7,tear:true}; }
+      if(t>=100&&t<122) FXQ.push(()=>emo('💥',hX.x,hX.y-R*0.5,32,0)); }
+    else { for(let j=0;j<3;j++){ const t0=50+j*45; fly('🩴',hH,hX,t0,t0+30,28,60,(t-t0)*0.4); if(t>=t0+30&&t<t0+40) FXQ.push(()=>emo('💥',hX.x,hX.y-R*0.4,26,0)); }
+      oX={sm:-0.6,op:0.9,wor:true,lk:Math.sin(f*0.6)}; pX={x:hX.x+Math.sin(f*1.3)*2.5,y:hX.y}; }
   }
-  moodFace(pX.x,pX.y,R,oX); moodFace(pH.x,pH.y,R,oH);
+  moodFace(pX.x,pX.y,R,{...oX,...pp(X)}); moodFace(hH.x,hH.y,R,{...oH,...pp(H)});
 }
+function ez0(k){ k=clamp(k,0,1); return k*k*(3-2*k); }
 // el conteo: las fichas van al centro una por una y se suman
 function drawCounting(){
   const c=G.cnt; if(!c||G.state!=='handover') return; const hs=G.frame-c.t0, F=getComputedStyle(document.body).fontFamily, N=c.list.length;
@@ -4715,7 +4708,7 @@ function update(){
       if(T.fin==null){
         if(A.every(x=>G.rev[x]!=null)&&G.frame>=Math.max(...A.map(x=>G.rev[x]))+80){ T.fin=G.frame; chime(T.win); say(T.say,110); broadcast(); }
       }
-      else if(T.bonkAt!=null&&G.frame-T.fin===T.bonkAt) bonk();
+      else if((T.bonkAt!=null&&G.frame-T.fin===T.bonkAt)||(T.chanc&&[80,125,170].includes(G.frame-T.fin))) bonk();
       else if(G.frame>=T.fin+220){ G.revWait=false; G.cnt.t0=G.frame-60; G.timer=70+G.cnt.list.length*28+300; broadcast(); }
       return; }
     const c=G.cnt; if(c&&!c.done){ const hs=G.frame-c.t0;
