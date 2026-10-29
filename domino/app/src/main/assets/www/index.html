@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.17';
+const VERSION='v3.9.18';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3810,8 +3810,9 @@ function drawSeat(s){
     if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,x-11,y-8,22,H+16,11); ctx.fill(); }
     ctx.textAlign='center'; for(const c of L){ const h=step(c); if(c!==' ') txt(c,x,y+h/2+1); y+=h; }
   }
-  // carita casi pegada a las fichas (sitio fijo, fila de 10): arriba/abajo a la izquierda de la fila, a los lados encima de la columna
-  const edge=9/2*22+9+5;
+  // carita casi pegada a las fichas: arriba/abajo a la izquierda de la fila, a los lados encima de la columna
+  // la carita sigue a las fichas: cuando se van acabando se acerca (deslizándose suave, sin saltos)
+  const tgt=(Math.max(1,n)-1)/2*22+9+5; G.faceE=G.faceE||[]; if(G.faceE[s]==null) G.faceE[s]=tgt; G.faceE[s]+=(tgt-G.faceE[s])*0.08; const edge=G.faceE[s];
   if(s===0||s===2) face(VW/2-edge-R,s===0?VH-54:54);
   else face(s===1?VW-54:54,VH/2-edge-R);
   ctx.restore();
