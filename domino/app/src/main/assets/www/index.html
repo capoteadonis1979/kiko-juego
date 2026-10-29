@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.18';
+const VERSION='v3.9.19';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3789,32 +3789,33 @@ function drawSeat(s){
       if(up){ const t=G.hands[s][i]; drawTile(ctx,t[0],t[1],40,20,true); } else drawTile(ctx,0,0,36,18,false); ctx.restore();
     }
   }
-  // foto con aro del color de la pareja
-  const label=G.names[s], ph=G.photos[s], R=19, col=seatColor(s);
+  // foto con aro del color de la pareja: grande, ocupa desde el borde de las fichas hasta casi el filo de la pantalla
+  const label=G.names[s], ph=G.photos[s], R=33, col=seatColor(s);
   ctx.textBaseline='middle'; ctx.lineJoin='round';
   const face=(x,y)=>{
-    if(me){ ctx.save(); ctx.shadowColor='#ffd23a'; ctx.shadowBlur=16; ctx.fillStyle='#ffd23a'; ctx.beginPath(); ctx.arc(x,y,R+6,0,7); ctx.fill(); ctx.restore(); }
+    if(me){ ctx.save(); ctx.shadowColor='#ffd23a'; ctx.shadowBlur=16; ctx.fillStyle='#ffd23a'; ctx.beginPath(); ctx.arc(x,y,R+5,0,7); ctx.fill(); ctx.restore(); }
     ctx.save(); ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.arc(x+1.5,y+2.5,R+2,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(x,y,R,0,7); ctx.clip();
     if(ph) ctx.drawImage(ph,x-R,y-R,R*2,R*2);
-    else { ctx.fillStyle='#2b1a0d'; ctx.fillRect(x-R,y-R,R*2,R*2); ctx.fillStyle='#fff6e0'; ctx.font='700 20px '+font; ctx.textAlign='center'; ctx.fillText((label.trim()[0]||'?'),x,y+1); }
-    ctx.restore(); ctx.strokeStyle=col; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(x,y,R,0,7); ctx.stroke(); };
-  // nombre como antes: en el borde de madera, centrado con las fichas; a los lados en vertical (se lee de arriba abajo)
+    else { ctx.fillStyle='#2b1a0d'; ctx.fillRect(x-R,y-R,R*2,R*2); ctx.fillStyle='#fff6e0'; ctx.font='700 32px '+font; ctx.textAlign='center'; ctx.fillText((label.trim()[0]||'?'),x,y+2); }
+    ctx.restore(); ctx.strokeStyle=col; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(x,y,R,0,7); ctx.stroke(); };
+  // la carita sigue a las fichas, un poquito despegada: cuando se van acabando se acerca (deslizándose suave, sin saltos)
+  const tgt=(Math.max(1,n)-1)/2*22+9+12; G.faceE=G.faceE||[]; if(G.faceE[s]==null) G.faceE[s]=tgt; G.faceE[s]+=(tgt-G.faceE[s])*0.08; const edge=G.faceE[s];
+  // nombre en el borde, en el medio de las fichas; si la carita llega a él, lo va empujando para que nunca se monten
   ctx.font='700 14px '+font;
   const txt=(t,x,y)=>{ if(me){ ctx.fillStyle='#3a2600'; ctx.fillText(t,x,y); } else { ctx.lineWidth=3; ctx.strokeStyle='rgba(30,14,4,.85)'; ctx.strokeText(t,x,y); ctx.fillStyle='#fff6e0'; ctx.fillText(t,x,y); } };
   if(s===0||s===2){
-    const y=s===0?VH-13:13, tw=ctx.measureText(label).width;
-    if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,VW/2-tw/2-8,y-11,tw+16,22,11); ctx.fill(); }
-    ctx.textAlign='center'; txt(label,VW/2,y+1);
+    const fy=s===0?VH-39:39, fx=VW/2-edge-R, y=s===0?VH-13:13, tw=ctx.measureText(label).width;
+    const cx=Math.max(VW/2,fx+R+10+tw/2+(me?8:0));
+    if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,cx-tw/2-8,y-11,tw+16,22,11); ctx.fill(); }
+    ctx.textAlign='center'; txt(label,cx,y+1);
+    face(fx,fy);
   } else {
-    const x=s===1?VW-13:13, L=[...label], step=c=>c===' '?8:15, H=L.reduce((n,c)=>n+step(c),0); let y=VH/2-H/2;
+    const fx=s===1?VW-39:39, fy=VH/2-edge-R, x=s===1?VW-13:13, L=[...label], step=c=>c===' '?8:15, H=L.reduce((n,c)=>n+step(c),0);
+    let y=Math.max(VH/2-H/2,fy+R+8+(me?8:0));
     if(me){ ctx.fillStyle='#ffd23a'; rr(ctx,x-11,y-8,22,H+16,11); ctx.fill(); }
     ctx.textAlign='center'; for(const c of L){ const h=step(c); if(c!==' ') txt(c,x,y+h/2+1); y+=h; }
+    face(fx,fy);
   }
-  // carita casi pegada a las fichas: arriba/abajo a la izquierda de la fila, a los lados encima de la columna
-  // la carita sigue a las fichas: cuando se van acabando se acerca (deslizándose suave, sin saltos)
-  const tgt=(Math.max(1,n)-1)/2*22+9+5; G.faceE=G.faceE||[]; if(G.faceE[s]==null) G.faceE[s]=tgt; G.faceE[s]+=(tgt-G.faceE[s])*0.08; const edge=G.faceE[s];
-  if(s===0||s===2) face(VW/2-edge-R,s===0?VH-54:54);
-  else face(s===1?VW-54:54,VH/2-edge-R);
   ctx.restore();
 }
 function showLocalHand(){ return !isTV; }
