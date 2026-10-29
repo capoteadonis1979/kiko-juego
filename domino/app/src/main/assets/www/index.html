@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.20';
+const VERSION='v3.9.21';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3612,7 +3612,10 @@ function drumHit(big){ if(!AC) return; const t=AC.currentTime; boom(big?1:0.55);
   burst(t,0.12,260,1,big?2.2:1.4,'lowpass'); }
 function bonk(){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type='square'; o.frequency.setValueAtTime(700,t); o.frequency.exponentialRampToValueAtTime(140,t+0.18);
   g.gain.setValueAtTime(0.35,t); g.gain.exponentialRampToValueAtTime(0.0005,t+0.22); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.25); burst(t,0.08,400,1,1.4,'lowpass'); }
-function facePos(s){ return [{x:VW/2-175,y:VH-150},{x:VW-205,y:VH/2+120},{x:VW/2+175,y:150},{x:205,y:VH/2-120}][s]; }
+// carita: antes de virarse, delante de sus fichas; al virarse, las fichas salen hacia delante y la carita se queda atrás,
+// entre las fichas y el borde de la pantalla, en el mismo medio del lugar de cada jugador
+function facePos(s){ const back=[{x:VW/2,y:VH-53},{x:VW-53,y:VH/2},{x:VW/2,y:53},{x:53,y:VH/2}][s], front=[{x:VW/2,y:VH-104},{x:VW-112,y:VH/2},{x:VW/2,y:104},{x:112,y:VH/2}][s];
+  const r=G.rev&&G.rev[s]!=null?clamp((G.frame-G.rev[s])/20,0,1):0, e=r*r*(3-2*r); return {x:front.x+(back.x-front.x)*e,y:front.y+(back.y-front.y)*e}; }
 // carita de dibujo animada: sm = sonrisa (-1 triste .. 1 alegre), op = boca abierta, ang = bravo (0..1), lk = hacia dónde mira
 function moodFace(x,y,R,o){ const f=G.frame; ctx.save(); ctx.translate(x,y); if(o.rot) ctx.rotate(o.rot); if(o.sq) ctx.scale(1+o.sq*0.25,1-o.sq*0.25);
   const red=o.ang||0; const g=ctx.createRadialGradient(-R*0.3,-R*0.35,R*0.2,0,0,R);
@@ -3643,8 +3646,10 @@ function moodFace(x,y,R,o){ const f=G.frame; ctx.save(); ctx.translate(x,y); if(
 function emo(t,x,y,size,rot,flip){ ctx.save(); ctx.translate(x,y); if(rot) ctx.rotate(rot); if(flip) ctx.scale(-1,1); ctx.font=size+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(t,0,0); ctx.restore(); }
 function pointAt(from,to,size,dist){ const a=Math.atan2(to.y-from.y,to.x-from.x), x=from.x+Math.cos(a)*dist, y=from.y+Math.sin(a)*dist;
   if(Math.cos(a)>=0) emo('👉',x,y,size,a); else emo('👈',x,y,size,a-Math.PI); }
-function drawTrq(){
-  const T=G.trq; if(!T||G.state!=='handover') return; const A=ACT(), f=G.frame, c=G.cnt, hs=c?f-c.t0:-1, R=30;
+const FXQ=[];
+function drawTrqTiles(){ drawTrqTiles0(); for(const fn of FXQ) fn(); FXQ.length=0; }
+function drawTrqTiles0(){
+  const T=G.trq; if(!T||G.state!=='handover') return; const A=ACT(), f=G.frame, c=G.cnt, hs=c?f-c.t0:-1;
   // fichas viradas delante de cada jugador: salen de su fila, giran (se ve el giro) y caen boca arriba, ¡tácata!
   for(const s of A){ if(G.rev[s]==null||f<G.rev[s]) continue; const n=G.hands[s].length;
     for(let i=0;i<n;i++){ if(c&&hs>=0&&c.list.some((x,k)=>x.s===s&&x.ti===i&&hs>=130+k*28)) continue;   // ya se fue a contar
@@ -3654,6 +3659,9 @@ function drawTrq(){
       ctx.save(); ctx.translate(X,Y); ctx.rotate(b.a); ctx.scale(1+hop,(1+hop)*Math.max(0.06,flipS));   // se ve el giro: la ficha se aplasta y vuelve boca arriba
       if(k<0.5) drawTile(ctx,0,0,36+4*e,18+2*e,false); else { const t=G.hands[s][i]; drawTile(ctx,t[0],t[1],40,20,true); }
       ctx.restore(); } }
+}
+function drawTrq(){
+  const T=G.trq; if(!T||G.state!=='handover') return; const A=ACT(), f=G.frame, c=G.cnt, hs=c?f-c.t0:-1, R=27;
   // cartel
   if(T.fin==null){ const p=1+Math.sin(f*0.12)*0.04, F=getComputedStyle(document.body).fontFamily;
     ctx.save(); ctx.translate(VW/2,VH/2); ctx.scale(p,p); ctx.font='700 30px '+F; ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -3675,19 +3683,19 @@ function drawTrq(){
   const worst=L.length?L.reduce((a,b)=>tot[b]>tot[a]?b:a,L[0]):-1, hitter=(!sen&&L.length===2)?L.find(x=>x!==worst):-1;
   T.bonk=hitter>=0?1:null;
   // ganador: alegría de verdad
-  { const p=facePos(W); moodFace(p.x,p.y-Math.abs(Math.sin(f*0.2))*7,R*1.08,{sm:1,op:1}); }
+  { const p=facePos(W); moodFace(p.x,p.y-(W===2?-1:1)*Math.abs(Math.sin(f*0.2))*7,R*1.08,{sm:1,op:1}); }   // salta hacia la mesa, sin tapar su nombre
   // su pareja: alegre, aplaude y le señala con el dedito
   if(P>=0){ const p=facePos(P), q=facePos(W); moodFace(p.x,p.y-Math.abs(Math.sin(f*0.2+1))*4,R,{sm:0.9,op:0.6});
-    const cl=Math.abs(Math.sin(f*0.35)); emo('👏',p.x+(p.x<VW/2?-R-20:R+20),p.y+6,26+cl*10,0);
-    pointAt(p,q,30,R+28); }
+    const cl=Math.abs(Math.sin(f*0.35)), sd=(P===1||P===2)?-1:1;   // aplaude a un lado y señala con el dedito desde el otro
+    FXQ.push(()=>{ emo('👏',p.x+sd*(R+20),p.y+4,26+cl*10,0); pointAt({x:p.x-sd*(R+22),y:p.y},q,30,0); }); }
   // los que pierden: primero tristes, después bravos y se echan la culpa; al que peor salió su compañero le da un cocotazo
   for(const s of L){ const p=facePos(s), o=L.find(x=>x!==s), q=o!=null?facePos(o):null, lk=q?Math.sign(q.x-p.x||q.y-p.y):0;
     let sq=0; if(s===worst&&hitter>=0&&t>=175&&t<200) sq=Math.sin((t-175)/25*Math.PI);
     if(t<90) moodFace(p.x,p.y,R,{sm:-0.9,tear:true});
     else moodFace(p.x+Math.sin(f*0.8)*(t<175?1.5:0),p.y,R,{sm:-0.55,ang:Math.min(1,(t-90)/30),lk,sq});
-    if(s===worst&&hitter>=0&&t>=175) emo('💫',p.x,p.y-R-8,22,f*0.08); }
+    if(s===worst&&hitter>=0&&t>=175) FXQ.push(()=>emo('💫',p.x,p.y-R-8,22,f*0.08)); }
   if(hitter>=0&&t>=135&&t<215){ const a=facePos(hitter), b=facePos(worst); const k=t<175?(t-135)/40:1-(t-175)/40, e=k*k*(3-2*k);
-    emo('👊',a.x+(b.x-a.x)*e,a.y+(b.y-R*0.9-a.y)*e-Math.sin(k*Math.PI)*30,34,0,b.x<a.x); }
+    FXQ.push(()=>emo('👊',a.x+(b.x-a.x)*e,a.y+(b.y-R*0.9-a.y)*e-Math.sin(k*Math.PI)*30,34,0,b.x<a.x)); }
 }
 // el conteo: las fichas van al centro una por una y se suman
 function drawCounting(){
@@ -3825,6 +3833,7 @@ function drawTable(){
   drawSmoke();
   drawChainLayer();
   drawTrq();
+  drawTrqTiles();
   drawCounting();
   // mensaje: siempre encima y en un hueco sin fichas
   if(false&&G.msgT>0&&!(G.state==='handover'&&G.cnt&&G.frame-G.cnt.t0>=110)){   // sin letreros en la mesa (pasó, se pegó...): se ve lo que pasa
