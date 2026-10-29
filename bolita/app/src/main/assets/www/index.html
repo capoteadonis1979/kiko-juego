@@ -1,0 +1,124 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Bolita al Centro</title>
+<style>
+@font-face{font-family:Fredoka;src:url(fredoka.woff2) format('woff2');font-weight:300 700}
+html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#1d6b3e,#0b2a17 75%);font-family:Fredoka,system-ui,sans-serif;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none}
+#wrap{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:14px 12px 22px;box-sizing:border-box}
+h1{margin:0;font-size:min(7.5vw,34px);color:#ffd23a;text-shadow:0 3px 0 #6b3a00;letter-spacing:1px}
+#info{font-size:min(4.2vw,18px);color:#d8f5e2;text-align:center;min-height:2.6em;line-height:1.3}
+#cv{width:min(94vw,calc(100vh - 250px));height:min(94vw,calc(100vh - 250px));touch-action:none}
+#lv{display:flex;gap:8px}
+#lv button{font:700 min(4vw,17px) Fredoka,system-ui;border-radius:14px;padding:9px 14px;color:#fff;background:#5a3a14;border:3px solid #8a5a2a;min-width:26vw;max-width:130px}
+#lv button.on{background:#2f8fd6;border-color:#9fd4ff}
+#stats{font-size:min(3.8vw,15px);color:#b9dcc6}
+#over{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(5,20,10,.86);text-align:center;padding:24px;box-sizing:border-box}
+#over h2{margin:0;font-size:min(9vw,40px);color:#ffd23a;text-shadow:0 3px 0 #6b3a00}
+#over p{margin:0;font-size:min(4.6vw,20px);line-height:1.4;max-width:520px}
+#over button{font:700 min(5.5vw,24px) Fredoka,system-ui;border-radius:18px;padding:14px 34px;color:#fff;background:#2fbf71;border:3px solid #1a7a44;box-shadow:0 5px 0 #145c33}
+#ver{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:4px;font-size:12px;color:rgba(255,255,255,.75)}
+[hidden]{display:none!important}
+</style></head><body>
+<div id="wrap">
+  <h1>BOLITA AL CENTRO</h1>
+  <div id="info">Inclina el teléfono y deja la bolita<br>en el centro <b>3 segundos</b></div>
+  <canvas id="cv"></canvas>
+  <div id="lv"><button data-l="0">FÁCIL</button><button data-l="1" class="on">NORMAL</button><button data-l="2">DIFÍCIL</button></div>
+  <div id="stats"></div>
+</div>
+<div id="over"><h2>BOLITA AL CENTRO</h2><p>Sostén el teléfono como te sea cómodo, toca <b>EMPEZAR</b> y, sin moverte de golpe, lleva la bolita al círculo dorado del centro.<br>Si la aguantas <b>3 segundos</b> dentro, ¡ganas el premio!</p><button id="go">EMPEZAR</button></div>
+<div id="ver">v1.0.0</div>
+<script>
+const VERSION='v1.0.0';
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d'), info=document.getElementById('info'), over=document.getElementById('over'), goBtn=document.getElementById('go'), stats=document.getElementById('stats');
+// niveles: tamaño del círculo del centro, sensibilidad y "viento" (un temblor que obliga a corregir: no vale dejar el teléfono quieto en la mesa)
+const LV=[{n:'FÁCIL',r:0.24,k:1.0,w:0.0},{n:'NORMAL',r:0.15,k:1.25,w:0.35},{n:'DIFÍCIL',r:0.095,k:1.55,w:0.75}];
+let lvl=1; try{ const s=localStorage.getItem('bolLv'); if(s!==null&&+s>=0&&+s<=2) lvl=+s; }catch(_){}
+let ST={tries:0,wins:0}; try{ ST=Object.assign(ST,JSON.parse(localStorage.getItem('bolSt')||'{}')); }catch(_){}
+function saveSt(){ try{ localStorage.setItem('bolSt',JSON.stringify(ST)); }catch(_){} }
+function showStats(){ stats.textContent='Intentos: '+ST.tries+'   ·   Premios ganados: '+ST.wins; }
+document.querySelectorAll('#lv button').forEach(b=>{ b.classList.toggle('on',+b.dataset.l===lvl); b.addEventListener('click',()=>{ lvl=+b.dataset.l; try{ localStorage.setItem('bolLv',lvl); }catch(_){}
+  document.querySelectorAll('#lv button').forEach(x=>x.classList.toggle('on',x===b)); newRound(); }); });
+
+// ---- sonido ----
+let AC=null, master;
+function initAudio(){ try{ if(!AC){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return; AC=new C(); master=AC.createGain(); master.gain.value=0.8; master.connect(AC.destination); } if(AC.state==='suspended') AC.resume(); }catch(_){ AC=null; } }
+function tone(f,d,v,type,at){ if(!AC) return; const t=AC.currentTime+(at||0), o=AC.createOscillator(), g=AC.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+0.01); g.gain.exponentialRampToValueAtTime(0.0005,t+d); o.connect(g); g.connect(master); o.start(t); o.stop(t+d+0.02); }
+function tick(n){ tone(n===0?1320:880,0.12,0.35,'triangle'); }
+function winSound(){ [0,4,7,12,16].forEach((s,i)=>tone(523*Math.pow(2,s/12),0.35,0.3,'triangle',i*0.09)); tone(1046,0.8,0.25,'sine',0.5); }
+function failSound(){ tone(300,0.18,0.25,'sawtooth'); tone(200,0.3,0.25,'sawtooth',0.12); }
+
+// ---- sensores: la inclinación del teléfono respecto a como lo tenías al empezar ----
+let G0=null, GR=[0,0,0], HAS=false;
+function scrAngle(){ try{ return (screen.orientation&&screen.orientation.angle)||window.orientation||0; }catch(_){ return 0; } }
+addEventListener('devicemotion',ev=>{ const g=ev.accelerationIncludingGravity; if(!g||g.x==null) return; HAS=true;
+  for(let k=0;k<3;k++) GR[k]=GR[k]*0.8+[g.x,g.y,g.z][k]*0.2; });
+function tilt(){ // devuelve la fuerza en pantalla (x derecha, y abajo)
+  if(!HAS) return [KEY.x*4,KEY.y*4];
+  const b=G0||[0,0,9.8], dx=GR[0]-b[0], dy=GR[1]-b[1], t=scrAngle()*Math.PI/180, c=Math.cos(t), s=Math.sin(t);
+  const x=-dx, y=dy; return [x*c-y*s, x*s+y*c]; }
+// para probar sin sensores: flechas del teclado o arrastrar el dedo
+const KEY={x:0,y:0};
+addEventListener('keydown',e=>{ if(e.key==='ArrowLeft') KEY.x=-1; if(e.key==='ArrowRight') KEY.x=1; if(e.key==='ArrowUp') KEY.y=-1; if(e.key==='ArrowDown') KEY.y=1; });
+addEventListener('keyup',e=>{ if(e.key.startsWith('Arrow')){ KEY.x=0; KEY.y=0; } });
+let drag=null; cv.addEventListener('pointerdown',e=>{ if(HAS) return; drag={x:e.clientX,y:e.clientY}; });
+addEventListener('pointermove',e=>{ if(!drag) return; KEY.x=clamp((e.clientX-drag.x)/60,-1.5,1.5); KEY.y=clamp((e.clientY-drag.y)/60,-1.5,1.5); });
+addEventListener('pointerup',()=>{ if(drag){ drag=null; KEY.x=0; KEY.y=0; } });
+
+// ---- juego ----
+let S=0, W=0, CX=0, CY=0, AR=0;   // tamaño del lienzo y del plato
+function fit(){ const r=cv.getBoundingClientRect(), d=Math.min(devicePixelRatio||1,2.5); cv.width=Math.round(r.width*d); cv.height=Math.round(r.height*d); S=cv.width; CX=S/2; CY=S/2; AR=S*0.46; }
+addEventListener('resize',fit);
+const B={x:0,y:0,vx:0,vy:0}; let state='idle', inT=0, lastSec=4, wind={a:0,va:0,m:0}, winT=0, conf=[], frame=0;
+function newRound(){ const a=Math.random()*Math.PI*2; B.x=Math.cos(a)*0.7; B.y=Math.sin(a)*0.7; B.vx=B.vy=0; inT=0; lastSec=4; winT=0; conf=[];
+  if(state!=='idle'){ state='play'; info.innerHTML='Lleva la bolita al <b>círculo dorado</b> y aguántala ahí'; } }
+goBtn.addEventListener('click',()=>{ initAudio(); G0=GR.slice(); if(Math.hypot(...G0)<1) G0=null; over.hidden=true; state='play'; ST.tries++; saveSt(); showStats(); newRound(); });
+cv.addEventListener('click',()=>{ if(state==='won'||state==='lost'){ G0=HAS?GR.slice():null; state='play'; ST.tries++; saveSt(); showStats(); newRound(); } });
+
+function update(){ frame++;
+  if(state!=='play') { if(state==='won') for(const c of conf){ c.x+=c.vx; c.y+=c.vy; c.vy+=0.0009; c.r+=c.vr; } return; }
+  const L=LV[lvl], f=tilt(), acc=0.00055*L.k;
+  // viento: cambia poco a poco de dirección y fuerza
+  wind.va+=(Math.random()-0.5)*0.02; wind.va*=0.95; wind.a+=wind.va; wind.m+=((Math.random()<0.01?Math.random():wind.m)-wind.m)*0.02;
+  const wf=L.w*0.00028*(0.4+wind.m);
+  B.vx+=f[0]*acc+Math.cos(wind.a)*wf; B.vy+=f[1]*acc+Math.sin(wind.a)*wf;
+  B.vx*=0.985; B.vy*=0.985; B.x+=B.vx; B.y+=B.vy;
+  const d=Math.hypot(B.x,B.y), br=0.07;
+  if(d>1-br){ const nx=B.x/d, ny=B.y/d; B.x=nx*(1-br); B.y=ny*(1-br); const dot=B.vx*nx+B.vy*ny; if(dot>0){ B.vx-=1.6*dot*nx; B.vy-=1.6*dot*ny; if(dot>0.004) tone(180,0.08,clamp(dot*40,0.05,0.4),'triangle'); } }
+  const inside=d<L.r-br*0.35;
+  if(inside){ inT+=1/60; const left=Math.ceil(3-inT); if(left<lastSec&&left>0){ lastSec=left; tick(left); }
+    info.innerHTML='¡Aguanta! <b style="font-size:1.4em;color:#ffd23a">'+Math.max(0,3-inT).toFixed(1)+'</b> s';
+    if(inT>=3){ state='won'; winT=frame; ST.wins++; saveSt(); showStats(); winSound(); try{ navigator.vibrate&&navigator.vibrate([80,60,200]); }catch(_){}
+      info.innerHTML='<b style="color:#ffd23a;font-size:1.3em">¡GANASTE EL PREMIO!</b><br>Toca la bolita para jugar otra vez';
+      for(let i=0;i<120;i++) conf.push({x:0,y:-0.2,vx:(Math.random()-0.5)*0.05,vy:-0.02-Math.random()*0.03,r:Math.random()*6,vr:(Math.random()-0.5)*0.3,c:['#ffd23a','#ff5a5a','#5ad1ff','#7dff8a','#ffffff'][i%5]}); } }
+  else { if(inT>0.25){ failSound(); info.innerHTML='¡Se salió! Vuelve a llevarla al centro'; } inT=0; lastSec=4; }
+}
+function draw(){ const L=LV[lvl]; ctx.clearRect(0,0,S,S);
+  // plato de madera y paño verde
+  ctx.save(); ctx.translate(CX,CY);
+  ctx.fillStyle='#5a3412'; ctx.beginPath(); ctx.arc(0,0,AR*1.07,0,7); ctx.fill();
+  const g=ctx.createRadialGradient(0,-AR*0.3,AR*0.1,0,0,AR); g.addColorStop(0,'#2fa35d'); g.addColorStop(1,'#13603a'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,AR,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=S*0.003; for(let r=0.33;r<1;r+=0.33){ ctx.beginPath(); ctx.arc(0,0,AR*r,0,7); ctx.stroke(); }
+  // círculo del premio
+  const tr=AR*L.r, pulse=state==='play'&&inT>0?1+Math.sin(frame*0.3)*0.03:1;
+  ctx.fillStyle='rgba(255,210,58,.18)'; ctx.beginPath(); ctx.arc(0,0,tr*pulse,0,7); ctx.fill();
+  ctx.strokeStyle='#ffd23a'; ctx.lineWidth=S*0.008; ctx.beginPath(); ctx.arc(0,0,tr*pulse,0,7); ctx.stroke();
+  // progreso de los 3 segundos
+  if(inT>0||state==='won'){ const k=state==='won'?1:inT/3; ctx.strokeStyle='#7dff8a'; ctx.lineWidth=S*0.02; ctx.lineCap='round'; ctx.beginPath(); ctx.arc(0,0,tr+S*0.03,-Math.PI/2,-Math.PI/2+k*Math.PI*2); ctx.stroke(); }
+  ctx.fillStyle='rgba(255,210,58,.9)'; ctx.font='700 '+Math.round(S*0.04)+'px Fredoka,system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; if(state!=='won'&&inT===0) ctx.fillText('🏆',0,0);
+  // bolita (canica brillante) con su sombra
+  const bx=B.x*AR, by=B.y*AR, rr=AR*0.07;
+  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(bx+rr*0.25,by+rr*0.35,rr,rr*0.9,0,0,7); ctx.fill();
+  const bg=ctx.createRadialGradient(bx-rr*0.35,by-rr*0.4,rr*0.1,bx,by,rr); bg.addColorStop(0,'#ffffff'); bg.addColorStop(0.25,'#ff6b5a'); bg.addColorStop(1,'#8a120a');
+  ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(bx,by,rr,0,7); ctx.fill();
+  // confeti del premio
+  if(state==='won') for(const c of conf){ ctx.save(); ctx.translate(c.x*AR,c.y*AR); ctx.rotate(c.r); ctx.fillStyle=c.c; ctx.fillRect(-S*0.008,-S*0.004,S*0.016,S*0.008); ctx.restore(); }
+  ctx.restore();
+}
+let acc=0, last=performance.now();
+function loop(now){ acc+=Math.min(100,now-last); last=now; let n=0; while(acc>=1000/60&&n<5){ update(); acc-=1000/60; n++; } draw(); requestAnimationFrame(loop); }
+fit(); showStats(); newRound(); requestAnimationFrame(loop);
+window.__B={B,get state(){return state},get inT(){return inT}};
+</script>
+</body></html>
