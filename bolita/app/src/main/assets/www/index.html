@@ -32,13 +32,13 @@ h1{margin:0;font-size:min(6.2vw,32px);white-space:nowrap;color:#ffd23a;text-shad
   <div id="stats"></div>
 </div>
 <div id="over"><h2 id="oh">CENTRA E GANHA KWANZAS</h2><p id="op">Sostén el teléfono como te sea cómodo y toca <b>EMPEZAR</b>. Inclínalo para llevar la bolita al círculo dorado del centro.<br>Cada segundo que la aguantes dentro ganas <b>50 Kz</b>, hasta que se acabe el tiempo.</p><button id="go">EMPEZAR</button></div>
-<div id="ver">v1.2.0</div>
+<div id="ver">v1.3.0</div>
 <script>
-const VERSION='v1.2.0';
+const VERSION='v1.3.0';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d'), info=document.getElementById('info'), over=document.getElementById('over'), goBtn=document.getElementById('go'), stats=document.getElementById('stats');
 // niveles: tamaño del círculo del centro, sensibilidad y "viento" (un temblor que obliga a corregir: no vale dejar el teléfono quieto en la mesa)
-const LV=[{n:'FÁCIL',r:0.355,k:1.0,w:0.0},{n:'NORMAL',r:0.265,k:1.25,w:0.35},{n:'DIFÍCIL',r:0.21,k:1.55,w:0.75}];   // la bolita tiene que caber entera dentro del círculo
+const LV=[{n:'FÁCIL',r:0.355,w:0},{n:'NORMAL',r:0.265,w:0.04},{n:'DIFÍCIL',r:0.21,w:0.09}];   // w = temblor en m/s² (como una mesa que no está quieta)   // la bolita tiene que caber entera dentro del círculo
 let lvl=1; try{ const s=localStorage.getItem('bolLv'); if(s!==null&&+s>=0&&+s<=2) lvl=+s; }catch(_){}
 let ST={games:0,best:0}; try{ ST=Object.assign(ST,JSON.parse(localStorage.getItem('bolSt2')||'{}')); }catch(_){}
 let mins=1; try{ const m=localStorage.getItem('bolMin'); if(m!==null&&+m>=1&&+m<=3) mins=+m; }catch(_){}
@@ -64,9 +64,9 @@ function failSound(){ tone(300,0.18,0.25,'sawtooth'); tone(200,0.3,0.25,'sawtoot
 let G0=null, GR=[0,0,0], HAS=false;
 function scrAngle(){ try{ return (screen.orientation&&screen.orientation.angle)||window.orientation||0; }catch(_){ return 0; } }
 let NAT=false;   // el teléfono manda el acelerómetro directo (más seguro que el del navegador)
-window.kikoAcc=(x,y,z)=>{ NAT=true; HAS=true; const v=[x,y,z]; for(let k=0;k<3;k++) GR[k]=GR[k]*0.35+v[k]*0.65; };   // casi sin filtro: responde al instante
+window.kikoAcc=(x,y,z)=>{ NAT=true; HAS=true; const v=[x,y,z]; for(let k=0;k<3;k++) GR[k]=GR[k]*0.5+v[k]*0.5; };   // casi sin filtro: responde al instante
 addEventListener('devicemotion',ev=>{ if(NAT) return; const g=ev.accelerationIncludingGravity; if(!g||g.x==null) return; HAS=true;
-  for(let k=0;k<3;k++) GR[k]=GR[k]*0.35+[g.x,g.y,g.z][k]*0.65; });
+  for(let k=0;k<3;k++) GR[k]=GR[k]*0.5+[g.x,g.y,g.z][k]*0.5; });
 function tilt(){ // devuelve la fuerza en pantalla (x derecha, y abajo)
   if(!HAS) return [KEY.x*4,KEY.y*4];
   if(!G0&&state==='play') G0=GR.slice();   // el sensor llegó después de empezar: esa posición es el cero
@@ -109,14 +109,21 @@ function update(){ frame++;
   for(const p of pops) p.t++; if(pops.length) pops=pops.filter(p=>p.t<60);
   if(state!=='play') return;
   tLeft-=1/60; showTime(); if(tLeft<=0){ tLeft=0; showTime(); endGame(); return; }
-  const L=LV[lvl], f=tilt(), acc=0.006*L.k;   // como una bola de verdad: la inclinación la acelera al instante
-  // viento: un temblor que cambia poco a poco (no vale dejar el teléfono quieto en la mesa)
+  // ===== física real de un balín de acero de 1 cm (4,1 g; la masa no cambia la aceleración) =====
+  // rueda sin deslizar: a = 5/7 · g·sen(θ) (la componente de la gravedad en el plano la da el acelerómetro);
+  // resistencia a la rodadura sobre el paño Crr ≈ 0,01 (si la inclinación no la vence, el balín no arranca)
+  // escala: el balín mide 1 cm en la pantalla → el plato mide unos 7 cm de ancho
+  const L=LV[lvl], f=tilt(), dt=1/60, RP=0.005/BR;   // RP: radio del plato en metros
   wind.va+=(Math.random()-0.5)*0.02; wind.va*=0.95; wind.a+=wind.va; wind.m+=((Math.random()<0.01?Math.random():wind.m)-wind.m)*0.02;
-  const wf=L.w*0.0006*(0.4+wind.m);
-  B.vx+=f[0]*acc+Math.cos(wind.a)*wf; B.vy+=f[1]*acc+Math.sin(wind.a)*wf;
-  B.vx*=0.992; B.vy*=0.992; B.x+=B.vx; B.y+=B.vy;   // rueda casi sin frenarse, como un balín
+  const fx=f[0]+Math.cos(wind.a)*L.w*(0.4+wind.m), fy=f[1]+Math.sin(wind.a)*L.w*(0.4+wind.m);   // m/s² en el plano
+  const CRR=0.01, g=9.81, ax=5/7*fx, ay=5/7*fy, rr=5/7*CRR*g;   // frenado por rodadura
+  let vx=B.vx*RP*60, vy=B.vy*RP*60;   // velocidad en m/s
+  const sp=Math.hypot(vx,vy), fa=Math.hypot(ax,ay);
+  if(sp<0.004&&fa<=rr){ vx=0; vy=0; }   // quieto: la inclinación no vence el roce
+  else { vx+=ax*dt; vy+=ay*dt; const s2=Math.hypot(vx,vy); if(s2>0){ const k=Math.max(0,s2-rr*dt)/s2; vx*=k; vy*=k; } }
+  B.vx=vx/RP/60; B.vy=vy/RP/60; B.x+=B.vx; B.y+=B.vy;
   const d=Math.hypot(B.x,B.y), br=BR;
-  if(d>1-br){ const nx=B.x/d, ny=B.y/d; B.x=nx*(1-br); B.y=ny*(1-br); const dot=B.vx*nx+B.vy*ny; if(dot>0){ B.vx-=1.45*dot*nx; B.vy-=1.45*dot*ny; if(dot>0.004) tone(180,0.08,clamp(dot*25,0.05,0.4),'triangle'); } }   // rebota en el borde
+  if(d>1-br){ const nx=B.x/d, ny=B.y/d; B.x=nx*(1-br); B.y=ny*(1-br); const dot=B.vx*nx+B.vy*ny; if(dot>0){ B.vx-=1.5*dot*nx; B.vy-=1.5*dot*ny; if(dot>0.004) tone(180,0.08,clamp(dot*25,0.05,0.4),'triangle'); } }   // rebota en el borde
   const inside=d<L.r-br; buzz(d,L,inside);
   if(inside){ const prev=Math.floor(inT); inT+=1/60;
     if(Math.floor(inT)>prev){ kz+=50; kzEl.textContent=kzf(kz); coin(); pops.push({t:0}); }   // cada segundo dentro: +50 Kz
