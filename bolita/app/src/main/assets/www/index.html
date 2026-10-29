@@ -26,9 +26,9 @@ h1{margin:0;font-size:min(7.5vw,34px);color:#ffd23a;text-shadow:0 3px 0 #6b3a00;
   <div id="stats"></div>
 </div>
 <div id="over"><h2>BOLITA AL CENTRO</h2><p>Sostén el teléfono como te sea cómodo, toca <b>EMPEZAR</b> y, sin moverte de golpe, lleva la bolita al círculo dorado del centro.<br>Si la aguantas <b>3 segundos</b> dentro, ¡ganas el premio!</p><button id="go">EMPEZAR</button></div>
-<div id="ver">v1.1.2</div>
+<div id="ver">v1.1.3</div>
 <script>
-const VERSION='v1.1.2';
+const VERSION='v1.1.3';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d'), info=document.getElementById('info'), over=document.getElementById('over'), goBtn=document.getElementById('go'), stats=document.getElementById('stats');
 // niveles: tamaño del círculo del centro, sensibilidad y "viento" (un temblor que obliga a corregir: no vale dejar el teléfono quieto en la mesa)
@@ -73,11 +73,10 @@ addEventListener('pointerup',()=>{ if(drag){ drag=null; KEY.x=0; KEY.y=0; } });
 const BR=0.14;   // radio de la bolita (el doble que antes)
 let lastBuzz=0;
 // solo vibra con la bolita dentro del círculo del centro
-function buzz(d,L,inside){ if(state!=='play'||!inside) return; const now=performance.now(); if(now-lastBuzz<120) return;
-  const zone=Math.max(0.6,L.r*2.2), k=inside?1:clamp(1-(d-L.r+BR)/zone,0,1); if(k<=0.02) return; lastBuzz=now;
-  const amp=Math.round(inside?255:20+k*k*200);
-  try{ if(window.KikoApp&&KikoApp.vib){ KikoApp.vib(110,amp); return; } }catch(_){}
-  try{ navigator.vibrate&&navigator.vibrate(Math.round(15+k*95)); }catch(_){} }
+let vibOn=false;   // vibra solo con la bolita dentro: una sola orden al entrar y otra al salir (no satura el teléfono)
+function buzz(d,L,inside){ const want=state==='play'&&inside; if(want===vibOn) return; vibOn=want;
+  setTimeout(()=>{ try{ if(window.KikoApp&&KikoApp.vib){ if(want) KikoApp.vib(3500,255); else KikoApp.vibOff(); return; } }catch(_){}
+    try{ navigator.vibrate&&navigator.vibrate(want?3500:0); }catch(_){} },0); }
 // ---- juego ----
 let S=0, W=0, CX=0, CY=0, AR=0;   // tamaño del lienzo y del plato
 function fit(){ const r=cv.getBoundingClientRect(), d=Math.min(devicePixelRatio||1,2.5); cv.width=Math.round(r.width*d); cv.height=Math.round(r.height*d); S=cv.width; CX=S/2; CY=S/2; AR=S*0.46; }
@@ -100,8 +99,8 @@ function update(){ frame++;
   if(d>1-br){ const nx=B.x/d, ny=B.y/d; B.x=nx*(1-br); B.y=ny*(1-br); const dot=B.vx*nx+B.vy*ny; if(dot>0){ B.vx-=1.6*dot*nx; B.vy-=1.6*dot*ny; if(dot>0.004) tone(180,0.08,clamp(dot*40,0.05,0.4),'triangle'); } }
   const inside=d<L.r-br; buzz(d,L,inside);
   if(inside){ inT+=1/60; const left=Math.ceil(3-inT); if(left<lastSec&&left>0){ lastSec=left; tick(left); }
-    info.innerHTML='¡Aguanta! <b style="font-size:1.4em;color:#ffd23a">'+Math.max(0,3-inT).toFixed(1)+'</b> s';
-    if(inT>=3){ state='won'; winT=frame; ST.wins++; saveSt(); showStats(); winSound(); try{ navigator.vibrate&&navigator.vibrate([80,60,200]); }catch(_){}
+    const tx=Math.max(0,3-inT).toFixed(1); if(tx!==lastTx){ lastTx=tx; info.innerHTML='¡Aguanta! <b style="font-size:1.4em;color:#ffd23a">'+tx+'</b> s'; }
+    if(inT>=3){ state='won'; buzz(0,L,false); winT=frame; ST.wins++; saveSt(); showStats(); winSound(); try{ navigator.vibrate&&navigator.vibrate([80,60,200]); }catch(_){}
       info.innerHTML='<b style="color:#ffd23a;font-size:1.3em">¡GANASTE EL PREMIO!</b><br>Toca la bolita para jugar otra vez';
       for(let i=0;i<120;i++) conf.push({x:0,y:-0.2,vx:(Math.random()-0.5)*0.05,vy:-0.02-Math.random()*0.03,r:Math.random()*6,vr:(Math.random()-0.5)*0.3,c:['#ffd23a','#ff5a5a','#5ad1ff','#7dff8a','#ffffff'][i%5]}); } }
   else { if(inT>0.25){ failSound(); info.innerHTML='¡Se salió! Vuelve a llevarla al centro'; } inT=0; lastSec=4; }
@@ -136,7 +135,10 @@ function draw(){ const L=LV[lvl]; ctx.clearRect(0,0,S,S);
   ctx.restore();
 }
 let acc=0, last=performance.now();
-function loop(now){ acc+=Math.min(100,now-last); last=now; let n=0; while(acc>=1000/60&&n<5){ update(); acc-=1000/60; n++; } draw(); requestAnimationFrame(loop); }
+let lastTx='', errShown=false;
+function loop(now){ requestAnimationFrame(loop);   // el juego nunca se congela: aunque algo falle, sigue el siguiente cuadro
+  try{ acc+=Math.min(100,now-last); last=now; let n=0; while(acc>=1000/60&&n<5){ update(); acc-=1000/60; n++; } draw(); }
+  catch(e){ acc=0; if(!errShown){ errShown=true; stats.textContent='Aviso: '+(e&&e.message||e); } } }
 fit(); showStats(); newRound(); requestAnimationFrame(loop);
 window.__B={B,get state(){return state},get inT(){return inT}};
 </script>

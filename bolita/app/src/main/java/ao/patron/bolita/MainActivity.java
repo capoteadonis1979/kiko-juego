@@ -432,16 +432,20 @@ public class MainActivity extends Activity {
     private void ctrlStatus(String m) { js("window.kikoCtrl&&kikoCtrl(" + JSONObject.quote(m) + ")"); }
 
     public class Puente {
-        // vibración con fuerza (amplitud 1..255): cuanto más cerca del centro, más fuerte
+        // vibración (en otro hilo para no frenar nunca el juego)
         @JavascriptInterface
-        public void vib(int ms, int amp) {
-            try {
+        public void vib(final int ms, final int amp) {
+            new Thread(() -> { try {
                 android.os.Vibrator v = (android.os.Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 if (v == null || !v.hasVibrator()) return;
                 int a = Math.max(1, Math.min(255, amp));
                 if (Build.VERSION.SDK_INT >= 26) v.vibrate(android.os.VibrationEffect.createOneShot(Math.max(10, ms), v.hasAmplitudeControl() ? a : android.os.VibrationEffect.DEFAULT_AMPLITUDE));
-                else v.vibrate(Math.max(10, ms) * a / 255 + 5);
-            } catch (Exception ignored) { }
+                else v.vibrate(Math.max(10, ms));
+            } catch (Throwable ignored) { } }).start();
+        }
+        @JavascriptInterface
+        public void vibOff() {
+            new Thread(() -> { try { android.os.Vibrator v = (android.os.Vibrator) getSystemService(Context.VIBRATOR_SERVICE); if (v != null) v.cancel(); } catch (Throwable ignored) { } }).start();
         }
         @JavascriptInterface
         public boolean isTV() { return tv; }
@@ -720,7 +724,7 @@ public class MainActivity extends Activity {
     private long ultAcc = 0;
     private final android.hardware.SensorEventListener accL = new android.hardware.SensorEventListener() {
         @Override public void onSensorChanged(android.hardware.SensorEvent e) {
-            long t = System.currentTimeMillis(); if (t - ultAcc < 15 || web == null) return; ultAcc = t;
+            long t = System.currentTimeMillis(); if (t - ultAcc < 25 || web == null) return; ultAcc = t;
             final String js = "window.kikoAcc&&kikoAcc(" + e.values[0] + "," + e.values[1] + "," + e.values[2] + ")";
             web.post(() -> { if (web != null) web.evaluateJavascript(js, null); });
         }
