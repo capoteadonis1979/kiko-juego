@@ -2827,7 +2827,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.22';
+const VERSION='v3.9.23';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3016,7 +3016,7 @@ function dealHand(){
   try{ if(!G.remoteMode) libEl.hidden=true; }catch(_){}
   const d=newDeck(), A=ACT(); for(let s=0;s<4;s++){ const k=A.indexOf(s); G.hands[s]=k<0?[]:d.slice(k*10,k*10+10); }
   if(G.joinWait) for(let q=0;q<4;q++) if(G.joinWait[q]&&G.remote[q]!=null){ G.joinWait[q]=false; G.human[q]=true; }
-  G.passT=0; G.fist=null; G.cnt=null; G.pc=[0,0,0,0]; G.drink=null; G.smoke=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
+  G.passT=0; G.fist=null; G.cnt=null; G.trq=null; G.rev=null; G.revWait=false; drumStop(); G.pc=[0,0,0,0]; G.drink=null; G.smoke=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
   G.chain=[]; G.ends=null; G.passes=0; G.handNo++; G.anim=[]; G.fly=null; G.fallT=-1; G.cigT=-1; G.energy=[0,0,0,0]; G.fallHold=false; G.megaT=-1;   // se recogen la botella y el tabaco
   if(G.lastWinner<0){
     // primera mano: sale quien tenga el doble más alto
@@ -3493,7 +3493,6 @@ function endHand(winner,tranque){
     G.rev=[null,null,null,null]; G.revWait=true; G.cnt.t0=1e9;
     G.trq={t0:G.frame,fin:null,tot:tot.slice(),old:{s:oldS,p:oldP},hit:-999,mood:[0,0,0,0],say:(team<0?'TRANQUE: EMPATE':'TRANQUE: GANA '+(sen?G.names[wseat]:TEAMN()[team])),win:(sen?(wseat===0&&!isTV):team===0)};
     ACT().filter(x=>!G.human[x]).sort((a,b)=>tot[b]-tot[a]).forEach((x,k)=>{ G.rev[x]=G.frame+110+k*120; });
-    drumStart();
   } else {
     say(G.names[wseat]+' SE PEGÓ',110);
     chime(sen?(wseat===0&&!isTV):team===0);
@@ -3585,7 +3584,7 @@ function drawFistV(){
   // al golpear, un poco de polvo
   if(f.n&&t>=12&&t<hitEnd&&((t-12)%16)===0) for(let q=0;q<(f.hard?28:10);q++){ const a=Math.random()*6.28, v=f.hard?2.6:1.2; G.dust.push({x:Fx+Math.cos(a)*20,y:Fy+Math.sin(a)*14,vx:Math.cos(a)*v,vy:Math.sin(a)*v*0.66,r:2+Math.random()*2,life:0.7,dec:0.03}); }
 }
-function hsOK(){ return G.state==='handover'&&G.cnt&&(G.cnt.done||!G.human.some(Boolean))&&G.frame-G.cnt.t0>60; }
+function hsOK(){ return G.state==='handover'&&G.cnt&&((G.cnt.done||!G.human.some(Boolean))&&G.frame-G.cnt.t0>60||(G.trq&&G.trq.fin!=null&&G.frame-G.trq.fin>20)); }   // tras el tranque: tocar o el mando pasa a la próxima mano
 // dónde está cada ficha en el puesto de un jugador
 function revPos(s,i,n){ const pos=seatPos(s), d=(i-(n-1)/2)*22;   // en el tranque las fichas se viran en su sitio, en el borde
   return s%2===0?{x:pos.x+d,y:pos.y+(s===0?-18:18),a:Math.PI/2}:{x:pos.x+(s===1?-14:14),y:pos.y+d,a:0}; }
@@ -3690,11 +3689,11 @@ function drawTrq(){
     FXQ.push(()=>{ pointAt(p,q,30,R+22); emo('👏',p.x-uy*(R+22),p.y+ux*(R+22),26+cl*10,0); }); }
   // los que pierden: primero tristes, después bravos y se echan la culpa; al que peor salió su compañero le da un cocotazo
   for(const s of L){ const p=facePos(s), o=L.find(x=>x!==s), q=o!=null?facePos(o):null, lk=q?Math.sign(q.x-p.x||q.y-p.y):0;
-    let sq=0; if(s===worst&&hitter>=0&&t>=175&&t<200) sq=Math.sin((t-175)/25*Math.PI);
-    if(t<90) moodFace(p.x,p.y,R,{sm:-0.9,tear:true});
-    else moodFace(p.x+Math.sin(f*0.8)*(t<175?1.5:0),p.y,R,{sm:-0.55,ang:Math.min(1,(t-90)/30),lk,sq});
-    if(s===worst&&hitter>=0&&t>=175) FXQ.push(()=>emo('💫',p.x,p.y-R-8,22,f*0.08)); }
-  if(hitter>=0&&t>=135&&t<215){ const a=facePos(hitter), b=facePos(worst); const k=t<175?(t-135)/40:1-(t-175)/40, e=k*k*(3-2*k);
+    let sq=0; if(s===worst&&hitter>=0&&t>=120&&t<145) sq=Math.sin((t-120)/25*Math.PI);
+    if(t<60) moodFace(p.x,p.y,R,{sm:-0.9,tear:true});
+    else moodFace(p.x+Math.sin(f*0.8)*(t<120?1.5:0),p.y,R,{sm:-0.55,ang:Math.min(1,(t-60)/25),lk,sq});
+    if(s===worst&&hitter>=0&&t>=120) FXQ.push(()=>emo('💫',p.x,p.y-R-8,22,f*0.08)); }
+  if(hitter>=0&&t>=80&&t<160){ const a=facePos(hitter), b=facePos(worst); const k=t<120?(t-80)/40:1-(t-120)/40, e=k*k*(3-2*k);
     FXQ.push(()=>emo('👊',a.x+(b.x-a.x)*e,a.y+(b.y-R*0.9-a.y)*e-Math.sin(k*Math.PI)*30,34,0,b.x<a.x)); }
 }
 // el conteo: las fichas van al centro una por una y se suman
@@ -4536,7 +4535,7 @@ window.kikoKey=(k,down)=>{ if(!down) return; if(k==='a'||k==='start') k='ok';
   const t=document.activeElement; if(k==='ok'&&t&&t.tagName==='INPUT'){ const ov=openOv(); if(ov===payEl&&t.value.trim()){ document.getElementById('pwok').click(); return; } }
   navKey(k); };
 window.kikoBack=()=>{ if(!vidov.hidden){ closeVideo(); return true; } const ov=openOv(); if(ov){ ov.hidden=true; return true; } if(!guide.hidden){ guide.hidden=true; return true; } if(!pauseEl.hidden){ closePause(); return true; } if(!G.remoteMode&&menu.hidden&&(G.state==='play'||G.state==='handover')){ openPause(); return true; } if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
-function nextHandOrMenu(){ if(G.over){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } broadcast(); } else dealHand(); }
+function nextHandOrMenu(){ G.trq=null; G.rev=null; G.revWait=false; if(G.over){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } broadcast(); } else dealHand(); }
 cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu(); });
 
 /* ===== cuadros: nombres de las máquinas y activación ===== */
@@ -4673,12 +4672,12 @@ function update(){
   } else if(G.state==='handover'){
     if(G.revWait&&G.cnt){ const A=ACT(), T=G.trq;
       A.forEach(x=>{ if(G.frame===T.t0+12+x*6) popSnd(); });
-      A.forEach(x=>{ if(G.rev[x]!=null&&G.frame===G.rev[x]+20){ drumStop(); clack(0.9); clack(0.6,0.05); drumHit(false); T.hit=G.frame; } });   // ¡tácata!
+      A.forEach(x=>{ if(G.rev[x]!=null&&G.frame===G.rev[x]+20){ clack(0.9); clack(0.6,0.05); T.hit=G.frame; } });   // ¡tácata!
       if(T.fin==null){
-        if(A.every(x=>G.rev[x]!=null)&&G.frame>=Math.max(...A.map(x=>G.rev[x]))+80){ T.fin=G.frame; drumStop(); drumHit(true); chime(T.win); say(T.say,110); broadcast(); }
-        else if(!drumOn&&G.frame-T.hit>50) drumStart(); }
-      else if(G.frame-T.fin===175&&T.bonk!=null) bonk();
-      else if(G.frame>=T.fin+300){ G.revWait=false; G.cnt.t0=G.frame-60; G.timer=70+G.cnt.list.length*28+300; broadcast(); }
+        if(A.every(x=>G.rev[x]!=null)&&G.frame>=Math.max(...A.map(x=>G.rev[x]))+80){ T.fin=G.frame; chime(T.win); say(T.say,110); broadcast(); }
+      }
+      else if(G.frame-T.fin===120&&T.bonk!=null) bonk();
+      else if(G.frame>=T.fin+200){ G.revWait=false; G.cnt.t0=G.frame-60; G.timer=70+G.cnt.list.length*28+300; broadcast(); }
       return; }
     const c=G.cnt; if(c&&!c.done){ const hs=G.frame-c.t0;
       while(c.next<c.list.length&&hs>=130+c.next*28+16){ c.sum+=pips(c.list[c.next].t); c.next++; clack(0.45); }
