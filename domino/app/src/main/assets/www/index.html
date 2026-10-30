@@ -2830,7 +2830,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.30';
+const VERSION='v3.9.31';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3479,7 +3479,11 @@ function endHand(winner,tranque){
   if(sen){
     if(tranque){ const mn=Math.min(...ACT().map(x=>tot[x])), w=ACT().filter(s=>tot[s]===mn); if(w.length===1){ wseat=w[0]; team=0; } else { wseat=G.starter; team=-1; } } else team=0;
   } else {
-    if(tranque){ const t0=tot[0]+tot[2], t1=tot[1]+tot[3]; if(t0!==t1){ team=t0<t1?0:1; const a=team===0?[0,2]:[1,3]; wseat=tot[a[0]]<=tot[a[1]]?a[0]:a[1]; } else { team=-1; wseat=G.starter; } }
+    if(tranque){   // tranque en parejas: gana la pareja del jugador que MENOS tenga (individual); empate entre contrarios: gana el que salió (o el primero desde él)
+      const A=ACT(), mn=Math.min(...A.map(x=>tot[x])), w=A.filter(x=>tot[x]===mn);
+      if(w.every(x=>teamOf(x)===teamOf(w[0]))) wseat=w[0];
+      else { let p=G.starter; for(let k=0;k<4;k++){ if(w.includes(p)){ wseat=p; break; } p=(p+1)%4; } }
+      team=teamOf(wseat); }
     else team=teamOf(winner);
   }
   // qué fichas se cuentan: todas, o solo las de los que pierden
@@ -3610,7 +3614,8 @@ function cntSlot(i,N){ const per=30, row=Math.floor(i/per), m=Math.min(N-row*per
 const NUMF=['¡La blanca que le gusta al negro!','¡Ahí va la uña!','¡El duque!','¡Trío Matamoros!','¡El cuarto de Tula!','¡Sin comer no se puede vivir!','¡Ceiba del agua!','¡La peste, la que no le gusta a nadie!','¡Ochoa!','¡Nuevecito de paquete!'];
 const DBLF={4:'¡Cuácara con cuácara!',6:'¡Caja de muerto!',9:'¡La puerca!'};
 function phraseFor(t,side){ let n; if(t[0]===t[1]){ n=t[0]; if(DBLF[n]) return DBLF[n]; return NUMF[n]; }
-  if(!G.ends) n=Math.max(t[0],t[1]); else n=side==='L'?G.ends[0]:G.ends[1]; return NUMF[n]||NUMF[t[0]]; }
+  if(!G.ends) n=Math.max(t[0],t[1]); else { const e=side==='L'?G.ends[0]:G.ends[1]; n=t[0]===e?t[1]:t[0]; }   // la frase es del número que se pone (el que queda en la mesa), no del que se mata
+  return NUMF[n]||NUMF[t[0]]; }
 // el bot tira duro como una persona: salida con el doble 9 respaldado, al pegarse, o pasada la mitad con buena ocasión (lo que más lleva,
 // apoyar el número de su pareja o la racha ganadora). Como mucho dos tirones por mano.
 function botSlam(s,c){ G.slamN=G.slamN||[0,0,0,0]; if(G.slamN[s]>=2) return false;
