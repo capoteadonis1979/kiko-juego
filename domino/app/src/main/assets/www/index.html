@@ -343,13 +343,19 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #menu #pmesa{background:#7b3fc4;border-color:#4a2380}   /* TV en morado: el rojo es solo para salir */   /* empezar = verde (el rojo es solo para salir) */
 #menu button:focus{outline:none}
 #menu button.focus,#menu button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+ /* pantalla del jugador: solo MENÚ arriba y el botón largo de ORDENAR FICHAS (todo lo demás va dentro del MENÚ) */
+body.remote #handbar #bsort,body.remote #handbar .bpan,body.remote #handbar #blib,body.remote #handbar #bgame,body.remote.linked #rscan{display:none}
+#bigsort{display:none}
+body.remote #bigsort{display:flex;position:absolute;z-index:7;left:14px;right:14px;top:64px;height:42px;align-items:center;justify-content:center;font:800 20px var(--font);letter-spacing:3px;color:#ffe2b0;text-shadow:0 1px 0 rgba(0,0,0,.55);border-radius:12px;background:transparent;border:0;padding:0;box-shadow:inset 0 0 0 2px rgba(60,28,6,.75),inset 0 0 0 3px rgba(255,210,150,.18);-webkit-tap-highlight-color:transparent}
+body.remote #bigsort:active,body.remote #bigsort.down{box-shadow:inset 0 0 0 2px rgba(60,28,6,.85),inset 0 6px 10px rgba(0,0,0,.55),inset 0 -2px 4px rgba(255,210,150,.12);background:rgba(0,0,0,.12);padding-top:4px;color:#e8c890}
+#pbox #prrow button{min-width:0;width:103px}
 #ver{position:fixed;right:max(28px,calc(env(safe-area-inset-right,0px) + 20px));bottom:max(8px,calc(env(safe-area-inset-bottom,0px) + 6px));font-size:12px;color:rgba(255,255,255,.7);z-index:30;pointer-events:none}
 </style>
 <div id="app">
   <div id="tablebox">
     <canvas id="t" width="960" height="540" aria-label="Mesa de dominó"></canvas>
     <div id="remotebar">
-      <div id="rb1"><button id="rexit">◀ MENÚ</button><span id="rends">Mesa vacía</span><button id="rscan">📷 ESCANEAR QR DE LA TV</button><button id="rpair">EMPAREJAR</button></div>
+      <div id="rb1"><button id="rexit">☰ MENÚ</button><span id="rends">Mesa vacía</span><button id="rscan">📷 ESCANEAR QR DE LA TV</button><button id="rpair">EMPAREJAR</button></div>
       <div id="rst">Buscando la tele en tu Wi-Fi...</div>
       <div id="rwifi">⚠ La mesa y tu cel tienen que estar en la MISMA red Wi-Fi</div>
       <div class="ipbox" hidden><input id="rip" inputmode="decimal" placeholder="192.168.1.20" aria-label="Dirección de la tele"><button id="rgo">CONECTAR</button></div>
@@ -360,6 +366,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
     <div id="tiles"></div>
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
+    <button id="bigsort">⇅&nbsp; ORDENAR FICHAS &nbsp;⇅</button>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
     <button id="bvirar" hidden>MOSTRAR MIS FICHAS</button>
     <div id="passbox" hidden><b>NO LLEVAS FICHA</b><div id="pbtns"><button data-st="azar">👊 PASO<small>toca en cualquier parte para pasar</small></button></div><i id="passn"></i></div>
@@ -418,18 +425,33 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
       </ul>
       <h3>3 · En tu cel (JUGADOR)</h3>
       <ul>
-        <li><b>Toca una ficha</b> para ponerla en la mesa (sin golpe). Si casa por los dos lados, te pregunta a qué número ponerla.</li>
-        <li><b>Desliza la ficha hacia arriba</b> para dar un <b>golpetazo</b> con toda la fuerza acumulada.</li>
-        <li>La barra <b>FUERZA</b> (arriba) tiene <b>10 niveles</b>: cada ficha que pones sube un nivel, y si <b>pasas baja 2</b>. Pegar no la gasta. Empieza en 0 en cada mano. Con más nivel: más llena, más fuerte cae la ficha, más polvo, el vaso de ron se tambalea y salpica, y con todo lleno se vira. La <b>ficha con la que te pegas</b> pega el doble, y <b>el que va ganando</b> pega más duro que el que va perdiendo.</li>
-        <li>Si <b>no llevas ficha</b>, en el teléfono sale el botón <b>PASO</b>: lo tocas y tu jugador pasa con un gesto al azar: <b>toque</b> (1 o 2), <b>palma</b> o <b>señalar</b> al siguiente.</li>
-        <li>Arrastra una ficha a los lados para ordenarlas, o toca <b>ORDENAR</b>.</li>
-        <li><b>FRASES</b>: las frases cubanas de cada número de ficha, del 0 al 9. <b>CARITAS</b>: risa, bravo, enfurecido…</li>
+        <li><b>Toca una ficha</b> (un clic) para ponerla en la mesa sin golpe.</li>
+        <li><b>Desliza la ficha hacia arriba</b> para tirarla con <b>golpetazo</b>, con la fuerza que tengas acumulada.</li>
+        <li>Si casa por los dos lados te pregunta a qué número ponerla. Si los dos extremos son el <b>mismo número</b> no pregunta: la pone sola donde mejor cabe.</li>
+        <li>Si no casa, se iluminan las fichas que sí puedes jugar.</li>
+        <li>La barra <b>FUERZA</b> tiene <b>10 niveles</b>: cada ficha que pones sube uno y si <b>pasas baja 2</b>. Empieza en 0 cada mano. Con más fuerza la ficha cae más duro, levanta polvo y el vaso de ron se tambalea. La ficha con la que te pegas pega el doble.</li>
+        <li>Si <b>no llevas ficha</b> sale el botón <b>PASO</b>: lo tocas y tu jugador pasa con un gesto (toque, palma o señalar).</li>
+      </ul>
+      <h3>Ordenar fichas y el MENÚ del jugador</h3>
+      <ul>
+        <li>Toca el botón largo de madera <b>⇅ ORDENAR FICHAS</b> (donde sea): se hunde, vibra y suena, y las fichas quedan con el <b>número grande arriba</b>, de menor a mayor: la <b>doble blanca</b> a la izquierda y la <b>doble nueve</b> a la derecha.</li>
+        <li>También puedes arrastrar una ficha a los lados para ponerla donde quieras.</li>
+        <li>Arriba a la izquierda está <b>☰ MENÚ</b>. Dentro: <b>SEGUIR JUGANDO</b>, reiniciar o nueva partida, <b>MÚSICA</b>, <b>EFECTOS</b>, <b>CANCIÓN</b>, <b>⚙️ CONFIGURACIÓN</b>, <b>FRASES</b> (las frases cubanas de cada número), <b>CARITAS</b> (risa, bravo, enfurecido…), <b>LIBRETA</b> (los puntos de cada mano) y <b>◀ SALIR DE LA MESA</b>.</li>
+        <li>Mientras no estés conectado, <b>☰ MENÚ</b> te devuelve al inicio y sale el botón <b>📷 ESCANEAR QR DE LA TV</b> para conectarte.</li>
+      </ul>
+      <h3>En la mesa: frases, tranque y quién gana</h3>
+      <ul>
+        <li>En <b>⚙️ CONFIGURACIÓN</b> puedes encender o apagar las <b>frases cubanas</b>: cuando alguien da un golpetazo sale la frase del número que puso (“¡El duque!”, “¡Ceiba del agua!”…). Los bots también pegan, como mucho 2 veces por mano.</li>
+        <li>Al <b>pegarse</b> o en el <b>tranque</b> sale “<b>¡MUESTREN SUS FICHAS!</b>”: cada jugador vira sus fichas, se cuentan los puntos y aparece “<b>¡FULANO GANÓ!</b>”.</li>
+        <li>Salen las <b>caritas</b> encima de la foto de cada jugador: los que ganan celebran y los que pierden se enfadan, y va a más mientras más manos seguidas se ganen o se pierdan.</li>
+        <li><b>Tranque en parejas</b>: gana el <b>jugador</b> con menos puntos en la mano y su pareja se lleva la mano. Si empatan dos de distinta pareja, gana el que salió o el primero después de él.</li>
+        <li>Toca la pantalla (o OK en el mando) para saltar la celebración.</li>
       </ul>
       <h3>4 · Bajar la app y comprarla</h3>
       <ul>
         <li>En la sala de la MESA sale un <b>código QR</b>: escanéalo con el cel y se baja la app.</li>
         <li>La primera <b>hora de juego es gratis</b> y sin límite (solo cuenta el tiempo jugando). Después: <b>3 partidas gratis al día</b>, o cómprala por <b>5 USD al mes</b> o <b>20 USD para siempre</b>.</li>
-        <li>Para comprar toca <b>ACTIVAR / COMPRAR</b>, elige el plan y paga con <b>PayPal</b>, <b>USDT</b> o <b>transferencia BAI</b> (Angola). Con PayPal y USDT la app se activa sola en un par de minutos; con el BAI, manda el comprobante a <b>capoteapps@gmail.com</b> o por <b>WhatsApp +244 926 815 829</b> y se activa en cuanto lo aprobemos. Solo hace falta en la tele o el cel donde se pone la mesa; los que juegan con el teléfono no pagan.</li>
+        <li>Para comprar toca <b>ACTIVAR / COMPRAR</b>, elige el plan y paga con <b>PayPal</b>, <b>USDT</b> o <b>transferencia BAI</b> (Angola). Con PayPal y USDT la app se activa sola en un par de minutos; con el BAI, manda el comprobante a <b>capoteapps@gmail.com</b> o por <b>WhatsApp +244 926 815 829</b> y se activa en cuanto lo aprobemos. También puedes pedir un <b>código de activación</b>: en <b>ACTIVAR / COMPRAR</b> sale el <b>código de tu equipo</b>; mándalo por WhatsApp y te devolvemos el código que lo activa (no hace falta internet para meterlo). Solo hace falta en la tele o el cel donde se pone la mesa; los que juegan con el teléfono no pagan.</li>
       </ul>
       <h3>Créditos</h3>
       <p class="gcred">Dominó Cubano TV — idea, diseño y desarrollo: <b>Adonis Capote</b>.<br>Contacto: <b>capoteapps@gmail.com</b><br>© 2026 Adonis Capote. Todos los derechos reservados.</p>
@@ -495,6 +517,8 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
   <button id="pcfg2">⚙️ CONFIGURACIÓN</button>
+  <div class="prow" id="prrow"><button id="prfr">FRASES</button><button id="prca">CARITAS</button><button id="prli">LIBRETA</button></div>
+  <button id="prexit" class="pred">◀ SALIR DE LA MESA</button>
   <button id="pexit" class="pred">SALIR DEL JUEGO</button>
   <div id="pqr" hidden><div id="pqrsvg"></div><span>¿Alguien más quiere jugar?<br>Que abra Dominó Cubano TV → TELÉFONO → <b>ESCANEAR QR</b><br>y ocupa el sitio de un bot.<br><small>Misma red Wi-Fi que la mesa.</small></span></div>
   <p id="pconf" hidden></p></div></div>
@@ -2830,7 +2854,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.31';
+const VERSION='v3.9.32';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4031,7 +4055,7 @@ function tileCanvas(t,w,h){
 function renderHand(){
   const h=myHand(); tilesEl.innerHTML='';
   const H=tilesEl.clientHeight||150; let th=Math.min(H-18,120), tw=th/2;
-  if(G.remoteMode){ const n=Math.max(1,h.length); tw=Math.min((H-52)/2,(tilesEl.clientWidth-8-(n-1)*2)/n); th=tw*2; }   // deja sitio arriba para la FUERZA y abajo para el borde del atril
+  if(G.remoteMode){ const n=Math.max(1,h.length); tw=Math.min((H-112)/2,(tilesEl.clientWidth-8-(n-1)*2)/n); th=tw*2; }   // deja sitio arriba para la FUERZA y abajo para el borde del atril
   const gap=G.remoteMode?2:Math.min(10,Math.max(-tw*0.45,(tilesEl.clientWidth-24-h.length*tw)/Math.max(1,h.length-1)));
   const total=h.length*tw+(h.length-1)*gap, x0=(tilesEl.clientWidth-total)/2;
   h.forEach((t,i)=>{
@@ -4203,10 +4227,10 @@ function renderSeatBox(L,me){
 }
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pcfg2','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pcfg2','prfr','prca','prli','prexit','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
-function openPause(){ if(G.remoteMode) return; document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
+function openPause(){ if(G.remoteMode) return; rOnly(false); document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
 function closePause(){ pauseEl.hidden=true; pPending=null; if(G.remoteMode){ netSend({t:'ctl',a:'resume'}); return; } G.paused=false; }
 function gameAction(a){
   G.paused=false; pauseEl.hidden=true; G.fly=null; G.fist=null; G.passT=0; G.cnt=null;
@@ -4313,7 +4337,8 @@ document.getElementById('psnd').addEventListener('click',()=>{ if(G.remoteMode){
 setInterval(()=>{ document.getElementById('bmesa').hidden=!(isTV&&menu.hidden&&!G.remoteMode&&(G.state==='play'||G.state==='handover')&&pauseEl.hidden); },300);
 // desde el cel: el mismo menú, que lo hace la mesa
 document.getElementById('bgame').addEventListener('click',()=>{ if(G.remoteMode){ rPauseOpen(); } else openPause(); });
-function rPauseOpen(){ document.getElementById('pqr').hidden=true; musLabel(); netSend({t:'ctl',a:'pause'}); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; pfoc(0); }
+function rOnly(on){ ['prrow','prfr','prca','prli','prexit'].forEach(i=>document.getElementById(i).hidden=!on); }
+function rPauseOpen(){ rOnly(true); document.getElementById('pqr').hidden=true; musLabel(); netSend({t:'ctl',a:'pause'}); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; pfoc(0); }
 let expLast=-1e9;
 document.querySelectorAll('.bexp').forEach(b=>b.addEventListener('click',()=>{
   const now=performance.now(); if(now-expLast<1500) return; expLast=now; initAudio(); const k=+b.dataset.k;
@@ -4322,7 +4347,10 @@ document.querySelectorAll('.bexp').forEach(b=>b.addEventListener('click',()=>{
 }));
 document.getElementById('jnow').addEventListener('click',()=>{ netSend({t:'join',now:1}); document.getElementById('joinbox').hidden=true; });
 document.getElementById('jwait').addEventListener('click',()=>{ netSend({t:'join',now:0}); document.getElementById('joinbox').hidden=true; });
-document.getElementById('bsort').addEventListener('click',()=>{ if(G.remoteMode){ G.rHand.sort((x,y)=>(Math.max(y[0],y[1])-Math.max(x[0],x[1]))||(pips(y)-pips(x))); renderHand(); } else sortHand(0); });
+function rSortHand(){ G.rHand=G.rHand.map(t=>[Math.min(t[0],t[1]),Math.max(t[0],t[1])]).sort((x,y)=>(x[1]-y[1])||(x[0]-y[0])); renderHand(); }
+(()=>{ const b=document.getElementById('bigsort'); b.addEventListener('click',()=>{ if(!G.remoteMode) return; try{ initAudio(); for(let i=0;i<4;i++) clack(0.12+Math.random()*0.1,0.03+i*0.055); }catch(_){} try{ navigator.vibrate&&navigator.vibrate([18,35,14,35,22]); }catch(_){} rSortHand(); });
+  b.addEventListener('pointerdown',()=>b.classList.add('down')); ['pointerup','pointercancel','pointerleave'].forEach(e=>b.addEventListener(e,()=>b.classList.remove('down'))); })();
+document.getElementById('bsort').addEventListener('click',()=>{ if(G.remoteMode){ rSortHand(); } else sortHand(0); });
 
 /* ================= RED: la tele es la mesa, cada móvil tiene sus fichas ================= */
 const peers={};   // id de conexión → asiento
@@ -4429,8 +4457,13 @@ window.kikoQR=(t)=>{ const st=document.getElementById('rst'); t=String(t||'');
   if(t==='ERR') st.textContent='No se pudo abrir el escáner. Escribe la dirección que sale en la mesa.'; else if(t) st.textContent='Ese QR no es el que dice "OCUPAR SILLA".'; else st.textContent='Escaneo cancelado.'; };
 document.getElementById('rpair').addEventListener('click',()=>{ document.getElementById('rst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('rgo').addEventListener('click',()=>{ const ip=document.getElementById('rip').value.trim(); if(ip) try{ KikoApp.ctrlStart(ip); }catch(_){} });
-document.getElementById('rexit').addEventListener('click',()=>{ try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
-  ['seatbox','passbox','libreta','panel','sidebox','pause'].forEach(i=>{ const e=document.getElementById(i); if(e) e.hidden=true; }); document.body.classList.remove('remote'); document.getElementById('menu').hidden=false; showPick(); layout(); });
+document.getElementById('rexit').addEventListener('click',()=>{ if(document.body.classList.contains('linked')){ rPauseOpen(); return; } rExitNow(); });
+function rExitNow(){ try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
+  ['seatbox','passbox','libreta','panel','sidebox','pause'].forEach(i=>{ const e=document.getElementById(i); if(e) e.hidden=true; }); document.body.classList.remove('remote','linked'); document.getElementById('menu').hidden=false; showPick(); layout(); }
+document.getElementById('prexit').addEventListener('click',()=>{ closePause(); rExitNow(); });
+document.getElementById('prfr').addEventListener('click',()=>{ closePause(); openPanel('f'); });
+document.getElementById('prca').addEventListener('click',()=>{ closePause(); openPanel('c'); });
+document.getElementById('prli').addEventListener('click',()=>{ closePause(); openLibreta(false); });
 
 /* ================= MENÚ ================= */
 const menu=document.getElementById('menu');
