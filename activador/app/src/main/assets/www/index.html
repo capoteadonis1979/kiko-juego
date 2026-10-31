@@ -21,7 +21,7 @@ input{font:700 min(7vw,30px) Fredoka,monospace;text-align:center;letter-spacing:
 [hidden]{display:none!important}
 </style></head><body>
 <div class="scr" id="lock"><h1>ACTIVADOR<small>Capote Apps · solo para el dueño</small></h1>
-  <div style="flex:1"></div><div class="lbl">Contraseña</div><input id="pw" maxlength="12" placeholder="XXXX-XXXX" autocomplete="off" spellcheck="false">
+  <div style="flex:1"></div><div class="lbl">Contraseña</div><input id="pw" maxlength="24" placeholder="contraseña" style="text-transform:none" autocomplete="off" spellcheck="false">
   <button class="go" id="pwgo">ENTRAR</button><div id="pwerr" style="color:#ff9a8a;min-height:1.3em"></div><div style="flex:2"></div></div>
 <div class="scr" id="main" hidden><h1>ACTIVADOR<small>Capote Apps</small></h1>
   <div class="lbl">App</div>
@@ -34,21 +34,42 @@ input{font:700 min(7vw,30px) Fredoka,monospace;text-align:center;letter-spacing:
   <div id="err"></div><div id="out"></div><div id="info"></div>
   <div class="row"><button id="cp" hidden>📋 COPIAR</button><button id="sh" hidden>📤 ENVIAR</button></div>
   <div id="hist"></div>
+  <button id="chpw" style="font-size:min(3.6vw,15px);padding:7px 14px">🔑 CAMBIAR CONTRASEÑA</button>
 </div>
-<div id="ver">v1.0.0</div>
+<div class="scr" id="pwbox" hidden style="background:#0d2b22;z-index:5"><h1>CAMBIAR<small>Contraseña nueva</small></h1>
+  <div style="flex:1"></div><div class="lbl">Nueva contraseña</div><input id="np1" maxlength="24" autocomplete="off" spellcheck="false" style="text-transform:none">
+  <div class="lbl">Repítela</div><input id="np2" maxlength="24" autocomplete="off" spellcheck="false" style="text-transform:none">
+  <div class="row"><button id="npno">VOLVER</button><button id="npok" style="background:#2fbf71;border-color:#1a7a44">GUARDAR</button></div>
+  <div id="nperr" style="color:#ff9a8a;min-height:1.3em;text-align:center"></div><div style="flex:2"></div></div>
+<div id="ver">v1.1.0</div>
 <script>
-const VERSION='v1.0.0';
-const BLOB={"s":"yWznwAOdjfBoCqk6oUVWrQ==","i":"2iBQ8CZYHjeRjtF/","c":"h1uakHY18z8kqGj9RjY556117YWqKiQcuUlYCgeQLSpJqRFislKQBz446jrVpDSVGmjZfhodc5RlNkRF5KplIx1Uy61LtLBNrrdnItVl0HrORF0drPLjb4oNbOu5Rcn8OxiFEAXeOxCCG/CjHlStZL6+Hr1S9/E4Cw=="};
+const VERSION='v1.1.0';
+const BLOB={"s":"g88Dkl6WMUoDXJkpOLHQ9g==","i":"eLCrRIW6vXOIxT2G","c":"GQO7tckuZKxHl0kf8hw+49DeV4GO3XIUMvfxNFjyJ16k4aVd1gaoUucs6FoknK5AqQh+CKV4T6gkih+/aFr0Uv5CgOAxsNW40dVf3kMIJM2kKzWzYx+lLvlHEdk1nOl0iMCyJaSw5+22FGvNKUrzXZxFFwkc5xDorQ=="};
 const $=i=>document.getElementById(i);
 const B32='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', DAY=86400000, enc=new TextEncoder();
 let SEC=null;
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function unlock(pw){ pw=String(pw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+function normPw(pw){ return String(pw||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function curBlob(){ try{ const b=JSON.parse(localStorage.getItem('actBlob')||'null'); if(b&&b.s&&b.i&&b.c) return b; }catch(_){} return BLOB; }
+const u8b64=a=>btoa(String.fromCharCode(...new Uint8Array(a)));
+async function lockWith(pw,obj){ pw=normPw(pw); const s=crypto.getRandomValues(new Uint8Array(16)), i=crypto.getRandomValues(new Uint8Array(12));
+  const base=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:s,iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt']);
+  const c=await crypto.subtle.encrypt({name:'AES-GCM',iv:i},key,enc.encode(JSON.stringify(obj))); return {s:u8b64(s),i:u8b64(i),c:u8b64(c)}; }
+async function unlock(pw){ pw=normPw(pw); const BLOB=curBlob();
   const base=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
   const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(BLOB.s),iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(BLOB.i)},key,b64(BLOB.c)); return JSON.parse(new TextDecoder().decode(pt)); }
 async function tryPw(pw,save){ try{ SEC=await unlock(pw); if(save) try{ localStorage.setItem('actPw',pw); }catch(_){} $('lock').hidden=true; $('main').hidden=false; setApp(app); showHist(); return true; }catch(_){ return false; } }
 $('pwgo').onclick=async()=>{ $('pwerr').textContent='Comprobando…'; if(!await tryPw($('pw').value,true)) $('pwerr').textContent='Contraseña incorrecta'; };
+$('chpw').onclick=()=>{ $('np1').value=$('np2').value=''; $('nperr').textContent=''; $('pwbox').hidden=false; };
+$('npno').onclick=()=>{ $('pwbox').hidden=true; };
+$('npok').onclick=async()=>{ const a=$('np1').value, b=$('np2').value;
+  if(normPw(a).length<4){ $('nperr').textContent='Mínimo 4 letras o números'; return; }
+  if(normPw(a)!==normPw(b)){ $('nperr').textContent='No son iguales'; return; }
+  $('nperr').textContent='Guardando…';
+  try{ const nb=await lockWith(a,SEC); localStorage.setItem('actBlob',JSON.stringify(nb)); localStorage.setItem('actPw',a); $('pwbox').hidden=true; $('info').textContent='Contraseña cambiada ✔'; }
+  catch(_){ $('nperr').textContent='No se pudo guardar'; } };
 (async()=>{ let p=null; try{ p=localStorage.getItem('actPw'); }catch(_){} if(p) await tryPw(p,false); })();
 
 async function sha(s){ const h=await crypto.subtle.digest('SHA-256',enc.encode(s)); return [...new Uint8Array(h)]; }
