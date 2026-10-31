@@ -2854,7 +2854,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.36';
+const VERSION='v3.9.37';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2941,7 +2941,7 @@ function musStepPlay(t,st){
   const k=MONT.indexOf(s16); if(k>=0){ const n=ch[k%3]+(k>3?12:0); mPluck(t,mNote(n+12),0.16,0.08); mPluck(t,mNote(n+24),0.12,0.05,'triangle'); }   // montuno
 }
 /* canciones cubanas (Suno Pro): se bajan una vez y quedan guardadas en el aparato; mientras tanto suena el son de la casa */
-const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3']];
+const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3'],['De Pinar a Guantánamo','12.mp3'],['La Habana que dejé','13.mp3'],['Carta a mi madre','14.mp3'],['Malecón de mis recuerdos','15.mp3'],['Cuando vuelva a Santiago','16.mp3'],['Las palmas me esperan','17.mp3'],['La mesa del barrio','18.mp3'],['Hombre de campo','19.mp3'],['Cinco en la mesa','20.mp3'],['Guajira de mi río','21.mp3'],['Que suene la orquesta','22.mp3'],['La última ficha','23.mp3']];
 const NATIVE_MUS=!!(window.KikoApp&&KikoApp.songsReady);
 let songIdx=0;   // siempre empieza con el tema del dominó
 let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songAsked=false, songReadyT=0;
@@ -2956,7 +2956,7 @@ function songLoad(){ if(!songEl){ songEl=new Audio(); songEl.volume=0.6*MUSV/5; 
     songEl.addEventListener('error',()=>{ if(++songErr>=SONGS.length){ songOK=false; songRetry=Date.now()+90000; } else songNext(1); }); }
   if(!songPick()) return; if(SONGS[songIdx][2]==='synth'){ songEl.pause(); return; } songEl.src=songSrc(songIdx); }
 function songNext(d){ songIdx=(songIdx+(d||1)+SONGS.length)%SONGS.length; songPick(); try{ localStorage.setItem('dominoCancion',songIdx); }catch(_){} if(songEl){ songLoad(); if(songWant()) songEl.play().catch(()=>{}); } musLabel(); broadcast(); }
-function songTick(){ if(!songOK&&Date.now()>songRetry){ songOK=true; songErr=0; } if(songEl) songEl.volume=Math.min(1,0.6*MUSV/5);
+function songTick(){ if(!songOK&&Date.now()>songRetry){ songOK=true; songErr=0; } if(songEl) songEl.volume=Math.min(1,0.3*MUSV/5);
   if(Date.now()-songReadyT>8000){ songReadyT=Date.now(); songRefresh(); }
   if(MUS&&!G.remoteMode&&!songAsked&&NATIVE_MUS&&songReady.size<SONGS.filter(x=>!x[2]).length){ songAsked=true; try{ KikoApp.fetchSongs(SONGS.filter(x=>!x[2]).map(x=>x[1]).join(',')); }catch(_){} }
   if(songWant()){ if(!songEl) songLoad(); if(songEl.paused&&songEl.src) songEl.play().catch(()=>{}); } else if(songEl&&!songEl.paused) songEl.pause(); }
