@@ -2854,7 +2854,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.34';
+const VERSION='v3.9.35';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2941,7 +2941,7 @@ function musStepPlay(t,st){
   const k=MONT.indexOf(s16); if(k>=0){ const n=ch[k%3]+(k>3?12:0); mPluck(t,mNote(n+12),0.16,0.08); mPluck(t,mNote(n+24),0.12,0.05,'triangle'); }   // montuno
 }
 /* canciones cubanas (Suno Pro): se bajan una vez y quedan guardadas en el aparato; mientras tanto suena el son de la casa */
-const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['Lechón, congrí y carnaval','07.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3'],['Son montuno (instrumental)','','synth']];
+const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3'],['Son montuno (instrumental)','','synth']];
 const NATIVE_MUS=!!(window.KikoApp&&KikoApp.songsReady);
 let songIdx=0;   // siempre empieza con el tema del dominó
 let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songAsked=false, songReadyT=0;
@@ -3664,8 +3664,7 @@ function drawPhr(){ const p=G.phr; if(!p) return; const t=G.frame-p.t, life=95; 
   if(!p.pos) p.pos=phrSpot(p.seat,w,hh); const sc=t<8?0.4+t/8*0.75:t<14?1.15-(t-8)/6*0.15:1, al=t>life-15?(life-t)/15:1;
   ctx.globalAlpha=al; ctx.translate(p.pos.x,p.pos.y); ctx.scale(sc,sc);
   ctx.fillStyle='#fffdf4'; ctx.strokeStyle='#111'; ctx.lineWidth=3; rr(ctx,-w/2,-hh/2,w,hh,16); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#2a1608'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(p.txt,0,1);
-  ctx.font='700 12px '+F; ctx.fillStyle='#8a5a2a'; ctx.fillText(G.names[p.seat],0,-hh/2-9); ctx.restore(); }
+  ctx.fillStyle='#2a1608'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(p.txt,0,1); ctx.restore(); }
 // caritas de la salida de 20 tantos
 function drawSalFx(){ const S=G.salFx; if(!S) return; const t=G.frame-S.t; if(t>170||G.state!=='play'){ G.salFx=null; return; }
   const P=[0,1,2,3].map(facePos), k=t/16, pop=t<16?(k<0.6?k/0.6*1.3:1.3-(k-0.6)/0.4*0.3):t>150?(170-t)/20:1;
