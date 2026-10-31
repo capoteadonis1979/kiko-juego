@@ -2854,7 +2854,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.33';
+const VERSION='v3.9.34';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4347,7 +4347,7 @@ document.querySelectorAll('.bexp').forEach(b=>b.addEventListener('click',()=>{
 }));
 document.getElementById('jnow').addEventListener('click',()=>{ netSend({t:'join',now:1}); document.getElementById('joinbox').hidden=true; });
 document.getElementById('jwait').addEventListener('click',()=>{ netSend({t:'join',now:0}); document.getElementById('joinbox').hidden=true; });
-function rSortHand(){ G.rHand=G.rHand.map(t=>[Math.min(t[0],t[1]),Math.max(t[0],t[1])]).sort((x,y)=>(x[1]-y[1])||(x[0]-y[0])); renderHand(); }
+function rSortHand(){ G.rSorted=true; G.rHand=G.rHand.map(t=>[Math.min(t[0],t[1]),Math.max(t[0],t[1])]).sort((x,y)=>(x[1]-y[1])||(x[0]-y[0])); renderHand(); }
 (()=>{ const b=document.getElementById('bigsort'); b.addEventListener('click',()=>{ if(!G.remoteMode) return; try{ initAudio(); for(let i=0;i<4;i++) clack(0.12+Math.random()*0.1,0.03+i*0.055); }catch(_){} try{ navigator.vibrate&&navigator.vibrate([18,35,14,35,22]); }catch(_){} rSortHand(); });
   b.addEventListener('pointerdown',()=>b.classList.add('down')); ['pointerup','pointercancel','pointerleave'].forEach(e=>b.addEventListener(e,()=>b.classList.remove('down'))); })();
 document.getElementById('bsort').addEventListener('click',()=>{ if(G.remoteMode){ rSortHand(); } else sortHand(0); });
@@ -4405,7 +4405,9 @@ window.kikoMsg=(id,line)=>{
 window.kikoFromTV=(line)=>{
   let o; try{ o=JSON.parse(line); }catch(_){ return; }
   if(o.t==='state'){
-    const wasTurn=G.rTurn; G.rHand=G.rHand&&G.rHand.length===o.hand.length&&o.hand.every(t=>G.rHand.some(x=>same(x,t)))?G.rHand:o.hand;
+    const wasTurn=G.rTurn; { const old=(G.rHand||[]).filter(x=>o.hand.some(t=>same(x,t)));   // las fichas se quedan en el orden en que estaban (si las ordenó, siguen ordenadas)
+      if(old.length) G.rHand=old.concat(o.hand.filter(t=>!old.some(x=>same(x,t))));
+      else { G.rHand=o.hand.slice(); if(G.rSorted) G.rHand=G.rHand.map(t=>[Math.min(t[0],t[1]),Math.max(t[0],t[1])]).sort((x,y)=>(x[1]-y[1])||(x[0]-y[0])); } }
     if(o.lib){ G.rLib=o.lib; if(!libEl.hidden) renderLibreta(); }
     if(o.hand&&G.rHand&&o.hand.length===10&&G.rHand.length<10) libEl.hidden=true;
     G.rMust=!!o.must; G.rOver=!!o.over; setTimeout(checkPassBox,0);
