@@ -1,0 +1,92 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Activador Capote Apps</title>
+<style>
+@font-face{font-family:Fredoka;src:url(fredoka.woff2) format('woff2');font-weight:300 700}
+html,body{margin:0;height:100%;overflow:hidden;background:#0d2b22;font-family:Fredoka,system-ui,sans-serif;color:#fff;user-select:none;-webkit-user-select:none}
+.scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;gap:min(2.2vh,14px);padding:16px 14px 26px;box-sizing:border-box}
+h1{margin:4px 0 0;font-size:min(7vw,30px);color:#ffd23a;text-shadow:0 3px 0 #6b3a00;text-align:center}
+h1 small{display:block;font-size:.5em;color:#9fd8bf;text-shadow:none;font-weight:400}
+.lbl{font-size:min(3.8vw,15px);color:#9fd8bf;align-self:stretch;max-width:520px;margin:0 auto;width:100%}
+.row{display:flex;gap:8px;width:100%;max-width:520px}
+.row button{flex:1}
+button{font:700 min(4.2vw,18px) Fredoka,system-ui;border-radius:14px;padding:11px 6px;color:#fff;background:#5a3a14;border:3px solid #8a5a2a}
+button.on{background:#2f8fd6;border-color:#9fd4ff}
+button.go{background:#2fbf71;border-color:#1a7a44;box-shadow:0 4px 0 #145c33;font-size:min(5.4vw,23px);width:100%;max-width:520px}
+input{font:700 min(7vw,30px) Fredoka,monospace;text-align:center;letter-spacing:3px;width:100%;max-width:520px;box-sizing:border-box;padding:10px;border-radius:14px;border:3px solid #ffd23a;background:#08201a;color:#fff;text-transform:uppercase}
+#out{font:700 min(9vw,40px) Fredoka,monospace;letter-spacing:3px;color:#7dff8a;min-height:1.3em;text-align:center}
+#info,#err{font-size:min(3.8vw,15px);text-align:center;min-height:1.3em;max-width:520px}
+#err{color:#ff9a8a}#info{color:#d8f5e2}
+#hist{font-size:min(3.3vw,13px);color:#9fd8bf;width:100%;max-width:520px;flex:1;overflow:hidden;line-height:1.5}
+#ver{position:fixed;right:10px;bottom:4px;font-size:12px;color:rgba(255,255,255,.75)}
+[hidden]{display:none!important}
+</style></head><body>
+<div class="scr" id="lock"><h1>ACTIVADOR<small>Capote Apps · solo para el dueño</small></h1>
+  <div style="flex:1"></div><div class="lbl">Contraseña</div><input id="pw" maxlength="12" placeholder="XXXX-XXXX" autocomplete="off" spellcheck="false">
+  <button class="go" id="pwgo">ENTRAR</button><div id="pwerr" style="color:#ff9a8a;min-height:1.3em"></div><div style="flex:2"></div></div>
+<div class="scr" id="main" hidden><h1>ACTIVADOR<small>Capote Apps</small></h1>
+  <div class="lbl">App</div>
+  <div class="row" id="apps"><button data-a="ac" class="on">AC Diagnostic 3D</button><button data-a="dom">Dominó</button><button data-a="par">Parchís</button></div>
+  <div class="lbl" id="idl">ID del cliente</div>
+  <input id="id" maxlength="9" placeholder="ABCD-1234" autocomplete="off" spellcheck="false">
+  <div class="lbl">Plan</div>
+  <div class="row" id="plans"></div>
+  <button class="go" id="go">GENERAR CÓDIGO</button>
+  <div id="err"></div><div id="out"></div><div id="info"></div>
+  <div class="row"><button id="cp" hidden>📋 COPIAR</button><button id="sh" hidden>📤 ENVIAR</button></div>
+  <div id="hist"></div>
+</div>
+<div id="ver">v1.0.0</div>
+<script>
+const VERSION='v1.0.0';
+const BLOB={"s":"yWznwAOdjfBoCqk6oUVWrQ==","i":"2iBQ8CZYHjeRjtF/","c":"h1uakHY18z8kqGj9RjY556117YWqKiQcuUlYCgeQLSpJqRFislKQBz446jrVpDSVGmjZfhodc5RlNkRF5KplIx1Uy61LtLBNrrdnItVl0HrORF0drPLjb4oNbOu5Rcn8OxiFEAXeOxCCG/CjHlStZL6+Hr1S9/E4Cw=="};
+const $=i=>document.getElementById(i);
+const B32='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', DAY=86400000, enc=new TextEncoder();
+let SEC=null;
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function unlock(pw){ pw=String(pw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const base=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(BLOB.s),iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(BLOB.i)},key,b64(BLOB.c)); return JSON.parse(new TextDecoder().decode(pt)); }
+async function tryPw(pw,save){ try{ SEC=await unlock(pw); if(save) try{ localStorage.setItem('actPw',pw); }catch(_){} $('lock').hidden=true; $('main').hidden=false; setApp(app); showHist(); return true; }catch(_){ return false; } }
+$('pwgo').onclick=async()=>{ $('pwerr').textContent='Comprobando…'; if(!await tryPw($('pw').value,true)) $('pwerr').textContent='Contraseña incorrecta'; };
+(async()=>{ let p=null; try{ p=localStorage.getItem('actPw'); }catch(_){} if(p) await tryPw(p,false); })();
+
+async function sha(s){ const h=await crypto.subtle.digest('SHA-256',enc.encode(s)); return [...new Uint8Array(h)]; }
+async function hc(s,n){ const b=await sha(s); let o=''; for(let i=0;i<n;i++) o+=B32[b[i]&31]; return o; }
+async function hmacHex(secret,msg){ const k=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const h=await crypto.subtle.sign('HMAC',k,enc.encode(msg)); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase(); }
+const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function monthPlan(add){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+add); return {k:'M',ym:String(d.getFullYear()%100).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0'),n:'hasta fin de '+MES[d.getMonth()],b:add===0?'Este mes':add===1?'+1 mes':'+2 meses'}; }
+const APPS={
+  ac:{name:'AC Diagnostic 3D',idl:'ID del cliente (8 letras/números 0-9 A-F)',ok:x=>/^[0-9A-F]{8}$/.test(x),
+      plans:()=>[{k:'W',b:'7 días',n:'7 días'},{k:'M',b:'30 días',n:'30 días'},{k:'Y',b:'1 año',n:'1 año'},{k:'P',b:'Siempre',n:'permanente'}],
+      gen:async(id,p)=>{ const day=Math.floor(Date.now()/DAY), v=(await hmacHex(SEC.ac,id+'|'+p.k+'|'+day)).slice(0,8);
+        return {code:v.slice(0,4)+'-'+v.slice(4),note:'Plan '+p.n+'. Tiene que meterlo antes del '+new Date((day+4)*DAY).toLocaleDateString('es',{day:'numeric',month:'long'})+'.'}; }},
+  dom:{name:'Dominó Cubano TV',sec:'dom'}, par:{name:'Parchís Cubano TV',sec:'par'} };
+for(const k of ['dom','par']) Object.assign(APPS[k],{idl:'Código del equipo (el que sale en ACTIVAR / COMPRAR)',ok:x=>x.length===8&&[...x].every(c=>B32.includes(c)),
+  plans:()=>[{k:'P',b:'Siempre',n:'para siempre'},monthPlan(0),monthPlan(1),monthPlan(2)],
+  gen:async(id,p)=>{ const s=SEC[APPS[app].sec]; if(p.k==='P') return {code:'P'+await hc(s+'|P|'+id,8),note:'Activado para siempre en ese equipo.'};
+    return {code:'M'+p.ym+await hc(s+'|M'+p.ym+'|'+id,8),note:'Activado '+p.n+'.'}; }});
+let app='ac', plan=0; try{ app=localStorage.getItem('actApp')||'ac'; if(!APPS[app]) app='ac'; }catch(_){}
+function setApp(a){ app=a; try{ localStorage.setItem('actApp',a); }catch(_){} document.querySelectorAll('#apps button').forEach(b=>b.classList.toggle('on',b.dataset.a===a));
+  $('idl').textContent=APPS[a].idl; const P=APPS[a].plans(); plan=a==='ac'?1:0;
+  $('plans').innerHTML=P.map((p,i)=>'<button data-i="'+i+'"'+(i===plan?' class="on"':'')+'>'+p.b+'</button>').join('');
+  $('plans').querySelectorAll('button').forEach(b=>b.onclick=()=>{ plan=+b.dataset.i; $('plans').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if($('out').textContent) go(); });
+  clearOut(); }
+function clearOut(){ $('out').textContent=''; $('info').textContent=''; $('err').textContent=''; $('cp').hidden=$('sh').hidden=true; }
+document.querySelectorAll('#apps button').forEach(b=>b.onclick=()=>setApp(b.dataset.a));
+$('id').oninput=clearOut;
+let MSG='';
+async function go(){ clearOut(); const A=APPS[app], x=$('id').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!A.ok(x)){ $('err').textContent='Ese código no es válido para '+A.name+'. Revisa que esté bien escrito.'; return; }
+  const idf=x.slice(0,4)+'-'+x.slice(4), p=A.plans()[plan], r=await A.gen(x.length===8&&app==='ac'?idf:x,p);
+  $('out').textContent=r.code; $('info').textContent=r.note; $('cp').hidden=$('sh').hidden=false;
+  MSG=A.name+' - Código de activación ('+p.n+'): '+r.code+' (equipo '+idf+').';
+  addHist(A.name+' · '+idf+' · '+p.b+' → '+r.code); }
+$('go').onclick=go;
+$('cp').onclick=()=>{ try{ if(window.KikoApp&&KikoApp.copiar){ KikoApp.copiar(MSG); } else navigator.clipboard.writeText(MSG); $('info').textContent='✔ Mensaje copiado'; }catch(_){} };
+$('sh').onclick=()=>{ try{ if(window.KikoApp&&KikoApp.enviar) KikoApp.enviar(MSG); else if(navigator.share) navigator.share({text:MSG}); }catch(_){} };
+function getHist(){ try{ return JSON.parse(localStorage.getItem('actHist')||'[]'); }catch(_){ return []; } }
+function addHist(t){ const h=getHist(); const d=new Date(); h.unshift(d.getDate()+'/'+(d.getMonth()+1)+' '+t); try{ localStorage.setItem('actHist',JSON.stringify(h.slice(0,30))); }catch(_){} showHist(); }
+function showHist(){ const h=getHist(); $('hist').innerHTML=h.length?'<b>Últimos códigos</b><br>'+h.slice(0,6).map(s=>s.replace(/</g,'&lt;')).join('<br>'):''; }
+</script></body></html>

@@ -1,0 +1,7 @@
+<resources>
+    <style name="Juego" parent="android:Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowDisablePreview">false</item>
+        <item name="android:windowSplashScreenBackground">#0B1A12</item>
+    </style>
+</resources>
