@@ -399,7 +399,7 @@ body.remote #bigsort:active,body.remote #bigsort.down{box-shadow:inset 0 0 0 2px
       </div>
       <h3>Música</h3>
       <ul>
-        <li>En el inicio toca <b>⚙️ CONFIGURACIÓN</b>: ahí escuchas la música del juego sin jugar y cambias de canción con <b>◀ ▶</b>. También está la musiquita <b>Son montuno (instrumental)</b>.</li>
+        <li>En el inicio toca <b>⚙️ CONFIGURACIÓN</b>: ahí escuchas la música del juego sin jugar y cambias de canción con <b>◀ ▶</b>.</li>
         <li><b>📂 ELEGIR CARPETA DE MÚSICA</b>: se abren las carpetas de la tele o del teléfono; eliges la carpeta donde tienes tu música y sus canciones se añaden a la lista.</li>
         <li><b>🎵 MÚSICA</b> y <b>🔊 EFECTOS</b>: cada toque baja el volumen; después de NO vuelve al máximo.</li>
       </ul>
@@ -2854,7 +2854,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.35';
+const VERSION='v3.9.36';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2941,7 +2941,7 @@ function musStepPlay(t,st){
   const k=MONT.indexOf(s16); if(k>=0){ const n=ch[k%3]+(k>3?12:0); mPluck(t,mNote(n+12),0.16,0.08); mPluck(t,mNote(n+24),0.12,0.05,'triangle'); }   // montuno
 }
 /* canciones cubanas (Suno Pro): se bajan una vez y quedan guardadas en el aparato; mientras tanto suena el son de la casa */
-const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3'],['Son montuno (instrumental)','','synth']];
+const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3']];
 const NATIVE_MUS=!!(window.KikoApp&&KikoApp.songsReady);
 let songIdx=0;   // siempre empieza con el tema del dominó
 let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songAsked=false, songReadyT=0;
@@ -2967,7 +2967,7 @@ function musTick(){
   const now=AC.currentTime; if(musNext<now) musNext=now+0.05;
   while(musNext<now+0.3){ musStepPlay(musNext,musStep); musStep=(musStep+1)%64; musNext+=M16; }
 }
-setInterval(()=>{ try{ musTick(); }catch(_){} },60);
+// el son instrumental de la casa quitado: solo suenan las canciones
 function chime(win){ if(!AC) return; const t=AC.currentTime; [0,4,7,12].forEach((n,i)=>{ const o=AC.createOscillator(), g=AC.createGain(); o.type='triangle'; o.frequency.value=440*Math.pow(2,((win?60:52)+n-69)/12); g.gain.setValueAtTime(0.25,t+i*0.12); g.gain.exponentialRampToValueAtTime(0.001,t+i*0.12+0.4); o.connect(g); g.connect(master); o.start(t+i*0.12); o.stop(t+i*0.12+0.45); }); }
 
 /* ================= FICHAS ================= */
