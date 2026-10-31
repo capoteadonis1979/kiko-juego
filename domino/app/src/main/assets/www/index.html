@@ -2854,7 +2854,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.32';
+const VERSION='v3.9.33';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -2943,7 +2943,7 @@ function musStepPlay(t,st){
 /* canciones cubanas (Suno Pro): se bajan una vez y quedan guardadas en el aparato; mientras tanto suena el son de la casa */
 const SONGS=[['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['Lechón, congrí y carnaval','07.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3'],['Son montuno (instrumental)','','synth']];
 const NATIVE_MUS=!!(window.KikoApp&&KikoApp.songsReady);
-let songIdx=0; try{ songIdx=(parseInt(localStorage.getItem('dominoCancion'))||0)%SONGS.length; }catch(_){}
+let songIdx=0;   // siempre empieza con el tema del dominó
 let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songAsked=false, songReadyT=0;
 function songRefresh(){ if(!NATIVE_MUS){ SONGS.forEach(x=>{ if(!x[2]) songReady.add(x[1]); }); return; } try{ String(KikoApp.songsReady()||'').split(',').filter(Boolean).forEach(f=>songReady.add(f)); }catch(_){} }
 window.kikoSong=f=>{ songReady.add(f); };
