@@ -372,6 +372,7 @@ body.remote.cafe2on #power{right:240px}
 @media (orientation:portrait){ body.remote.cafeon #power,body.remote.cafe2on #power{right:12px}
   body.remote #bcafe,body.remote #bcafe2{top:116px!important;height:38px!important;width:calc(50% - 21px)!important;font-size:17px!important;border-radius:12px!important;padding:0!important}
   body.remote #bcafe{right:14px!important} body.remote #bcafe2{right:auto!important;left:14px!important} }
+#swov{z-index:49}#swgrid{display:grid;grid-template-columns:repeat(3,minmax(150px,210px));grid-template-rows:repeat(3,auto);gap:8px;justify-content:center;margin:6px 0 10px}#swgrid button{margin:0;font-size:15px;line-height:1.2}#swgrid button small{display:block;font-size:11px;opacity:.8}#swgrid button.sel{background:#ffd23a!important;color:#2a1a00!important}#swtxt{margin:2px 0 4px;color:#ffe9a8}
 #hdet{z-index:49}#hdet .ovbox{max-width:none;width:100%}
 #hdtab table{border-collapse:collapse;width:min(96vw,900px);font:600 15px var(--font);color:#fff6e0}
 #hdtab th{color:#ffd23a;font-size:14px;padding:4px 8px;border-bottom:2px solid #8a5a2a}#hdtab td{padding:3px 8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:center}
@@ -546,6 +547,7 @@ body.remote.cafe2on #power{right:240px}
   <button id="pcont" class="main">SEGUIR JUGANDO</button>
   <button id="prest">REINICIAR PARTIDA<small>Mismos jugadores · marcador a cero</small></button>
   <button id="pnew">NUEVA PARTIDA<small>Volver a la sala: cambiar jugadores o modo</small></button>
+  <button id="pswap">⇄ CAMBIAR SILLAS</button>
   <div class="prow"><button id="pmus">MÚSICA ●●●●○</button><button id="psnd">EFECTOS ●●●●●</button></div>
   <button id="pcan">♪ CANCIÓN ▶</button>
   <button id="pcfg2">⚙️ CONFIGURACIÓN</button>
@@ -566,6 +568,7 @@ body.remote.cafe2on #power{right:240px}
 <button id="mfr">FRASES AL TIRAR DURO · SÍ</button>
 <p class="small">Al tirar la ficha duro (deslizando hacia arriba) sale la frase del número.</p>
 <button id="cfgx" class="main">LISTO</button></div></div>
+<div id="swov" class="ov" hidden><div class="ovbox"><h2>⇄ CAMBIAR SILLAS</h2><p id="swtxt"></p><div id="swgrid"></div><div class="row"><button id="swok" class="main">LISTO</button></div></div></div>
 <div id="hdet" class="ov" hidden><div class="ovbox"><h2 id="hdtit">MANO POR MANO</h2><div id="hdtab"></div><div class="row"><button id="hdx">VOLVER</button></div></div></div>
 <div id="hist" class="ov" hidden><div class="ovbox"><h2>📜 HISTORIAL DE PARTIDAS</h2>
 <div id="hlist"></div>
@@ -2888,7 +2891,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.50';
+const VERSION='v3.9.51';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4393,7 +4396,7 @@ function renderSeatBox(L,me){
 }
 // ---- menú de la partida: seguir, reiniciar o nueva ----
 const pauseEl=document.getElementById('pause'); let pFocus=0, pPending=null;
-function pauseBtns(){ return ['pcont','prest','pnew','pmus','psnd','pcan','pcfg2','prfr','prca','prli','prexit','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
+function pauseBtns(){ return ['pcont','prest','pnew','pswap','pmus','psnd','pcan','pcfg2','prfr','prca','prli','prexit','pexit','gsalir'].map(i=>document.getElementById(i)).filter(b=>!b.hidden); }
 function pfoc(i){ const b=pauseBtns(); pFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===pFocus)); try{ b[pFocus].focus({preventScroll:true}); }catch(_){} }
 document.getElementById('pbox').addEventListener('focusin',e=>{ const b=pauseBtns(), i=b.indexOf(e.target); if(i>=0){ pFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } });
 function openPause(){ if(G.remoteMode) return; rOnly(false); document.getElementById('bmesa').classList.remove('focus'); musLabel(); const qr=document.getElementById('pqr'); qr.hidden=!(isTV&&G.ips); if(!qr.hidden) document.getElementById('pqrsvg').innerHTML=qrSVG('DCMESA:'+G.ips); pPending=null; document.getElementById('pconf').hidden=true; pauseEl.hidden=false; G.paused=true; pfoc(0); }
@@ -4410,6 +4413,17 @@ function pauseChoose(a){ if(a==='cont'){ closePause(); return; }
 document.getElementById('pcont').addEventListener('click',()=>pauseChoose('cont'));
 document.getElementById('prest').addEventListener('click',()=>pauseChoose('restart'));
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
+// ---- cambiar sillas en plena partida (desde el menú): toca una silla y luego la otra; cada uno se lleva su nombre/foto/teléfono ----
+let swSel=null; const swEl=document.getElementById('swov'), SWPOS=[[3,2],[2,3],[1,2],[2,1]];   // [fila,col] como en la mesa
+function swRender(){ const g=document.getElementById('swgrid'); g.innerHTML='';
+  for(const s of ACT()){ const b=document.createElement('button'); b.dataset.s=s; b.style.gridRow=SWPOS[s][0]; b.style.gridColumn=SWPOS[s][1];
+    b.innerHTML=G.names[s]+'<small>'+(G.remote[s]!=null?'📱 teléfono':G.human[s]?'🙂 aquí':'🤖 bot')+' · '+['ABAJO','DERECHA','ARRIBA','IZQUIERDA'][s]+'</small>';
+    if(swSel===s) b.classList.add('sel'); b.addEventListener('click',()=>{ if(swSel===null) swSel=s; else if(swSel===s) swSel=null; else { swapSeatsGame(swSel,s); swSel=null; } swRender(); const nb=document.querySelector('#swgrid button[data-s="'+s+'"]'); ovFoc(swEl,Math.max(0,ovEls(swEl).indexOf(nb))); }); g.appendChild(b); }
+  document.getElementById('swtxt').textContent=swSel===null?'Toca la silla de un jugador y luego la silla adonde va':'Ahora toca la silla adonde va '+G.names[swSel]; }
+function swapSeatsGame(a,b){ const wins=G.wins, mn=G.matchNo; const sw=arr=>{ if(arr){ const t=arr[a]; arr[a]=arr[b]; arr[b]=t; } };
+  [G.joinWait,G.cafeUsed].forEach(sw); swapSeats(a,b); G.wins=wins; G.matchNo=mn; say(G.names[b]+' ⇄ '+G.names[a],70); layout(); renderHand(); broadcast(); }
+document.getElementById('pswap').addEventListener('click',()=>{ swSel=null; pauseEl.hidden=true; swRender(); swEl.hidden=false; fitAll(true); ovFoc(swEl,0); });
+document.getElementById('swok').addEventListener('click',()=>{ swEl.hidden=true; swSel=null; openPause(); });
 function salirApp(){ try{ if(window.KikoApp&&KikoApp.exitApp){ KikoApp.exitApp(); return; } }catch(_){} try{ window.close(); }catch(_){} }
 const exitEl=document.getElementById('exitask');
 try{ G.optSal=localStorage.getItem('dominoSalida20')==='1'; }catch(_){ G.optSal=false; }
@@ -4425,7 +4439,7 @@ document.getElementById('pexit').addEventListener('click',askExit);
 document.getElementById('gsalir').addEventListener('click',askExit);
 // SALIR solo en la pantalla de inicio, arriba a la derecha
 setInterval(()=>{ const $=i=>document.getElementById(i), g=$('gsalir'); const vis=e=>e&&!e.hidden;
-  const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','fpick','hdet','paywall','exitask'].some(i=>vis($(i)));
+  const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','fpick','hdet','swov','paywall','exitask'].some(i=>vis($(i)));
   if(g.hidden===ini){ g.hidden=!ini; if(!ini) g.classList.remove('focus'); } },120);
 // ===== historial de partidas: se guarda en el aparato (no se borra al actualizar) =====
 const HKEY='dominoHistorial', HPP=4; let HP=0;
@@ -4659,7 +4673,7 @@ function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputed
   kids.forEach(c=>c.style.zoom=''); let k=1;
   for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
 function fitMenu(force){ fitKids(menu,force); }
-function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','fpick','hdet','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
+function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','fpick','hdet','swov','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
   const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
 window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500);
 // en cuanto se abre o cierra una pantalla, se ajusta al momento (si no, el primer toque caía en un botón que se movía)
@@ -4852,11 +4866,11 @@ cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu()
 /* ===== cuadros: nombres de las máquinas y activación ===== */
 const bnEl=document.getElementById('bnames'), payEl=document.getElementById('paywall');
 const soEl=document.getElementById('seatop'); let soSeat=0;
-function openOv(){ return [document.getElementById('exitask'),payEl,document.getElementById('hdet'),document.getElementById('fpick'),bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
+function openOv(){ return [document.getElementById('swov'),document.getElementById('exitask'),payEl,document.getElementById('hdet'),document.getElementById('fpick'),bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
 function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>x.offsetParent!==null||(x.id==='gsalir'&&!x.hidden)); }
 let ovFocus=0;
 function ovFoc(el,i){ const b=ovEls(el); if(!b.length) return; ovFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===ovFocus)); try{ b[ovFocus].focus({preventScroll:true}); }catch(_){} }
-['bnames','fpick','paywall','seatop'].forEach(id=>document.getElementById(id).addEventListener('focusin',e=>{ const el=document.getElementById(id), b=ovEls(el), i=b.indexOf(e.target); if(i>=0){ ovFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } }));
+['bnames','fpick','paywall','seatop','swov'].forEach(id=>document.getElementById(id).addEventListener('focusin',e=>{ const el=document.getElementById(id), b=ovEls(el), i=b.indexOf(e.target); if(i>=0){ ovFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } }));
 // --- nombres de las máquinas ---
 function openBots(){
   const rows=document.getElementById('bnrows'); rows.innerHTML='';
