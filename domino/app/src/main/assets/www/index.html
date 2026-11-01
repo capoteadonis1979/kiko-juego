@@ -365,6 +365,13 @@ body.remote #bigsort:active,body.remote #bigsort.down{box-shadow:inset 0 0 0 2px
 #bcafe{position:absolute;z-index:8;left:4px;bottom:4px;width:56px;font:800 12px var(--font);padding:6px 0;border-radius:12px;background:#6b3a1a;color:#fff6e0;border:2px solid #ffd23a;box-shadow:0 0 12px #ffd23a}
 body.remote #bcafe{left:auto;right:12px;bottom:auto;top:31px;width:auto;height:26px;padding:0 14px;font-size:15px;border-radius:13px}
 body.remote.cafeon #power{right:120px}
+#bcafe2{position:absolute;z-index:8;left:4px;bottom:44px;width:56px;font:800 12px var(--font);padding:6px 0;border-radius:12px;background:#6b3a1a;color:#fff6e0;border:2px solid #ffd23a;box-shadow:0 0 12px #ffd23a}
+body.remote #bcafe2{left:auto;right:124px;bottom:auto;top:31px;width:104px;height:26px;padding:0;font-size:15px;border-radius:13px}
+body.remote #bcafe{width:104px!important;padding:0!important}
+body.remote.cafe2on #power{right:240px}
+@media (orientation:portrait){ body.remote.cafeon #power,body.remote.cafe2on #power{right:12px}
+  body.remote #bcafe,body.remote #bcafe2{top:116px!important;height:38px!important;width:calc(50% - 21px)!important;font-size:17px!important;border-radius:12px!important;padding:0!important}
+  body.remote #bcafe{right:14px!important} body.remote #bcafe2{right:auto!important;left:14px!important} }
 #hdet{z-index:49}#hdet .ovbox{max-width:none;width:100%}
 #hdtab table{border-collapse:collapse;width:min(96vw,900px);font:600 15px var(--font);color:#fff6e0}
 #hdtab th{color:#ffd23a;font-size:14px;padding:4px 8px;border-bottom:2px solid #8a5a2a}#hdtab td{padding:3px 8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:center}
@@ -388,7 +395,7 @@ body.remote.cafeon #power{right:120px}
     <div id="tiles"></div>
     <div id="power" aria-label="Fuerza del golpe"><span id="powlbl">FUERZA</span><div id="powtrack"><i id="powcap"></i><i id="powfill"></i></div><b id="powpct">0</b></div>
     <div id="rack"></div>
-    <button id="bcafe" hidden>☕ CAFÉ</button>
+    <button id="bcafe" hidden>☕ YO</button><button id="bcafe2" hidden>☕ PAREJA</button>
     <button id="bigsort">⇅&nbsp; ORDENAR FICHAS &nbsp;⇅</button>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
     <button id="bvirar" hidden>MOSTRAR MIS FICHAS</button>
@@ -2881,7 +2888,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.49';
+const VERSION='v3.9.50';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3743,8 +3750,11 @@ function bonk(){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator()
 // carita: aparece con un ¡pum! delante de las fichas (que se quedan en el borde), en el medio del lugar de cada jugador
 // la carita sale encima de la foto del jugador (la foto sigue a sus fichas)
 // ===== el cafecito: con la barra al 70% el jugador lo pide, gasta toda su fuerza y se lo traen caliente =====
-function orderCafe(s){ if(G.state!=='play'||!G.energy||G.energy[s]<0.69) return false; G.cafe=G.cafe||[null,null,null,null]; if(G.cafe[s]) return false; G.cafeUsed=G.cafeUsed||[false,false,false,false]; if(G.cafeUsed[s]) return false; G.cafeUsed[s]=true;
-  G.energy[s]=0; G.cafe[s]={t:G.frame}; try{ initAudio(); if(AC){ const t=AC.currentTime; ping(t+0.55,2200,0.12,0.12); ping(t+0.62,1700,0.1,0.08); } }catch(_){} say(G.names[s]+' PIDIÓ UN CAFECITO ☕',80); broadcast(); return true; }
+// café a pedido: cada humano pide el suyo cuando quiera (1 vez por juego, o por torneo); si la pareja es bot, se lo pido yo
+function partnerBot(s){ const p=(s+2)%4; return G.mode==='parejas'&&isAct(p)&&!G.human[p]&&G.remote[p]==null?p:-1; }
+function cafeFree(s){ return s>=0&&G.state==='play'&&!(G.cafe&&G.cafe[s])&&!(G.cafeUsed&&G.cafeUsed[s]); }
+function orderCafe(s,ask){ if(G.state!=='play'||!G.energy||(!ask&&G.energy[s]<0.69)) return false; G.cafe=G.cafe||[null,null,null,null]; if(G.cafe[s]) return false; G.cafeUsed=G.cafeUsed||[false,false,false,false]; if(G.cafeUsed[s]) return false; G.cafeUsed[s]=true;
+  if(!ask) G.energy[s]=0; G.cafe[s]={t:G.frame}; try{ initAudio(); if(AC){ const t=AC.currentTime; ping(t+0.55,2200,0.12,0.12); ping(t+0.62,1700,0.1,0.08); } }catch(_){} say(G.names[s]+' PIDIÓ UN CAFECITO ☕',80); broadcast(); return true; }
 // los bots también piden su cafecito cuando les va bien: fuerza al 70%, van por encima de los demás (en puntos o con menos fichas)
 function botCafe(){ if(G.state!=='play'||G.fly||!G.energy||G.frame%30) return; G.cafe=G.cafe||[null,null,null,null];
   for(const s of ACT()){ if(G.human[s]||G.remote[s]!=null||G.cafe[s]||(G.cafeUsed&&G.cafeUsed[s])||(G.cafeWant&&!G.cafeWant[s])||G.energy[s]<0.69||G.cafe.some(c=>c&&G.frame-c.t<240)) continue;
@@ -4294,13 +4304,17 @@ function showPower(){ const e=myEnergy(), v=effPower();
   const pr=G.remoteMode?'width':'height', o=G.remoteMode?'height':'width';   // en el cel del jugador la barra va acostada arriba
   const pc=document.getElementById('powcap').style, pf=document.getElementById('powfill').style; pc[o]=''; pf[o]=''; pc[pr]=Math.round(e*100)+'%'; pf[pr]=Math.round(v*100)+'%';
   document.getElementById('powpct').textContent='NIVEL '+Math.round(e*10); powEl.classList.toggle('full',e>=0.999);
-  const cf=document.getElementById('bcafe'); if(cf){ const on=e>=0.69&&(G.remoteMode?G.rCafeOk!==false:(G.state==='play'&&G.human[0]&&!(G.cafe&&G.cafe[0])&&!(G.cafeUsed&&G.cafeUsed[0]))); cf.hidden=!on; document.body.classList.toggle('cafeon',on); } }
+  const cf=document.getElementById('bcafe'), cf2=document.getElementById('bcafe2'); if(cf){
+    const on=G.remoteMode?G.rCafeOk===true:(G.human[0]&&cafeFree(0)), on2=G.remoteMode?G.rCafePOk===true:(G.human[0]&&cafeFree(partnerBot(0)));
+    cf.hidden=!on; cf2.hidden=!on2; document.body.classList.toggle('cafeon',on||on2); document.body.classList.toggle('cafe2on',on2); } }
 function setPowerFromY(y){ const b=powTrack.getBoundingClientRect(); POWER=clamp(1-(y-b.top)/b.height,0,1); POWER=POWER>0.97?1:Math.round(POWER*20)/20; showPower(); try{ localStorage.setItem('dominoFuerza',String(POWER)); }catch(_){} }
 let powId=null;
 const powEnd=e=>{ if(e.pointerId===powId){ powId=null; try{ navigator.vibrate&&navigator.vibrate(10+Math.round(POWER*40)); }catch(_){} } };
 showPower();
 document.getElementById('bcafe').addEventListener('click',()=>{ initAudio(); try{ navigator.vibrate&&navigator.vibrate([20,60,20]); }catch(_){}
-  if(G.remoteMode){ netSend({t:'cafe'}); G.rEnergy=0; } else orderCafe(0); showPower(); });
+  if(G.remoteMode){ netSend({t:'cafe'}); G.rCafeOk=false; } else orderCafe(0,true); showPower(); });
+document.getElementById('bcafe2').addEventListener('click',()=>{ initAudio(); try{ navigator.vibrate&&navigator.vibrate([20,60,20]); }catch(_){}
+  if(G.remoteMode){ netSend({t:'cafe',p:1}); G.rCafePOk=false; } else { const p=partnerBot(0); if(p>=0) orderCafe(p,true); } showPower(); });
 const panel=document.getElementById('panel'), pangrid=document.getElementById('pangrid');
 let sayLast=-1e9;
 function openPanel(type){
@@ -4522,13 +4536,14 @@ const peers={};   // id de conexión → asiento
 function netSend(o){ try{ KikoApp.ctrlSendLine(JSON.stringify(o)); }catch(_){} }
 function sendTo(id,o){ try{ KikoApp.sendTo(id,JSON.stringify(o)); }catch(_){} }
 function broadcast(){
+  try{ showPower(); }catch(_){}
   if(!isTV) { renderHand(); return; }
   for(const id in peers){ const s=peers[id]; sendTo(+id,stateFor(s)); }
 }
 function stateFor(s){
   const turn=G.turn===s&&G.state==='play';
   const must=G.state==='play'&&G.turn===s&&!G.fly&&!(G.passT>0)&&!playable(s).length;
-  return {t:'state',seat:s,cafeOk:!(G.cafeUsed&&G.cafeUsed[s]),join:!!(G.joinWait&&G.joinWait[s]===true),mus:MUS,snd:SND,musv:MUSV,sndv:SNDV,song:SONGS[songIdx][0],must,over:!!G.over,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),virar:!!(G.state==='handover'&&G.revWait&&G.rev&&G.rev[s]==null),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
+  return {t:'state',seat:s,cafeOk:cafeFree(s),cafePOk:cafeFree(partnerBot(s)),join:!!(G.joinWait&&G.joinWait[s]===true),mus:MUS,snd:SND,musv:MUSV,sndv:SNDV,song:SONGS[songIdx][0],must,over:!!G.over,cntDone:!!(G.state==='handover'&&G.cnt&&G.cnt.done),virar:!!(G.state==='handover'&&G.revWait&&G.rev&&G.rev[s]==null),lobby:G.state==='menu'?{names:G.names,rem:G.remote.map(x=>x!=null),mode:G.mode,act:ACT()}:null,lib:libData(),energy:G.energy[s],hand:G.hands[s],ends:G.ends,turn,msg:G.state==='play'?(turn?(must?'NO LLEVAS: TOCA PARA PASAR':'TE TOCA: TOCA UNA FICHA'):'JUEGA '+G.names[G.turn]):G.msg,
     score:G.mode==='sencillo'?('TÚ '+dispP()[s]+' · MÁX '+Math.max(...dispP())):(s%2===0?dispS()[0]+' – '+dispS()[1]:dispS()[1]+' – '+dispS()[0])};
 }
 // en la tele: llega un móvil
@@ -4555,7 +4570,7 @@ window.kikoMsg=(id,line)=>{
   if(o.t==='exp'){ expShow(seat,o.k?1:0); return; }
   if(o.t==='virar'){ virar(seat); return; }
   if(o.t==='pass'){ doPass(seat,o.n|0,o.st); return; }
-  if(o.t==='cafe'){ orderCafe(seat); return; }
+  if(o.t==='cafe'){ if(o.p){ const p=partnerBot(seat); if(p>=0) orderCafe(p,true); } else orderCafe(seat,true); return; }
   if(o.t==='ctl'){ if(o.a==='song'){ if(!MUS) setMusV(4); songNext(1); return; } if(o.a==='mus'){ setMus(!!o.v); return; } if(o.a==='snd'){ setSnd(!!o.v); return; } if(o.a==='musv'){ setMusV(+o.v); return; } if(o.a==='sndv'){ setSndV(+o.v); return; } if(o.a==='pause'){ G.paused=true; G.pausedBy=seat; say(G.names[seat]+' PUSO PAUSA',99999); return; } if(o.a==='resume'){ if(pauseEl.hidden){ G.paused=false; } G.msgT=0; return; }
     if(o.a==='restart'||o.a==='new') gameAction(o.a); else if(o.a==='next'&&G.state==='handover'&&G.cnt&&G.cnt.done) nextHandOrMenu(); return; }
   if(o.t==='seat'){ if(G.state==='menu'&&isTV){ const to=o.s|0, from=peers[id]; if(to>=0&&to<4&&to!==from&&isAct(to)) swapSeats(from,to); } return; }
@@ -4580,7 +4595,7 @@ window.kikoFromTV=(line)=>{
     document.getElementById('joinbox').hidden=!o.join; G.rMus=o.mus!==false; G.rSnd=o.snd!==false; if(o.musv!=null) G.rMusV=o.musv; if(o.sndv!=null) G.rSndV=o.sndv; if(o.song&&o.song!==G.rSong){ G.rSong=o.song; if(!pauseEl.hidden) musLabel(); }
     if(o.lobby&&G.remoteMode){ renderSeatBox(o.lobby,o.seat); seatbox.hidden=false; } else seatbox.hidden=true;
     if(o.cntDone&&!G.rCntDone) setTimeout(()=>openLibreta(true),400); G.rCntDone=!!o.cntDone; G.rVirar=!!o.virar;
-    G.rEnergy=+o.energy||0; G.rCafeOk=o.cafeOk!==false; G.rEnds=o.ends; G.rTurn=o.turn; G.rMsg=o.msg; G.rScore=o.score;
+    G.rEnergy=+o.energy||0; G.rCafeOk=o.cafeOk===true; G.rCafePOk=o.cafePOk===true; G.rEnds=o.ends; G.rTurn=o.turn; G.rMsg=o.msg; G.rScore=o.score;
     document.getElementById('rends').textContent=o.ends?('A los '+o.ends[0]+'  ·  a los '+o.ends[1]):'Mesa vacía';
     if(o.turn&&!wasTurn){ try{ navigator.vibrate&&navigator.vibrate([40,60,40]); }catch(_){} }
     renderHand();
