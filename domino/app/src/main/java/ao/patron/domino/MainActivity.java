@@ -141,7 +141,56 @@ public class MainActivity extends Activity {
     private boolean tienePermMusica() { return Build.VERSION.SDK_INT < 23 || checkSelfPermission(permMusica()) == android.content.pm.PackageManager.PERMISSION_GRANTED; }
     private android.content.SharedPreferences prefs() { return getSharedPreferences("domino", MODE_PRIVATE); }
     private void cancionesLocales(boolean pedir) {
-        if (!pedir) { String t = prefs().getString("carpetaMusica", null); if (t != null) listarCarpeta(Uri.parse(t), false); return; }
+        if (!pedir) {
+            String m = prefs().getString("carpetaMS", null);
+            if (m != null) { if (tienePermMusica()) cargarCarpetaMS(m, false); return; }
+            String t = prefs().getString("carpetaMusica", null); if (t != null) listarCarpeta(Uri.parse(t), false); return;
+        }
+        // selector propio: solo se ven las carpetas que tienen música (nada de fotos ni videos)
+        if (!tienePermMusica() && Build.VERSION.SDK_INT >= 23) { requestPermissions(new String[]{ permMusica() }, PERM_MUS); return; }
+        listarCarpetasMS();
+    }
+    // carpeta de cada canción según Android (MediaStore): solo archivos de audio de 30 s o más
+    private String carpetaDe(android.database.Cursor c, int iRel, int iData) {
+        String f = null;
+        try { if (iRel >= 0) f = c.getString(iRel); } catch (Exception ignored) { }
+        if ((f == null || f.isEmpty()) && iData >= 0) { try { String d = c.getString(iData); if (d != null) { int k = d.lastIndexOf('/'); f = k > 0 ? d.substring(0, k) : d; } } catch (Exception ignored) { } }
+        if (f == null) f = ""; while (f.endsWith("/")) f = f.substring(0, f.length() - 1);
+        f = f.replaceFirst("^/storage/emulated/0/", "").replaceFirst("^/sdcard/", "");
+        return f.isEmpty() ? "Música" : f;
+    }
+    private android.database.Cursor cursorAudio() {
+        java.util.ArrayList<String> cols = new java.util.ArrayList<>(java.util.Arrays.asList(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DATA));
+        if (Build.VERSION.SDK_INT >= 29) cols.add("relative_path");
+        return getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, cols.toArray(new String[0]),
+                MediaStore.Audio.Media.DURATION + ">=30000", null, MediaStore.Audio.Media.DISPLAY_NAME + " ASC");
+    }
+    private void listarCarpetasMS() {
+        new Thread(() -> {
+            java.util.TreeMap<String, Integer> m = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER); int tot = 0;
+            try (android.database.Cursor c = cursorAudio()) {
+                if (c != null) { int iRel = c.getColumnIndex("relative_path"), iData = c.getColumnIndex(MediaStore.Audio.Media.DATA);
+                    while (c.moveToNext()) { String f = carpetaDe(c, iRel, iData); Integer n = m.get(f); m.put(f, n == null ? 1 : n + 1); tot++; } }
+            } catch (Exception ignored) { }
+            org.json.JSONArray a = new org.json.JSONArray();
+            try { for (java.util.Map.Entry<String, Integer> e : m.entrySet()) { JSONObject o = new JSONObject(); o.put("f", e.getKey()); o.put("n", e.getValue()); a.put(o); } } catch (Exception ignored) { }
+            final String js = a.toString(); final int t = tot;
+            runOnUiThread(() -> js("window.kikoFolders&&kikoFolders(" + JSONObject.quote(js) + "," + t + ")"));
+        }).start();
+    }
+    private void cargarCarpetaMS(final String carpeta, final boolean pedido) {
+        new Thread(() -> {
+            java.util.ArrayList<Uri> us = new java.util.ArrayList<>(); java.util.ArrayList<String> ns = new java.util.ArrayList<>();
+            try (android.database.Cursor c = cursorAudio()) {
+                if (c != null) { int iRel = c.getColumnIndex("relative_path"), iData = c.getColumnIndex(MediaStore.Audio.Media.DATA);
+                    while (c.moveToNext() && us.size() < 300) { if (!"*".equals(carpeta) && !carpeta.equalsIgnoreCase(carpetaDe(c, iRel, iData))) continue;
+                        us.add(android.content.ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, c.getLong(0))); ns.add(c.getString(1)); } }
+            } catch (Exception ignored) { }
+            enviarLocales(us, ns, pedido ? "si" : "auto");
+        }).start();
+    }
+    private void elegirCarpetaMS(String carpeta) { prefs().edit().putString("carpetaMS", carpeta).apply(); cargarCarpetaMS(carpeta, true); }
+    private void viejoSelector() {
         try { Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE); startActivityForResult(i, REQ_CARPETA); return; } catch (Exception ignored) { }
         try { Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("audio/*"); i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); startActivityForResult(i, REQ_ARCHIVOS); return; } catch (Exception ignored) { }
         try { Intent i = new Intent(Intent.ACTION_GET_CONTENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("audio/*"); i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); startActivityForResult(Intent.createChooser(i, "Elige la música"), REQ_ARCHIVOS); return; } catch (Exception ignored) { }
@@ -192,7 +241,7 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
         super.onRequestPermissionsResult(code, perms, res);
-        if (code == PERM_MUS) { if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) musicaDelSistema(); else js("window.kikoLocal&&kikoLocal('[]','no')"); }
+        if (code == PERM_MUS) { if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) listarCarpetasMS(); else js("window.kikoLocal&&kikoLocal('[]','no')"); }
     }
 
     // ================= MÚSICA =================
@@ -471,6 +520,8 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void localSongs(boolean pedir) { runOnUiThread(() -> cancionesLocales(pedir)); }
+        @JavascriptInterface
+        public void musicFolder(String f) { if (f != null) runOnUiThread(() -> elegirCarpetaMS(f)); }
 
         @JavascriptInterface
         public void showKeyboard() {
