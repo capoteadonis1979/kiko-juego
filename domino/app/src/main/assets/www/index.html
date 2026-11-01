@@ -2872,7 +2872,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.46';
+const VERSION='v3.9.47';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3215,7 +3215,10 @@ const PH={"smokeE":{"ox":68,"oy":99,"sw":675,"sh":644,"u":"data:image/webp;base6
 const PI_={}, PSH={}, SHP=14; window.__PI=PI_;
 (function phLoad(){ for(const k in PH){ const m=PH[k]; if(m.ox===undefined){ m.ox=0; m.oy=0; m.sw=m.w; m.sh=m.h; }
   const i=new Image(); i.onload=()=>{ PI_[k]=i; if(k!=='glass'&&k!=='cigar') try{ const c=document.createElement('canvas'); c.width=i.width+SHP*2; c.height=i.height+SHP*2; const x=c.getContext('2d');
-      x.filter='blur(5px)'; x.drawImage(i,SHP,SHP); x.filter='none'; x.globalCompositeOperation='source-in'; x.fillStyle='#000'; x.fillRect(0,0,c.width,c.height); PSH[k]=c; }catch(_){} };
+      // sombra difuminada a mano (achicar y volver a agrandar): en algunas teles el blur del canvas no existe y la sombra salía dura, como un reflejo
+      const q=8, sm=document.createElement('canvas'); sm.width=Math.max(1,Math.round(c.width/q)); sm.height=Math.max(1,Math.round(c.height/q)); const y=sm.getContext('2d');
+      y.imageSmoothingEnabled=true; y.drawImage(i,SHP/q,SHP/q,i.width/q,i.height/q); y.globalCompositeOperation='source-in'; y.fillStyle='#000'; y.fillRect(0,0,sm.width,sm.height);
+      x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high'; x.drawImage(sm,0,0,c.width,c.height); PSH[k]=c; }catch(_){} };
   i.src=m.u; } })();
 // dibuja la foto k con la coordenada (X0,Y0) de la foto en el origen actual
 function phDraw(c,k,X0,Y0){ const m=PH[k]; c.drawImage(PI_[k],m.ox-X0,m.oy-Y0,m.sw,m.sh); }
@@ -3230,8 +3233,8 @@ function tube(c,sx,sy,dx,dy,w,len,col,shadow){ c.save(); c.translate(sx,sy); c.r
 const SLV_B=['#2c5aa0','#163668'], SLV_R=['#8a2a2a','#4a1212'];
 // brazo con foto: (x,y) donde va el punto (X0,Y0) de la foto; rot, escala S; sl=[sx,sy,dx,dy,w,len] en px de la foto
 function phArm(k,x,y,rot,S,X0,Y0,sl,col,o){ o=o||{}; const lift=o.lift||0, fx=o.flip?-1:1, c=ctx;
-  c.save(); c.globalAlpha=0.42-0.16*lift; c.translate(x+7+18*lift,y+9+20*lift); c.rotate(rot); c.scale(S*fx,S); phShadow(c,k,X0,Y0);
-  c.globalAlpha=0.24-0.08*lift; tube(c,sl[0]-X0,sl[1]-Y0,sl[2],sl[3],sl[4],sl[5],col,true); c.restore();
+  c.save(); c.globalAlpha=0.26-0.1*lift; c.translate(x+5+18*lift,y+6+20*lift); c.rotate(rot); c.scale(S*fx,S); phShadow(c,k,X0,Y0);
+  c.globalAlpha=0.16-0.06*lift; tube(c,sl[0]-X0,sl[1]-Y0,sl[2],sl[3],sl[4],sl[5],col,true); c.restore();
   c.save(); c.translate(x,y); c.rotate(rot); c.scale(S*fx,S);
   c.save(); if(o.clip){ c.beginPath(); c.rect(-5000,-5000,10000,10000); o.clip(c,X0,Y0); c.clip('evenodd'); } phDraw(c,k,X0,Y0); c.restore();
   tube(c,sl[0]-X0,sl[1]-Y0,sl[2],sl[3],sl[4],sl[5],col,false); c.restore(); }
