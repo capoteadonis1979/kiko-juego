@@ -2872,7 +2872,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.44';
+const VERSION='v3.9.45';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3579,8 +3579,8 @@ function doPass(seat,n,st){
   n=n>=2?2:1; G.lack=G.lack||[[],[],[],[]]; if(G.ends) G.lack[seat].push(G.ends[0],G.ends[1]); G.passes++; G.energy[seat]=Math.max(0,G.energy[seat]-0.2);   // pasar baja 2 niveles
   // regla de la salida (opción): pasa el 1º después de la salida = 20 tantos para los que salieron; si pasa también el 2º (el compañero) se anulan
   if(G.optSal&&G.sal&&G.mode!=='sencillo'&&ACT().length===4){ G.sal.n++; const tm=teamOf(G.sal.seat);
-    if(G.sal.n===1){ G.scores[tm]+=20; G.sal.got=true; const S=G.sal.seat; G.salFx={t:G.frame,m:{[S]:1,[(S+2)%4]:1,[seat]:-1}}; }   // se alegran los que salieron, triste el que no lleva
-    else { if(G.sal.got) G.scores[tm]-=20; const S=G.sal.seat, o=(S+1)%4; G.salFx={t:G.frame,m:{[S]:-1,[(S+2)%4]:-1,[o]:0.7,[(o+2)%4]:0.7}}; G.sal=null; } }   // se anulan: alivio para los otros
+    if(G.sal.n===1){ G.scores[tm]+=20; G.sal.got=true; G.log.push({n:G.handNo,w:tm,pts:20,sal:1,tot:G.scores.slice()}); const S=G.sal.seat; G.salFx={t:G.frame,m:{[S]:1,[(S+2)%4]:1,[seat]:-1}}; }   // se alegran los que salieron, triste el que no lleva
+    else { if(G.sal.got){ G.scores[tm]-=20; G.log.push({n:G.handNo,w:tm,pts:-20,sal:2,tot:G.scores.slice()}); } const S=G.sal.seat, o=(S+1)%4; G.salFx={t:G.frame,m:{[S]:-1,[(S+2)%4]:-1,[o]:0.7,[(o+2)%4]:0.7}}; G.sal=null; } }   // se anulan: alivio para los otros
   else G.sal=null;
   G.pc[seat]=(G.pc[seat]||0)+1; const hard=(st==='toque'||st==='palma')&&G.pc[seat]>=3;   // al 3er pase de la mano: puñetazo con empingue
   G.fist={seat,n,t:G.frame,tg:fistTarget(seat),hard,st,nx:nextAct(seat)};
@@ -4291,7 +4291,8 @@ function renderLibreta(fresh){
   let h='<h4>Partido '+d.match+' · a '+d.target+'</h4><table><tr><th></th>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>';
   d.log.forEach((e,i)=>{ const last=i===d.log.length-1&&fresh;
     h+='<tr><td class="n">'+e.n+'</td>'+cols.map((_,c)=>{ const won=d.sen?e.w===c:e.w===c; const txt=e.w<0?(c===0?'tranque':''):won?(e.tot[c]+(e.pts?'':'')):'';
-      return '<td'+(last&&won?' class="new"':'')+'>'+(won?('<span style="font-size:15px;color:#4a6a2a">+'+e.pts+'</span> '+e.tot[c]):txt)+'</td>'; }).join('')+'</tr>';
+      const lab=e.sal===1?' <small style="color:#8a4a1a">salida (pasó)</small>':e.sal===2?' <small style="color:#8a4a1a">se anula la salida</small>':'';
+      return '<td'+(last&&won?' class="new"':'')+'>'+(won?('<span style="font-size:15px;color:'+(e.pts<0?'#b03a2a':'#4a6a2a')+'">'+(e.pts<0?'':'+')+e.pts+'</span> '+e.tot[c]+lab):txt)+'</td>'; }).join('')+'</tr>';
     if(e.fin) h+='<tr><td></td><td colspan="'+cols.length+'" class="fin">¡Ganan '+esc(cols[e.fin.wi])+'!'+(e.fin.pollona?' ¡POLLONA!':'')+'</td></tr>';
   });
   h+='</table><h4 style="margin-top:8px">Partidos ganados</h4><table><tr>'+cols.map((c,i)=>'<td style="text-align:left">'+esc(c)+': <span class="palos">'+palos(d.wins[i]||0)+'</span></td>').join('')+'</tr></table>';
