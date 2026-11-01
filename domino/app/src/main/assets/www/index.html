@@ -2891,7 +2891,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.51';
+const VERSION='v3.9.52';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4688,7 +4688,8 @@ let lobSel=null;
 function swapSeats(a,b){
   if(a==null||b==null||a===b) return;
   const sw=arr=>{ const t=arr[a]; arr[a]=arr[b]; arr[b]=t; };
-  [G.names,G.photos,G.remote,G.human].forEach(sw);
+  [G.names,G.photos,G.remote,G.human,BOTN,BOTFACE].forEach(sw);   // el bot también se lleva su nombre y su cara: es el mismo en todas las partidas
+  try{ localStorage.setItem('dominoBots',JSON.stringify(BOTN)); localStorage.setItem('dominoBotFace',JSON.stringify(BOTFACE)); }catch(_){}
   for(const id in peers){ if(peers[id]===a) peers[id]=b; else if(peers[id]===b) peers[id]=a; }
   for(let s=0;s<4;s++) if(G.remote[s]==null){ G.human[s]=false; G.names[s]=botName(s); }
   G.wins=[0,0,0,0]; G.matchNo=0; updateTvMenu(); broadcast();
