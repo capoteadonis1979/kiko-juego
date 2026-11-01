@@ -87,9 +87,9 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #pbox{max-height:none}
 #bmesa.focus{outline:4px solid var(--gold);outline-offset:2px;background:#5a3a1a}
 #joinbox{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:22;background:rgba(20,40,70,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:10px}
-#salbox{position:absolute;left:14px;right:14px;top:64px;height:42px;box-sizing:border-box;z-index:21;background:rgba(20,40,70,.97);border:2px solid var(--gold);border-radius:12px;display:flex;flex-direction:row;align-items:center;gap:10px;padding:3px 6px;text-align:center}
-#salbox b{color:var(--gold);font-size:17px;white-space:nowrap;padding-left:6px} #salbox div{display:flex;gap:10px;flex:1;height:100%} #salbox button{flex:1;font:800 16px var(--font);padding:0 6px;border-radius:12px;border:3px solid #1e7a48;background:#2fbf71;color:#fff}
-@media (orientation:portrait){ #salbox{top:170px;height:auto;flex-direction:column;padding:10px} #salbox div{width:100%} #salbox button{padding:12px 6px} }
+#salbox{position:absolute;left:12px;right:12px;top:28px;height:34px;box-sizing:border-box;z-index:21;background:rgba(20,40,70,.97);border:2px solid var(--gold);border-radius:12px;display:flex;flex-direction:row;align-items:center;gap:10px;padding:3px 6px;text-align:center}
+#salbox b{color:var(--gold);font-size:15px;white-space:nowrap;padding-left:6px} #salbox div{display:flex;gap:10px;flex:1;height:100%} #salbox button{flex:1;font:800 14px var(--font);padding:0 6px;border-radius:12px;border:3px solid #1e7a48;background:#2fbf71;color:#fff}
+body.remote #power{display:none!important}   /* la barra de fuerza ya no se muestra en el teléfono: ahí va ¿QUIÉN SALE? */
 #joinbox b{color:var(--gold);font-size:20px} #joinbox div{display:flex;gap:14px} #joinbox button{font:700 18px var(--font);padding:14px 20px;border-radius:14px;border:3px solid #8a5a2a;background:#f6f0e2;color:#2a1608}
 #pconf{margin:0;color:#ffd9a0;font-size:15px}
 #bmesa{position:fixed;left:8px;bottom:4px;z-index:31;font:700 13px var(--font);background:rgba(0,0,0,.55);color:#fff;border:2px solid #8a5a2a;border-radius:10px;padding:4px 10px}
@@ -2897,7 +2897,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.53';
+const VERSION='v3.9.54';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
