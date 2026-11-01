@@ -2872,7 +2872,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.45';
+const VERSION='v3.9.46';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3068,12 +3068,13 @@ const G=window.__D={state:'menu',hands:[[],[],[],[]],chain:[],ends:null,turn:0,p
 function newDeck(){ const d=[]; for(let a=0;a<=9;a++) for(let b=a;b<=9;b++) d.push([a,b]); for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; } return d; }
 function canPlay(t){ if(!G.ends) return ['L']; const s=[]; if(t[0]===G.ends[0]||t[1]===G.ends[0]) s.push('L'); if(t[0]===G.ends[1]||t[1]===G.ends[1]) s.push('R'); return s; }
 function playable(seat){ return G.hands[seat].filter(t=>canPlay(t).length); }
-function startMatch(){ G.mWin=[0,0]; G.mLose=[0,0]; G.rum=1; G.burn=0; G.ash=0; G.log=[]; G.matchNo=(G.matchNo||0)+1; G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.over=false; dealHand(); }
+function startMatch(){ G.cafeN=[0,0,0,0]; G.cafeWant=[0,1,2,3].map(()=>Math.random()<0.55);   // en cada partido, cada bot pide como mucho 1 café, y no siempre
+ G.mWin=[0,0]; G.mLose=[0,0]; G.rum=1; G.burn=0; G.ash=0; G.log=[]; G.matchNo=(G.matchNo||0)+1; G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.over=false; dealHand(); }
 function dealHand(){
   try{ if(!G.remoteMode) libEl.hidden=true; }catch(_){}
   const d=newDeck(), A=ACT(); for(let s=0;s<4;s++){ const k=A.indexOf(s); G.hands[s]=k<0?[]:d.slice(k*10,k*10+10); }
   if(G.joinWait) for(let q=0;q<4;q++) if(G.joinWait[q]&&G.remote[q]!=null){ G.joinWait[q]=false; G.human[q]=true; }
-  G.passT=0; G.fist=null; G.cnt=null; G.pend=null; G.phr=null; G.salFx=null; G.slamN=[0,0,0,0]; G.lack=[[],[],[],[]]; G.cafe=[null,null,null,null]; G.cafeN=[0,0,0,0]; G.lastPlayed=[]; G.trq=null; G.rev=null; G.revWait=false; drumStop(); G.pc=[0,0,0,0]; G.drink=null; G.smoke=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
+  G.passT=0; G.fist=null; G.cnt=null; G.pend=null; G.phr=null; G.salFx=null; G.slamN=[0,0,0,0]; G.lack=[[],[],[],[]]; G.cafe=[null,null,null,null]; G.lastPlayed=[]; G.trq=null; G.rev=null; G.revWait=false; drumStop(); G.pc=[0,0,0,0]; G.drink=null; G.smoke=null; if(G.rum<0.15) G.rum=1; if(G.burn>=1){ G.burn=0; G.ash=0; }
   G.chain=[]; G.ends=null; G.passes=0; G.handNo++; G.anim=[]; G.fly=null; G.fallT=-1; G.cigT=-1; G.energy=[0,0,0,0]; G.fallHold=false; G.megaT=-1;   // se recogen la botella y el tabaco
   if(G.lastWinner<0){
     // primera mano: sale quien tenga el doble más alto
@@ -3730,7 +3731,7 @@ function orderCafe(s){ if(G.state!=='play'||!G.energy||G.energy[s]<0.69) return 
   G.energy[s]=0; G.cafe[s]={t:G.frame}; try{ initAudio(); if(AC){ const t=AC.currentTime; ping(t+0.55,2200,0.12,0.12); ping(t+0.62,1700,0.1,0.08); } }catch(_){} say(G.names[s]+' PIDIÓ UN CAFECITO ☕',80); broadcast(); return true; }
 // los bots también piden su cafecito cuando les va bien: fuerza al 70%, van por encima de los demás (en puntos o con menos fichas)
 function botCafe(){ if(G.state!=='play'||G.fly||!G.energy||G.frame%30) return; G.cafe=G.cafe||[null,null,null,null]; G.cafeN=G.cafeN||[0,0,0,0];
-  for(const s of ACT()){ if(G.human[s]||G.remote[s]!=null||G.cafe[s]||G.cafeN[s]>=1||G.energy[s]<0.69||G.cafe.some(c=>c&&G.frame-c.t<240)) continue;
+  for(const s of ACT()){ if(G.human[s]||G.remote[s]!=null||G.cafe[s]||G.cafeN[s]>=1||(G.cafeWant&&!G.cafeWant[s])||G.energy[s]<0.69||G.cafe.some(c=>c&&G.frame-c.t<240)) continue;
     const n=G.hands[s].length, others=ACT().filter(q=>q!==s&&!(G.mode==='parejas'&&q===(s+2)%4));
     const fewer=others.every(q=>G.hands[q].length>n);
     const pts=G.mode==='parejas'?G.scores[teamOf(s)]>G.scores[1-teamOf(s)]:others.every(q=>G.pscores[s]>G.pscores[q]);
