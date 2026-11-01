@@ -439,6 +439,7 @@ body.remote #bigsort:active,body.remote #bigsort.down{box-shadow:inset 0 0 0 2px
       <ul>
         <li><b>Toca una ficha</b> (un clic) para ponerla en la mesa sin golpe.</li>
         <li><b>Desliza la ficha hacia arriba</b> para tirarla con <b>golpetazo</b>, con la fuerza que tengas acumulada.</li>
+        <li><b>Desliza la ficha hacia abajo</b> para ponerla <b>suave, con estilo</b>: si su sitio queda cerca de ti la pones tú con la mano; si queda del lado de tu compañero, la deslizas por la mesa y él la coge y la pone.</li>
         <li>Si casa por los dos lados te pregunta a qué número ponerla. Si los dos extremos son el <b>mismo número</b> no pregunta: la pone sola donde mejor cabe.</li>
         <li>Si no casa, se iluminan las fichas que sí puedes jugar.</li>
         <li>La barra <b>FUERZA</b> tiene <b>10 niveles</b>: cada ficha que pones sube uno y si <b>pasas baja 2</b>. Empieza en 0 cada mano. Con más fuerza la ficha cae más duro, levanta polvo y el vaso de ron se tambalea. La ficha con la que te pegas pega el doble.</li>
@@ -2867,7 +2868,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.38';
+const VERSION='v3.9.39';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3093,7 +3094,7 @@ function leadMult(seat){
   let my,opp; if(G.mode==='sencillo'){ my=G.pscores[seat]; opp=Math.max(...ACT().filter(i=>i!==seat).map(i=>G.pscores[i])); } else { my=G.scores[teamOf(seat)]; opp=G.scores[1-teamOf(seat)]; }
   const d=my-opp; return d>0?1+Math.min(0.5,d/80):d<0?Math.max(0.7,1+d/150):1;
 }
-function doPlay(seat,tile,side,force=0.5,slm=0,noPh=false){
+function doPlay(seat,tile,side,force=0.5,slm=0,noPh=false,soft=false){
   if(G.state!=='play'||seat!==G.turn||G.fly||(G.pend&&!noPh)) return false;
   const h=G.hands[seat], idx=h.findIndex(t=>same(t,tile)); if(idx<0) return false;
   const opts=canPlay(h[idx]); if(!opts.length) return false;
@@ -3109,7 +3110,7 @@ function doPlay(seat,tile,side,force=0.5,slm=0,noPh=false){
   item.seat=seat; item.dbl=t[0]===t[1];
   G.energy[seat]=clamp(G.energy[seat]+0.1,0,1);   // 10 niveles: cada ficha puesta sube uno (no se gasta al pegar)
   slm=slm>0?Math.max(G.energy[seat],slm>=2?0.6:0):0;   // el golpetazo pega con todo el nivel acumulado (el bot, cuando decide tirar duro, con fuerza)
-  if(slm) force=Math.max(force,slm); G.fly={item,seat,t:0,dur:slm>0.5?16:18+Math.round((1-force)*14),force,slam:slm}; G.passes=0;
+  if(slm) force=Math.max(force,slm); if(soft){ slm=0; force=0.06; } G.fly={item,seat,t:0,dur:soft?66:(slm>0.5?16:18+Math.round((1-force)*14)),force,slam:slm,soft:!!soft}; G.passes=0;
   slide(0.12);
   return true;
 }
@@ -4022,10 +4023,30 @@ function drawChainLayer(){
     const f=G.fly, it=f.item, p=L[G.chain.indexOf(it)];
     const k=clamp(f.t/f.dur,0,1), e=1-Math.pow(1-k,3);
     const from=seatPos(f.seat), tx=ox+p.x*fit, ty=oy+p.y*fit;
+    if(f.soft){ drawSoft(f,p,from,tx,ty,fit); return; }
     const x=from.x+(tx-from.x)*e, y=from.y+(ty-from.y)*e-Math.sin(k*Math.PI)*60*(0.5+f.force);
     const sc=1+Math.sin(k*Math.PI)*0.35;
     ctx.save(); ctx.translate(x,y); ctx.rotate(p.ang+(1-e)*(f.seat%2?2.4:-2.4)); drawTile(ctx,p.a,p.b,TL*fit*sc,TW*fit*sc,true); ctx.restore();
   }
+}
+// ficha puesta suave: si queda del lado del compañero, se la desliza por la mesa y él la pone con la mano; si no, la pone uno mismo
+function drawHand(x,y,ang,al){ ctx.save(); ctx.globalAlpha=al; ctx.translate(x,y); ctx.rotate(ang); ctx.font='34px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🤏',0,0); ctx.restore(); }
+function drawSoft(f,p,from,tx,ty,fit){
+  const k=clamp(f.t/f.dur,0,1), mate=(f.seat+2)%4, mp=seatPos(mate), cx=VW/2, cy=VH/2;
+  if(f.via==null){ const dS=Math.hypot(tx-from.x,ty-from.y), dM=Math.hypot(tx-mp.x,ty-mp.y); f.via=dM<dS&&isAct(mate)?mate:f.seat; }
+  const ease=u=>u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2, ang0=f.seat%2?Math.PI/2:0;
+  let x,y,a,lift=0,hx=null,hy=null,hseat=f.seat;
+  if(f.via===f.seat){   // la pone él mismo con la mano, despacio
+    const e=ease(k); x=from.x+(tx-from.x)*e; y=from.y+(ty-from.y)*e; a=ang0+(p.ang-ang0)*e; lift=Math.sin(k*Math.PI)*14; hx=x; hy=y-lift;
+  } else {             // se desliza por la mesa hasta el compañero y él la coge y la pone
+    const P={x:mp.x+(cx-mp.x)*0.28, y:mp.y+(cy-mp.y)*0.28};
+    if(k<0.48){ const u=k/0.48, e=1-Math.pow(1-u,2); x=from.x+(P.x-from.x)*e; y=from.y+(P.y-from.y)*e; a=ang0+e*1.2; }
+    else { const u=(k-0.48)/0.52, e=ease(u); x=P.x+(tx-P.x)*e; y=P.y+(ty-P.y)*e; a=ang0+1.2+(p.ang-ang0-1.2)*e; lift=Math.sin(u*Math.PI)*14; hx=x; hy=y-lift; hseat=mate; }
+  }
+  ctx.save(); ctx.fillStyle='rgba(0,0,0,.25)'; ctx.translate(x+3+lift*0.3,y+4); ctx.rotate(a); ctx.fillRect(-TL*fit/2,-TW*fit/2,TL*fit,TW*fit); ctx.restore();   // sombra en el paño
+  ctx.save(); ctx.translate(x,y-lift); ctx.rotate(a); drawTile(ctx,p.a,p.b,TL*fit,TW*fit,true); ctx.restore();
+  if(hx!=null){ const sp=seatPos(hseat), ha=Math.atan2(hy-sp.y,hx-sp.x)-Math.PI/2, al=k>0.9?(1-k)/0.1:1;
+    drawHand(hx-Math.sin(ha)*-10,hy+Math.cos(ha)*-10,ha+Math.PI,al); }
 }
 function seatPos(s){ return [{x:VW/2,y:VH-36},{x:VW-40,y:VH/2},{x:VW/2,y:36},{x:40,y:VH/2}][s]; }   // todas las fichas desde la línea blanca hacia dentro
 function drawSeat(s){
@@ -4114,9 +4135,10 @@ function bindTile(el,tw,gap,x0){
     if(e.pointerId!==pid) return;
     const dx=e.clientX-sx, dy=e.clientY-sy, now=performance.now();
     if(now>lastT){ vy=(e.clientY-lastY)/(now-lastT)*0.6+vy*0.4; lastY=e.clientY; lastT=now; }
-    if(!mode&&Math.hypot(dx,dy)>16){ clearInterval(holdTm); if(charged&&!(dy<0&&Math.abs(dy)>Math.abs(dx))) setLvl(0); mode=Math.abs(dy)>Math.abs(dx)&&dy<0?'throw':'sort'; moved=true; el.classList.add('drag'); }
+    if(!mode&&Math.hypot(dx,dy)>16){ clearInterval(holdTm); if(charged&&!(dy<0&&Math.abs(dy)>Math.abs(dx))) setLvl(0); mode=Math.abs(dy)>Math.abs(dx)?(dy<0?'throw':'soft'):'sort'; moved=true; el.classList.add('drag'); }
     if(mode==='throw') el.style.transform='translate('+dx*0.3+'px,'+Math.min(0,dy)+'px) rotate('+dx*0.05+'deg)';
     if(mode==='sort'){ el.style.left=(baseLeft+dx)+'px'; }
+    if(mode==='soft') el.style.transform='translate(0,'+Math.min(28,Math.max(0,dy)*0.5)+'px)';
   });
   const up=e=>{
     if(e.pointerId!==pid) return; pid=null; clearInterval(holdTm); el.classList.remove('drag'); const lvl=charged; setLvl(0);
@@ -4132,6 +4154,14 @@ function bindTile(el,tw,gap,x0){
         sel=null; return;
       }
       el.style.transform=''; if(dy<-50&&!myTurn()) flashMsg('Espera tu turno'); else if(dy<-50) noFit();
+      return;
+    }
+    if(mode==='soft'){   // deslizar hacia abajo: la ficha se pone suave, con la mano (o se la pasa al compañero si queda de su lado)
+      el.style.transform='';
+      if(dy>26&&myTurn()&&myOpts(el._t).length){ const o=myOpts(el._t);
+        const go=side=>{ el.classList.add('fly'); el.style.transform='translate(0,-'+(tilesEl.clientHeight+200)+'px)'; throwTile(el._t,side,0.06,0,true); try{ navigator.vibrate&&navigator.vibrate([10,40,10]); }catch(_){} };
+        if(o.length>1) askSide(el._t,0,go); else go(o[0]); sel=null; return; }
+      if(dy>26&&!myTurn()) flashMsg('Espera tu turno'); else if(dy>26) noFit();
       return;
     }
     if(mode==='sort'){
@@ -4165,9 +4195,9 @@ let hintUntil=0;
 // tocó una ficha que no casa: avisar y enseñar un momento las que sí sirven
 function noFit(){ hintUntil=performance.now()+2600; try{ navigator.vibrate&&navigator.vibrate([60,40,60]); }catch(_){} renderHand(); flashMsg('Esa no casa · mira las que brillan'); setTimeout(renderHand,2700); }
 function flashMsg(m){ turnmsg.textContent=m; setTimeout(()=>renderHand(),1200); }
-function throwTile(t,side,force,slm){
-  if(G.remoteMode){ netSend({t:'play',tile:t,side,force,pw:slm}); G.rTurn=false; const h=G.rHand; const i=h.findIndex(x=>same(x,t)); if(i>=0) h.splice(i,1); setTimeout(renderHand,380); return; }
-  if(doPlay(0,t,side,force,slm)) setTimeout(renderHand,380);
+function throwTile(t,side,force,slm,soft){
+  if(G.remoteMode){ netSend({t:'play',tile:t,side,force,pw:slm,soft:soft?1:0}); G.rTurn=false; const h=G.rHand; const i=h.findIndex(x=>same(x,t)); if(i>=0) h.splice(i,1); setTimeout(renderHand,380); return; }
+  if(doPlay(0,t,side,force,slm,false,!!soft)) setTimeout(renderHand,380);
 }
 let POWER=0.5;
 try{ const v=parseFloat(localStorage.getItem('dominoFuerza')); if(v>=0&&v<=1) POWER=v; }catch(_){}
@@ -4417,7 +4447,7 @@ window.kikoPeer=(id,on)=>{
 window.kikoMsg=(id,line)=>{
   let o; try{ o=JSON.parse(line); }catch(_){ return; }
   const seat=peers[id]; if(seat===undefined) return;
-  if(o.t==='play'){ initAudio(); if(!doPlay(seat,o.tile,o.side,clamp(+o.force||0.4,0.1,1),o.pw!=null?clamp(+o.pw||0,0,1):clamp((o.slam===true?1:o.slam|0),0,3)/3)) sendTo(id,stateFor(seat)); }
+  if(o.t==='play'){ initAudio(); if(!doPlay(seat,o.tile,o.side,clamp(+o.force||0.4,0.1,1),o.pw!=null?clamp(+o.pw||0,0,1):clamp((o.slam===true?1:o.slam|0),0,3)/3,false,!!o.soft)) sendTo(id,stateFor(seat)); }
   if(o.t==='join'){ if(G.joinWait&&G.joinWait[seat]){ if(o.now){ G.joinWait[seat]=false; G.human[seat]=true; say(G.names[seat]+' COGE LA MANO',90); } else say(G.names[seat]+' ENTRA EN LA PRÓXIMA MANO',90); G.joinWait[seat]=o.now?false:'next'; broadcast(); } return; }
   if(G.joinWait&&G.joinWait[seat]&&(o.t==='play'||o.t==='pass')) return;
   if(o.t==='exp'){ expShow(seat,o.k?1:0); return; }
