@@ -2868,7 +2868,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.39';
+const VERSION='v3.9.40';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4033,15 +4033,16 @@ function drawChainLayer(){
 function drawHand(x,y,ang,al){ ctx.save(); ctx.globalAlpha=al; ctx.translate(x,y); ctx.rotate(ang); ctx.font='34px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🤏',0,0); ctx.restore(); }
 function drawSoft(f,p,from,tx,ty,fit){
   const k=clamp(f.t/f.dur,0,1), mate=(f.seat+2)%4, mp=seatPos(mate), cx=VW/2, cy=VH/2;
-  if(f.via==null){ const dS=Math.hypot(tx-from.x,ty-from.y), dM=Math.hypot(tx-mp.x,ty-mp.y); f.via=dM<dS&&isAct(mate)?mate:f.seat; }
+  if(f.via==null){ const dS=Math.hypot(tx-from.x,ty-from.y), dM=Math.hypot(tx-mp.x,ty-mp.y); f.via=dM<dS&&isAct(mate)?mate:f.seat; f.spin=Math.random()<0.35?(Math.random()<0.5?-1:1)*Math.PI*(2+Math.random()*2):1.2; }   // de vez en cuando la ficha va girando mientras resbala
   const ease=u=>u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2, ang0=f.seat%2?Math.PI/2:0;
   let x,y,a,lift=0,hx=null,hy=null,hseat=f.seat;
   if(f.via===f.seat){   // la pone él mismo con la mano, despacio
     const e=ease(k); x=from.x+(tx-from.x)*e; y=from.y+(ty-from.y)*e; a=ang0+(p.ang-ang0)*e; lift=Math.sin(k*Math.PI)*14; hx=x; hy=y-lift;
   } else {             // se desliza por la mesa hasta el compañero y él la coge y la pone
     const P={x:mp.x+(cx-mp.x)*0.28, y:mp.y+(cy-mp.y)*0.28};
-    if(k<0.48){ const u=k/0.48, e=1-Math.pow(1-u,2); x=from.x+(P.x-from.x)*e; y=from.y+(P.y-from.y)*e; a=ang0+e*1.2; }
-    else { const u=(k-0.48)/0.52, e=ease(u); x=P.x+(tx-P.x)*e; y=P.y+(ty-P.y)*e; a=ang0+1.2+(p.ang-ang0-1.2)*e; lift=Math.sin(u*Math.PI)*14; hx=x; hy=y-lift; hseat=mate; }
+    const a1=ang0+f.spin, dA=Math.atan2(Math.sin(p.ang-a1),Math.cos(p.ang-a1));   // al cogerla la endereza por el camino corto
+    if(k<0.48){ const u=k/0.48, e=1-Math.pow(1-u,2); x=from.x+(P.x-from.x)*e; y=from.y+(P.y-from.y)*e; a=ang0+e*f.spin; }
+    else { const u=(k-0.48)/0.52, e=ease(u); x=P.x+(tx-P.x)*e; y=P.y+(ty-P.y)*e; a=a1+dA*e; lift=Math.sin(u*Math.PI)*14; hx=x; hy=y-lift; hseat=mate; }
   }
   ctx.save(); ctx.fillStyle='rgba(0,0,0,.25)'; ctx.translate(x+3+lift*0.3,y+4); ctx.rotate(a); ctx.fillRect(-TL*fit/2,-TW*fit/2,TL*fit,TW*fit); ctx.restore();   // sombra en el paño
   ctx.save(); ctx.translate(x,y-lift); ctx.rotate(a); drawTile(ctx,p.a,p.b,TL*fit,TW*fit,true); ctx.restore();
