@@ -356,7 +356,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 #menu button.big small{font:500 13px var(--font);opacity:.85}
 /* inicio en horizontal: bandera y palmita a la derecha, derechos de autor a la izquierda, y los botones del menú lo más grandes posible */
 @media (orientation:landscape) and (min-width:641px){
-  #cuba{flex-basis:100%;margin:0;gap:22px} #cuba .flag{width:clamp(56px,11vh,96px);height:auto} #cuba .tinajon{width:clamp(52px,10vh,92px);height:auto} #cuba .cmg span{font-size:clamp(14px,3.4vh,22px)}
+  #cuba{flex-basis:100%;margin:0;gap:22px} #cuba .cmg{position:fixed;right:14px;bottom:34px} #cuba .flag{width:clamp(56px,11vh,96px);height:auto} #cuba .tinajon{width:clamp(52px,10vh,92px);height:auto} #cuba .cmg span{font-size:clamp(14px,3.4vh,22px)}
   #menu p#cred{right:auto;left:14px;bottom:10px;text-align:left}
   #pick{max-width:calc(100vw - 250px);gap:clamp(8px,2vh,14px)}
   #pick button{min-width:0;flex:1 1 calc(50% - 14px);white-space:nowrap;font-size:clamp(15px,4vh,24px)!important;padding:clamp(7px,2.2vh,16px) 12px!important}
@@ -2922,7 +2922,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.60';
+const VERSION='v3.9.61';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
