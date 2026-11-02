@@ -413,7 +413,7 @@ body.remote.cafe2on #power{right:240px}
     <div id="rack"></div>
     <button id="bcafe" hidden>☕ YO</button><button id="bcafe2" hidden>☕ PAREJA</button>
     <button id="bigsort">⇅&nbsp; ORDENAR FICHAS &nbsp;⇅</button>
-    <div id="rconn"><button id="rcbig">📺 CONECTAR CON TV</button><p id="rcst">Toca para buscar la tele</p><button id="rcqr">📷 ESCANEAR QR DE LA TV</button><small>La tele y este teléfono tienen que estar en la <b>misma red Wi-Fi</b></small><button id="rcprof">✏️ NOMBRE Y FOTO</button></div>
+    <div id="rconn"><button id="rcqr">📷 ESCANEAR QR DE LA TV</button><button id="rcbig">📺 CONECTAR CON TV</button><p id="rcst">Toca para buscar la tele</p><small>La tele y este teléfono tienen que estar en la <b>misma red Wi-Fi</b></small><button id="rcprof">✏️ NOMBRE Y FOTO</button></div>
     <div id="salbox" hidden><b>¿QUIÉN SALE?</b><div><button id="salme">SALGO YO</button><button id="salpa">SALE <span id="salpn">MI PAREJA</span></button></div></div>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
     <button id="bvirar" hidden>MOSTRAR MIS FICHAS</button>
@@ -427,7 +427,7 @@ body.remote.cafe2on #power{right:240px}
   <div id="prof" hidden>
     <h2>¿QUIÉN JUEGA?</h2>
     <label id="pphoto"><span id="ptxt">TOCA PARA<br>HACERTE<br>UNA FOTO</span><input id="pfile" type="file" accept="image/*" capture="user" hidden></label>
-    <div id="pform"><input id="pname" maxlength="14" placeholder="Tu nombre" autocomplete="off" aria-label="Tu nombre"><button id="pgo">📺 CONECTAR CON TV</button></div>
+    <div id="pform"><input id="pname" maxlength="14" placeholder="Tu nombre" autocomplete="off" aria-label="Tu nombre"><button id="pgo">LISTO, A LA MESA</button></div>
   </div>
   <div id="guide" hidden>
     <div id="gbox">
@@ -2909,7 +2909,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.55';
+const VERSION='v3.9.56';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4801,7 +4801,6 @@ function becomeSolo(){
 }
 document.getElementById('pmesa').addEventListener('click',()=>{ initAudio(); becomeTable(); });
 document.getElementById('ptab').addEventListener('click',()=>{ initAudio(); isTV=false; document.getElementById('hand').hidden=false; if(!DEVTV&&PR.name){ document.getElementById('menu').hidden=true; startRemote(); } else openProfile(); });
-if(!DEVTV){ const pt=document.getElementById('ptab'); pt.innerHTML='📺 CONECTAR CON TV<small>Aquí tienes tus fichas</small>'; pt.classList.add('conn'); pt.parentNode.insertBefore(pt,document.getElementById('pmesa')); }
 document.getElementById('psolo').addEventListener('click',()=>{ initAudio(); becomeSolo(); });
 const guide=document.getElementById('guide');
 const VIDEO_URL='https://github.com/capoteadonis1979/kiko-juego/releases/download/tutorial/tutorial_domino.mp4';
