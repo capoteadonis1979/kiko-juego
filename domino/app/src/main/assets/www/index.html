@@ -354,6 +354,17 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 @media (max-height:460px){#menu h1{font-size:28px} #menu>p{display:none} #menu button.big{font-size:20px;padding:8px 14px} #menu button{font-size:15px;padding:8px 12px;min-width:240px} #pick button{min-width:280px}}
 #menu button.big{min-width:300px;font-size:26px;padding:14px 22px;display:flex;flex-direction:column;gap:2px}
 #menu button.big small{font:500 13px var(--font);opacity:.85}
+/* inicio en horizontal: bandera y palmita a la derecha, derechos de autor a la izquierda, y los botones del menú lo más grandes posible */
+@media (orientation:landscape) and (min-width:641px){
+  #cuba{position:fixed;right:14px;bottom:36px;flex-basis:auto;flex-direction:column;align-items:center;gap:4px;margin:0;z-index:1}
+  #menu p#cred{right:auto;left:14px;bottom:10px;text-align:left}
+  #pick{max-width:calc(100vw - 250px);gap:clamp(8px,2vh,14px)}
+  #pick button{min-width:0;flex:1 1 calc(50% - 14px);white-space:nowrap;font-size:clamp(15px,4vh,24px)!important;padding:clamp(7px,2.2vh,16px) 12px!important}
+  #pick #psolo{flex:1 1 100%;max-width:none}
+  #menu #pick button.big{min-width:0;font-size:clamp(20px,6.4vh,36px)!important;padding:clamp(8px,2.4vh,18px) 14px!important}
+  #menu #pick button.big small{font-size:clamp(11px,2.8vh,16px)}
+  #menu{gap:clamp(4px,1.6vh,12px)}
+}
 #menu button.main{background:var(--accent);border-color:#8a2418}
 #menu #lplay,#menu #mplay{background:#2fbf71;border-color:#1a7a44}
 #menu #pmesa{background:#7b3fc4;border-color:#4a2380}   /* TV en morado: el rojo es solo para salir */   /* empezar = verde (el rojo es solo para salir) */
@@ -2910,7 +2921,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.57';
+const VERSION='v3.9.58';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
