@@ -87,6 +87,16 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #pbox{max-height:none}
 #bmesa.focus{outline:4px solid var(--gold);outline-offset:2px;background:#5a3a1a}
 #joinbox{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:22;background:rgba(20,40,70,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:10px}
+#rconn{display:none}
+body.remote:not(.linked) #rconn{display:flex;position:absolute;left:0;right:0;top:28px;bottom:0;z-index:24;background:linear-gradient(#1b3a26,#10261a);flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;text-align:center;box-sizing:border-box}
+#rcbig{font:900 28px var(--font);padding:26px 30px;width:min(92%,520px);border-radius:20px;background:#2fbf71;color:#fff;border:4px solid #1e7a48;box-shadow:0 0 24px rgba(47,191,113,.6),0 6px 0 #145a33}
+#rcbig.busy{animation:rcpulse 1.2s ease-in-out infinite}
+@keyframes rcpulse{50%{box-shadow:0 0 40px rgba(255,210,60,.9),0 6px 0 #145a33}}
+#rcst{margin:0;font-size:15px;color:#ffe9a8;min-height:2.6em;max-width:520px}
+#rcqr{font:800 17px var(--font);padding:12px 18px;border-radius:14px;background:#1e3f6a;color:#fff;border:2px solid #4a7fc0;width:min(80%,400px)}
+#rconn small{color:#cfe3d4;font-size:13px} #rcprof{font:700 14px var(--font);padding:8px 14px;border-radius:12px;background:#6b3a1a;color:#fff6e0;border:2px solid #8a5a2a}
+@media (orientation:landscape) and (max-height:500px){ body.remote:not(.linked) #rconn{gap:8px;padding:8px} #rcbig{padding:14px 24px;font-size:24px} #rcst{min-height:1.4em;font-size:13px} #rcqr{padding:8px 14px;font-size:15px} }
+body.remote:not(.linked) #rscan,body.remote:not(.linked) #rpair,body.remote:not(.linked) #rst,body.remote:not(.linked) #rwifi{display:none!important}
 #salbox{position:absolute;left:12px;right:12px;top:28px;height:34px;box-sizing:border-box;z-index:21;background:rgba(20,40,70,.97);border:2px solid var(--gold);border-radius:12px;display:flex;flex-direction:row;align-items:center;gap:10px;padding:3px 6px;text-align:center}
 #salbox b{color:var(--gold);font-size:15px;white-space:nowrap;padding-left:6px} #salbox div{display:flex;gap:10px;flex:1;height:100%} #salbox button{flex:1;font:800 14px var(--font);padding:0 6px;border-radius:12px;border:3px solid #1e7a48;background:#2fbf71;color:#fff}
 body.remote #power{display:none!important}   /* la barra de fuerza ya no se muestra en el teléfono: ahí va ¿QUIÉN SALE? */
@@ -154,7 +164,7 @@ body.remote #powpct{font-size:12px;white-space:nowrap;min-width:58px;text-align:
 #pphoto{width:120px;height:120px;border-radius:50%;border:4px solid var(--gold);background:#1d3a52 center/cover no-repeat;display:grid;place-items:center;font-size:13px;text-align:center;color:#cfe;flex:none}
 #pform{display:flex;flex-direction:column;gap:10px;min-width:220px}
 #pname{font:700 20px var(--font);padding:10px 12px;border-radius:12px;border:3px solid #2c4c66;background:#0e2a3e;color:var(--fg)}
-#pgo{font:700 18px var(--font);padding:12px;border-radius:14px;border:3px solid #8a2418;background:var(--accent);color:#fff}
+#pgo{font:700 18px var(--font);padding:12px;border-radius:14px;border:3px solid #1e7a48;background:#2fbf71;color:#fff}
 body.remote #tablebox{flex:0 0 auto;height:auto;padding:0}
 body.remote #t{display:none}
 body.remote #remotebar{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:0 14px;box-sizing:border-box}
@@ -313,6 +323,7 @@ body.remote #power{bottom:auto!important}
 #sub{gap:22px}
 #pick:not([hidden]){display:flex}
 #menu #ptab{background:#2f7fe0;border-color:#1c4c94}
+#menu #ptab.conn{background:#2fbf71;border-color:#1e7a48;font-size:1.15em;box-shadow:0 0 18px rgba(47,191,113,.55)}
 #menu #psolo{background:#22a04a;border-color:#0f5a26}
 #mplayer{display:flex;gap:10px;justify-content:center;width:min(560px,90vw)}
 #mplayer button{min-width:0!important;flex:0 0 64px;padding-left:0;padding-right:0}
@@ -402,6 +413,7 @@ body.remote.cafe2on #power{right:240px}
     <div id="rack"></div>
     <button id="bcafe" hidden>☕ YO</button><button id="bcafe2" hidden>☕ PAREJA</button>
     <button id="bigsort">⇅&nbsp; ORDENAR FICHAS &nbsp;⇅</button>
+    <div id="rconn"><button id="rcbig">📺 CONECTAR CON TV</button><p id="rcst">Toca para buscar la tele</p><button id="rcqr">📷 ESCANEAR QR DE LA TV</button><small>La tele y este teléfono tienen que estar en la <b>misma red Wi-Fi</b></small><button id="rcprof">✏️ NOMBRE Y FOTO</button></div>
     <div id="salbox" hidden><b>¿QUIÉN SALE?</b><div><button id="salme">SALGO YO</button><button id="salpa">SALE <span id="salpn">MI PAREJA</span></button></div></div>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
     <button id="bvirar" hidden>MOSTRAR MIS FICHAS</button>
@@ -415,7 +427,7 @@ body.remote.cafe2on #power{right:240px}
   <div id="prof" hidden>
     <h2>¿QUIÉN JUEGA?</h2>
     <label id="pphoto"><span id="ptxt">TOCA PARA<br>HACERTE<br>UNA FOTO</span><input id="pfile" type="file" accept="image/*" capture="user" hidden></label>
-    <div id="pform"><input id="pname" maxlength="14" placeholder="Tu nombre" autocomplete="off" aria-label="Tu nombre"><button id="pgo">LISTO, A LA MESA</button></div>
+    <div id="pform"><input id="pname" maxlength="14" placeholder="Tu nombre" autocomplete="off" aria-label="Tu nombre"><button id="pgo">📺 CONECTAR CON TV</button></div>
   </div>
   <div id="guide" hidden>
     <div id="gbox">
@@ -2897,11 +2909,12 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.54';
+const VERSION='v3.9.55';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
 let isTV=/[?&]tv=1/.test(location.search); try{ if(window.KikoApp&&KikoApp.isTV()) isTV=true; }catch(_){}
+const DEVTV=isTV;   // el aparato es una tele
 const isTouch=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('ontouchstart' in window);
 
 /* ================= SONIDO (fichas de verdad: golpe seco + resonancia) ================= */
@@ -4653,8 +4666,14 @@ window.kikoFromTV=(line)=>{
     renderHand();
   }
 };
+let rcRetry=null;
+function rcSearch(){ clearTimeout(rcRetry); rcRetry=null; document.getElementById('rcbig').classList.add('busy'); document.getElementById('rcst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} }
 window.kikoCtrl=(m)=>{
-  const st=document.getElementById('rst'), ip=document.querySelector('.ipbox');
+  const st=document.getElementById('rst'), ip=document.querySelector('.ipbox'), rc=document.getElementById('rcst'), rb=document.getElementById('rcbig');
+  if(m.startsWith('OK:')){ rb.classList.remove('busy'); clearTimeout(rcRetry); }
+  else if(m.startsWith('ERR:')){ rc.textContent='Todavía no encuentro la tele. Sigo buscando solo... (o escanea el QR de la tele)';
+    clearTimeout(rcRetry); rcRetry=setTimeout(()=>{ if(G.remoteMode&&!document.body.classList.contains('linked')) rcSearch(); },2500); }
+  else rc.textContent=m;
   if(m.startsWith('OK:')){ st.textContent='Conectado a la tele ('+m.slice(3)+')'; st.className='ok'; ip.hidden=true; document.body.classList.add('linked'); netSend({t:'hi',name:PR.name,photo:PR.photo}); }
   else if(m.startsWith('ERR:')){ st.textContent=m.slice(4); st.className='err'; ip.hidden=false; document.body.classList.remove('linked'); }
   else { st.textContent=m; st.className=''; }
@@ -4683,17 +4702,20 @@ function startRemote(){
   G.remoteMode=true; document.body.classList.add('remote'); document.getElementById('menu').hidden=true;
   G.rHand=[]; G.rTurn=false; G.rMsg='Esperando a la tele...'; renderHand();
   try{ KikoApp.setPortrait(false); }catch(_){}
-  try{ KikoApp.ctrlStart(''); }catch(_){}
+  rcSearch();
 }
+document.getElementById('rcbig').addEventListener('click',()=>{ initAudio(); rcSearch(); });
+document.getElementById('rcqr').addEventListener('click',()=>document.getElementById('rscan').click());
+document.getElementById('rcprof').addEventListener('click',()=>{ clearTimeout(rcRetry); try{ KikoApp.ctrlStop(); }catch(_){} G.remoteMode=false; document.body.classList.remove('remote','linked'); openProfile(); });
 document.getElementById('rscan').addEventListener('click',()=>{ const st=document.getElementById('rst');
   if(window.KikoApp&&KikoApp.scanQR){ st.textContent='Apunta al QR que dice "OCUPAR SILLA"...'; try{ KikoApp.scanQR(); }catch(_){} } else st.textContent='Actualiza la app para usar el escáner.'; });
 window.kikoQR=(t)=>{ const st=document.getElementById('rst'); t=String(t||'');
-  if(t.startsWith('DCMESA:')){ const ips=t.slice(7).split(',').map(x=>x.trim()).filter(x=>/^\d+\.\d+\.\d+\.\d+$/.test(x)).join(','); if(ips){ st.textContent='Conectando a la mesa...'; try{ KikoApp.ctrlStart(ips); }catch(_){} return; } }
+  if(t.startsWith('DCMESA:')){ const ips=t.slice(7).split(',').map(x=>x.trim()).filter(x=>/^\d+\.\d+\.\d+\.\d+$/.test(x)).join(','); if(ips){ clearTimeout(rcRetry); st.textContent='Conectando a la mesa...'; document.getElementById('rcst').textContent='Conectando a la mesa...'; try{ KikoApp.ctrlStart(ips); }catch(_){} return; } }
   if(t==='ERR') st.textContent='No se pudo abrir el escáner. Escribe la dirección que sale en la mesa.'; else if(t) st.textContent='Ese QR no es el que dice "OCUPAR SILLA".'; else st.textContent='Escaneo cancelado.'; };
 document.getElementById('rpair').addEventListener('click',()=>{ document.getElementById('rst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('rgo').addEventListener('click',()=>{ const ip=document.getElementById('rip').value.trim(); if(ip) try{ KikoApp.ctrlStart(ip); }catch(_){} });
 document.getElementById('rexit').addEventListener('click',()=>{ if(document.body.classList.contains('linked')){ rPauseOpen(); return; } rExitNow(); });
-function rExitNow(){ try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
+function rExitNow(){ clearTimeout(rcRetry); try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
   ['seatbox','passbox','libreta','panel','sidebox','pause'].forEach(i=>{ const e=document.getElementById(i); if(e) e.hidden=true; }); document.body.classList.remove('remote','linked'); document.getElementById('menu').hidden=false; showPick(); layout(); }
 document.getElementById('prexit').addEventListener('click',()=>{ closePause(); rExitNow(); });
 document.getElementById('prfr').addEventListener('click',()=>{ closePause(); openPanel('f'); });
@@ -4778,7 +4800,8 @@ function becomeSolo(){
   showSub(); layout();
 }
 document.getElementById('pmesa').addEventListener('click',()=>{ initAudio(); becomeTable(); });
-document.getElementById('ptab').addEventListener('click',()=>{ initAudio(); isTV=false; document.getElementById('hand').hidden=false; openProfile(); });
+document.getElementById('ptab').addEventListener('click',()=>{ initAudio(); isTV=false; document.getElementById('hand').hidden=false; if(!DEVTV&&PR.name){ document.getElementById('menu').hidden=true; startRemote(); } else openProfile(); });
+if(!DEVTV){ const pt=document.getElementById('ptab'); pt.innerHTML='📺 CONECTAR CON TV<small>Aquí tienes tus fichas</small>'; pt.classList.add('conn'); pt.parentNode.insertBefore(pt,document.getElementById('pmesa')); }
 document.getElementById('psolo').addEventListener('click',()=>{ initAudio(); becomeSolo(); });
 const guide=document.getElementById('guide');
 const VIDEO_URL='https://github.com/capoteadonis1979/kiko-juego/releases/download/tutorial/tutorial_domino.mp4';

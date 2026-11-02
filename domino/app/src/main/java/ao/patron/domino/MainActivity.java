@@ -459,7 +459,7 @@ public class MainActivity extends Activity {
     private void scanSubnet(String mine, AtomicReference<String> found, int gen) {
         if (mine == null || mine.lastIndexOf('.') < 0) return;
         String pre = mine.substring(0, mine.lastIndexOf('.') + 1);
-        ExecutorService pool = Executors.newFixedThreadPool(48);
+        ExecutorService pool = Executors.newFixedThreadPool(64);
         for (int i = 1; i < 255; i++) {
             final String ip = pre + i;
             if (ip.equals(mine)) continue;
@@ -553,6 +553,15 @@ public class MainActivity extends Activity {
                 WifiManager.MulticastLock lock = null;
                 try {
                     String ip = manualIp == null ? "" : manualIp.trim();
+                    // primero la última tele a la que se conectó: así entra al momento, sin buscar por toda la red
+                    if (ip.isEmpty()) {
+                        String last = prefs().getString("ultimaTele", "");
+                        if (!last.isEmpty()) {
+                            ctrlStatus("Conectando con la tele de la última vez...");
+                            try (Socket t = new Socket()) { t.connect(new InetSocketAddress(last, TCP), 1500); ip = last; } catch (Exception ignored) { }
+                            if (gen != ctrlGen) return;
+                        }
+                    }
                     if (ip.isEmpty()) {
                         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         if (wm != null) { lock = wm.createMulticastLock("domino"); lock.setReferenceCounted(false); lock.acquire(); }
@@ -592,6 +601,7 @@ public class MainActivity extends Activity {
                     s2.setTcpNoDelay(true);
                     if (gen != ctrlGen) { s2.close(); return; }
                     ctrl = s2; ctrlOut = s2.getOutputStream();
+                    prefs().edit().putString("ultimaTele", ip).apply();
                     wifiRapido();
                     ctrlStatus("OK:" + ip);
                     // escuchar lo que manda la tele
