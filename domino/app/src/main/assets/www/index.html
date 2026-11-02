@@ -67,6 +67,7 @@ body{background:var(--bg);color:var(--fg);margin:0;overflow:hidden;font-family:v
 #seatbox{position:absolute;left:0;right:0;top:34px;bottom:0;z-index:23;background:rgba(30,16,6,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
 #seatbox b{color:var(--gold);font-size:18px}
 #seatbox small{color:#ffd9a0;font-size:12px}
+#sbstart{margin-top:6px;font:800 18px var(--font);padding:10px 26px;border-radius:14px;background:#2fbf71;color:#fff;border:3px solid #1e7a48;box-shadow:0 4px 0 #145a33}
 #seatgrid{display:grid;grid-template-areas:". t ." "l m r" ". b .";grid-template-columns:150px 70px 150px;gap:6px}
 #seatgrid button{font:700 13px var(--font);background:#f6f0e2;color:#2a1608;border:3px solid #8a5a2a;border-radius:12px;padding:8px 4px;min-height:40px}
 #seatgrid button.me{background:#2fbf71;color:#fff;border-color:#1a7a44}
@@ -271,7 +272,7 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #cfg .row button{width:15em;min-width:0}
 #pbox .prow button{width:155px;min-width:0}
 /* SALIR siempre abajo, en rojo, en todas las pantallas */
-#gsalir{position:fixed;right:10px;top:8px;z-index:80;font:800 14px var(--font);background:#c62828;color:#fff;border:2px solid #ff8a80;border-radius:10px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#menu #gsalir{background:#c62828;color:#fff;border-color:#8a1414}   /* SALIR debajo de los demás botones del inicio (rojo = salir) */
 #gsalir[hidden]{display:none}
 #gsalir.focus,#gsalir:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #power{bottom:46px!important}
@@ -418,7 +419,7 @@ body.remote.cafe2on #power{right:240px}
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
     <button id="bvirar" hidden>MOSTRAR MIS FICHAS</button>
     <div id="passbox" hidden><b>NO LLEVAS FICHA</b><div id="pbtns"><button data-st="azar">👊 PASO<small>toca en cualquier parte para pasar</small></button></div><i id="passn"></i></div>
-    <div id="seatbox" hidden><b>ELIGE TU SILLA</b><div id="seatgrid"></div><small>Tu pareja es siempre el de enfrente</small></div>
+    <div id="seatbox" hidden><b>ELIGE TU SILLA</b><div id="seatgrid"></div><small>Tu pareja es siempre el de enfrente</small><button id="sbstart">▶ COMENZAR PARTIDA</button></div>
     <div id="sidebox" hidden><b>¿DÓNDE LA PONES?</b><span id="sidelvl"></span><div><button id="sideL"></button><button id="sideR"></button></div><button id="sideX">CANCELAR</button></div>
     <div id="libreta" hidden><div id="libpage"></div><button id="libx">✕</button><button id="libnext" hidden>SIGUIENTE MANO ▶</button></div>
     <div id="panel" hidden><div id="panhead"><b id="pantitle">FRASES</b><button id="panx">✕</button></div><div id="pangrid"></div></div>
@@ -519,6 +520,7 @@ body.remote.cafe2on #power{right:240px}
       <button id="pact">ACTIVAR / COMPRAR</button>
       <button id="pcfg">⚙️ CONFIGURACIÓN</button>
       <button id="phist">📜 HISTORIAL</button>
+      <button id="gsalir">SALIR</button>
       <div id="cuba" aria-hidden="true">
         <svg class="flag" viewBox="0 0 150 76"><defs><clipPath id="fw"><path d="M0 4 Q37 -2 75 4 T150 4 V72 Q112 78 75 72 T0 72 Z"/></clipPath></defs>
           <g clip-path="url(#fw)"><rect width="150" height="80" fill="#fff"/>
@@ -605,7 +607,6 @@ body.remote.cafe2on #power{right:240px}
 <button id="pwwa" class="wa">💬 PAGAR DESDE ANGOLA POR WHATSAPP<small>+244 926 815 829</small></button>
 <button id="pwno">CERRAR</button></div></div>
 <button id="bmesa" hidden>☰ MENÚ</button>
-<button id="gsalir">SALIR</button>
 <div id="ver"></div>
 <script>
 //---------------------------------------------------------------------
@@ -2909,7 +2910,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.56';
+const VERSION='v3.9.57';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4588,6 +4589,7 @@ function salUI(){ const on=G.remoteMode?G.rSal:(!isTV&&G.human[0]&&!!(G.salPick&
 function salPick(me){ initAudio(); try{ navigator.vibrate&&navigator.vibrate(25); }catch(_){} if(G.remoteMode){ netSend({t:'sal',me:me?1:0}); G.rSal=false; salUI(); } else setSalida(0,me); }
 document.getElementById('salme').addEventListener('click',()=>salPick(true));
 document.getElementById('salpa').addEventListener('click',()=>salPick(false));
+document.getElementById('sbstart').addEventListener('click',()=>{ initAudio(); try{ navigator.vibrate&&navigator.vibrate(25); }catch(_){} netSend({t:'ctl',a:'start'}); });
 document.getElementById('jnow').addEventListener('click',()=>{ netSend({t:'join',now:1}); document.getElementById('joinbox').hidden=true; });
 document.getElementById('jwait').addEventListener('click',()=>{ netSend({t:'join',now:0}); document.getElementById('joinbox').hidden=true; });
 function rSortHand(){ G.rSorted=true; G.rHand=G.rHand.map(t=>[Math.min(t[0],t[1]),Math.max(t[0],t[1])]).sort((x,y)=>(x[1]-y[1])||(x[0]-y[0])); renderHand(); }
@@ -4637,6 +4639,7 @@ window.kikoMsg=(id,line)=>{
   if(o.t==='sal'){ setSalida(seat,!!o.me); return; }
   if(o.t==='cafe'){ if(o.p){ const p=partnerBot(seat); if(p>=0) orderCafe(p,true); } else orderCafe(seat,true); return; }
   if(o.t==='ctl'){ if(o.a==='song'){ if(!MUS) setMusV(4); songNext(1); return; } if(o.a==='mus'){ setMus(!!o.v); return; } if(o.a==='snd'){ setSnd(!!o.v); return; } if(o.a==='musv'){ setMusV(+o.v); return; } if(o.a==='sndv'){ setSndV(+o.v); return; } if(o.a==='pause'){ G.paused=true; G.pausedBy=seat; say(G.names[seat]+' PUSO PAUSA',99999); return; } if(o.a==='resume'){ if(pauseEl.hidden){ G.paused=false; } G.msgT=0; return; }
+    if(o.a==='start'){ if(isTV&&G.state==='menu'){ document.getElementById('lplay').click(); broadcast(); } return; }
     if(o.a==='restart'||o.a==='new') gameAction(o.a); else if(o.a==='next'&&G.state==='handover'&&G.cnt&&G.cnt.done) nextHandOrMenu(); return; }
   if(o.t==='seat'){ if(G.state==='menu'&&isTV){ const to=o.s|0, from=peers[id]; if(to>=0&&to<4&&to!==from&&isAct(to)) swapSeats(from,to); } return; }
   if(o.t==='say'){ if((o.type==='f'||o.type==='c')&&Number.isInteger(o.i)) sayShow(seat,o.type,o.i); return; }
@@ -4868,7 +4871,7 @@ try{ const m=localStorage.getItem('dominoModo'); if(m==='sencillo') setMode(m); 
 if(G.nPlayers<4&&G.mode==='parejas') setMode('sencillo');
 mmode.addEventListener('click',()=>{ if(G.remoteMode) return; setMode(G.mode==='parejas'?'sencillo':'parejas'); });
 let mFocus=-1;
-function menuBtns(){ return [...menu.querySelectorAll('button'),document.getElementById('gsalir')].filter(b=>b.offsetParent!==null||(b.id==='gsalir'&&!b.hidden)); }
+function menuBtns(){ return [...menu.querySelectorAll('button')].filter(b=>b.offsetParent!==null||(b.id==='gsalir'&&!b.hidden)); }
 function defId(){ return !lobby.hidden?'lplay':!sub.hidden?'mplay':(tvDevice?'pmesa':'ptab'); }
 function curBtn(){ const b=menuBtns(); const a=document.activeElement; if(a&&b.includes(a)) return a; if(mFocus>=0&&b[mFocus]) return b[mFocus]; return document.getElementById(defId()); }
 function setFocusBtn(el){ const b=menuBtns(); mFocus=b.indexOf(el); b.forEach(x=>x.classList.toggle('focus',x===el)); try{ el.focus({preventScroll:true}); }catch(_){} }
