@@ -361,6 +361,7 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   #pick{max-width:calc(100vw - 250px);gap:clamp(8px,2vh,14px)}
   #pick button{min-width:0;flex:1 1 calc(50% - 14px);white-space:nowrap;font-size:clamp(15px,4vh,24px)!important;padding:clamp(7px,2.2vh,16px) 12px!important}
   #pick #psolo{flex:1 1 100%;max-width:none}
+  #pick #gsalir{flex:0 1 calc(50% - 14px)}
   #menu #pick button.big{min-width:0;font-size:clamp(20px,6.4vh,36px)!important;padding:clamp(8px,2.4vh,18px) 14px!important}
   #menu #pick button.big small{font-size:clamp(11px,2.8vh,16px)}
   #menu{gap:clamp(4px,1.6vh,12px)}
@@ -2921,7 +2922,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.58';
+const VERSION='v3.9.59';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
