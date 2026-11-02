@@ -357,14 +357,16 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
 /* inicio en horizontal: bandera y palmita a la derecha, derechos de autor a la izquierda, y los botones del menú lo más grandes posible */
 @media (orientation:landscape) and (min-width:641px){
   #cuba{flex-basis:100%;margin:0;gap:22px} #cuba .cmg{position:fixed;right:14px;bottom:34px} #cuba .flag{width:clamp(56px,11vh,96px);height:auto} #cuba .tinajon{width:clamp(52px,10vh,92px);height:auto} #cuba .cmg span{font-size:clamp(14px,3.4vh,22px)}
-  #menu p#cred{right:auto;left:14px;bottom:10px;text-align:left}
-  #pick{max-width:calc(100vw - 250px);gap:clamp(8px,2vh,14px)}
-  #pick button{min-width:0;flex:1 1 calc(50% - 14px);white-space:nowrap;font-size:clamp(15px,4vh,24px)!important;padding:clamp(7px,2.2vh,16px) 12px!important}
+  #menu p#cred{right:auto;left:14px;bottom:28px;text-align:left}
+  body.home #ver{right:auto!important;left:14px;bottom:8px!important}
+  body.home #menu{overflow:hidden}
+  #pick{width:calc(100vw - 250px);max-width:calc(100vw - 250px);gap:clamp(8px,2vh,14px)}
+  #pick button{min-width:0;flex:1 1 calc(50% - 14px);white-space:nowrap;font-size:clamp(15px,4.8vh,28px)!important;padding:clamp(8px,2.8vh,22px) 12px!important}
   #pick #psolo{flex:1 1 100%;max-width:none}
   #pick #gsalir{flex:0 1 calc(50% - 14px)}
-  #menu #pick button.big{min-width:0;font-size:clamp(20px,6.4vh,36px)!important;padding:clamp(8px,2.4vh,18px) 14px!important}
+  #menu #pick button.big{min-width:0;font-size:clamp(20px,7.6vh,42px)!important;padding:clamp(8px,3vh,22px) 14px!important}
   #menu #pick button.big small{font-size:clamp(11px,2.8vh,16px)}
-  #menu{gap:clamp(4px,1.6vh,12px)}
+  #menu{gap:clamp(3px,1.3vh,12px)}
 }
 #menu button.main{background:var(--accent);border-color:#8a2418}
 #menu #lplay,#menu #mplay{background:#2fbf71;border-color:#1a7a44}
@@ -2922,7 +2924,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.61';
+const VERSION='v3.9.62';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4485,7 +4487,7 @@ document.getElementById('gsalir').addEventListener('click',askExit);
 // SALIR solo en la pantalla de inicio, arriba a la derecha
 setInterval(()=>{ const $=i=>document.getElementById(i), g=$('gsalir'); const vis=e=>e&&!e.hidden;
   const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','fpick','hdet','swov','mfold','paywall','exitask'].some(i=>vis($(i)));
-  if(g.hidden===ini){ g.hidden=!ini; if(!ini) g.classList.remove('focus'); } },120);
+  document.body.classList.toggle('home',ini); if(g.hidden===ini){ g.hidden=!ini; if(!ini) g.classList.remove('focus'); } },120);
 // ===== historial de partidas: se guarda en el aparato (no se borra al actualizar) =====
 const HKEY='dominoHistorial', HPP=4; let HP=0;
 function histLoad(){ try{ return JSON.parse(localStorage.getItem(HKEY)||'[]')||[]; }catch(_){ return []; } }
