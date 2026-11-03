@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8">
+<html lang="es"><head><meta charset="utf-8"><link rel="preload" href="bg_home.jpg" as="image">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Dominó Cubano TV</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -23,7 +23,7 @@ body:not(.home) #menu button,#pbox button,.ovbox button,#pgo{border-color:#d6a24
 }
 </style>
 <style>@font-face{font-family:"Caveat";src:url(caveat.woff2) format("woff2");font-weight:700;font-display:swap}</style>
-</head><body>
+</head><body class="home">
 
 <style>@font-face{font-family:"Dancing Script";src:url(dancing.woff2) format("woff2");font-weight:700;font-display:swap}</style>
 <style>
@@ -2952,7 +2952,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.64';
+const VERSION='v3.9.65';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
