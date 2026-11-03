@@ -1,5 +1,11 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><link rel="preload" href="bg_home.jpg" as="image">
+<html lang="es" class="loading"><head><meta charset="utf-8"><link rel="preload" href="bg_home.jpg" as="image"><link rel="preload" href="fredoka.woff2" as="font" type="font/woff2" crossorigin>
+<style>html{background:#0b1a12}html.loading body{opacity:0}body{transition:opacity .5s ease}</style>
+<script>/* al abrir: se espera a la letra y al fondo y la pantalla aparece suave (sin botones en blanco) */
+(function(){ const done=()=>document.documentElement.classList.remove('loading');
+  const im=new Image(); const pi=new Promise(r=>{ im.onload=im.onerror=r; im.src='bg_home.jpg'; });
+  const pf=(document.fonts&&document.fonts.load)?document.fonts.load('700 20px Fredoka').catch(()=>0):0;
+  Promise.race([Promise.all([pi,pf]),new Promise(r=>setTimeout(r,1500))]).then(()=>requestAnimationFrame(()=>requestAnimationFrame(done))); })();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Dominó Cubano TV</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2952,7 +2958,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.65';
+const VERSION='v3.9.66';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
