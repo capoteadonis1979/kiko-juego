@@ -291,7 +291,7 @@ body.mesa #lip small{font-size:12px;color:#9fbfaa}
 #lqr svg,#lqr2 svg{width:17vh;height:17vh}
 /* los botones no cambian de tamaño al cambiar su texto (la pantalla no se mueve) */
 #lbtns{display:grid!important;grid-template-columns:repeat(3,1fr);width:min(94vw,900px)}
-#lbtns #lplay{grid-column:1/-1}
+#lbtns #lplay{grid-column:2/-1}
 #lbtns button{min-width:0!important;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #cfg .row button{width:15em;min-width:0}
 #pbox .prow button{width:155px;min-width:0}
@@ -436,6 +436,44 @@ body.remote.cafe2on #power{right:240px}
   body.remote #bcafe,body.remote #bcafe2{top:116px!important;height:38px!important;width:calc(50% - 21px)!important;font-size:17px!important;border-radius:12px!important;padding:0!important}
   body.remote #bcafe{right:14px!important} body.remote #bcafe2{right:auto!important;left:14px!important} }
 #mfold{z-index:50}#mfgrid{display:grid;grid-template-columns:repeat(2,minmax(180px,300px));gap:8px;justify-content:center;margin:6px 0}#mfgrid button{margin:0;font-size:15px;line-height:1.2;text-align:left}#mfgrid button small{display:block;font-size:11px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#mfpg{align-self:center;min-width:60px;text-align:center;color:#ffe9a8}
+#copa{z-index:49}.ovbox button.pred{background:#c62828!important;color:#fff!important}#copabox{max-width:none}
+.copab{background-color:#b8860b!important;color:#fff!important}
+#copasc{position:fixed;inset:0;z-index:50;background:#0b1a12 url(bg_home.jpg) center/100% 100% no-repeat;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:var(--font)}
+#copasc .cnight{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 32%,rgba(255,220,120,.25),rgba(0,0,0,.78) 70%)}
+#copasc .crays{position:absolute;inset:-60vmax;background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,215,100,.11) 0 6deg,transparent 6deg 18deg);animation:crot 30s linear infinite}
+@keyframes crot{to{transform:rotate(360deg)}}
+#copasc .cconf{position:absolute;inset:0;background-image:radial-gradient(#ffd23a 2px,transparent 3px),radial-gradient(#e53935 2px,transparent 3px),radial-gradient(#2f7fe0 2px,transparent 3px);background-size:61px 53px,47px 71px,83px 59px;animation:cfall 6s linear infinite;opacity:.8}
+@keyframes cfall{from{background-position:0 0,20px 30px,40px 10px}to{background-position:0 530px,20px 740px,40px 600px}}
+#copain{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff}
+#copain .tro{font-size:min(15vh,110px);filter:drop-shadow(0 0 18px #ffd23a);animation:cpop .9s cubic-bezier(.2,1.6,.4,1) both}
+#copain h1{margin:0;font-size:min(10vh,64px);line-height:1;color:#ffd23a;text-shadow:0 4px 0 #7a4312,0 0 30px rgba(255,200,60,.8);animation:cpop .8s .5s both}
+#copain h1 small{display:block;font-size:.38em;color:#fff;letter-spacing:6px;text-shadow:0 2px 0 #000;margin-bottom:6px}
+#copain .cfl{display:flex;gap:min(2vw,16px);margin-top:2vh}
+#copain .cfl div{display:flex;flex-direction:column;align-items:center;font-size:min(2.4vh,14px);font-weight:700;text-shadow:0 2px 2px #000;animation:cpop .5s both}
+#copain .cfl b{font-size:min(9vh,56px);line-height:1.05}
+#copain .cann{margin-top:2vh;background:rgba(0,0,0,.55);border:2px solid #d6a24a;border-radius:12px;padding:6px 16px;font-size:min(3vh,17px);color:#ffe9a8;animation:cpop .6s 2.6s both}
+#copain button{margin-top:2vh;font:800 min(3.6vh,20px) var(--font);padding:10px 26px;border-radius:14px;border:3px solid #d6a24a;color:#fff;background:#2fbf71;box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 4px 0 #145a33}
+#copain button.focus{outline:3px solid var(--gold);outline-offset:3px}
+@keyframes cpop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+#copain .pod{display:flex;align-items:flex-end;gap:12px;margin-top:2vh}
+#copain .st{width:min(22vw,180px);display:flex;flex-direction:column;align-items:center;animation:cpop .7s both}
+#copain .st .blk{width:100%;border:3px solid #d6a24a;border-radius:10px 10px 0 0;background:linear-gradient(#6b3a1c,#3a1d0c);font-size:min(7vh,46px);font-weight:800;color:#ffd23a;padding-top:4px;box-sizing:border-box}
+#copain .st .nm{font-size:min(3vh,17px);font-weight:800;text-shadow:0 2px 2px #000}
+#copain .st .nm small{display:block;font-size:.7em;color:#ffe9a8}
+#copain .st .f2{font-size:min(9vh,58px);line-height:1}
+#copain .st .md{font-size:min(7vh,44px);line-height:1;margin-bottom:-4px}
+#cpk{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0}
+#cpk button{margin:0;font:800 15px var(--font);display:flex;flex-direction:column;align-items:center;padding:6px 10px}
+#cpk button b{font-size:40px;line-height:1.1}
+.cbr{display:grid;grid-template-columns:210px 200px 210px;gap:22px;align-items:center}
+.cbr .col{display:flex;flex-direction:column;justify-content:space-around;height:290px}
+.cbr .m{background:#24130a;border:2px solid #8a5a2a;border-radius:8px;padding:3px 6px;font-size:13px;margin:4px 0;text-align:left}
+.cbr .m div{display:flex;justify-content:space-between;gap:6px}
+.cbr .w{color:#ffd23a;font-weight:800}.cbr .me{background:rgba(47,191,113,.28);border-radius:4px}
+.cbr .lab{font-size:11px;color:#ffd9a0;text-align:center}
+.cbr .fin{border-color:#ffd23a;box-shadow:0 0 12px rgba(255,210,60,.6)}
+.cbr .cup{font-size:54px;text-align:center;filter:drop-shadow(0 0 10px #ffd23a)}
+#cmsg{color:#ffe9a8;font-size:15px;margin:2px 0}
 #swov{z-index:49}#swgrid{display:grid;grid-template-columns:repeat(3,minmax(150px,210px));grid-template-rows:repeat(3,auto);gap:8px;justify-content:center;margin:6px 0 10px}#swgrid button{margin:0;font-size:15px;line-height:1.2}#swgrid button small{display:block;font-size:11px;opacity:.8}#swgrid button.sel{background:#ffd23a!important;color:#2a1a00!important}#swtxt{margin:2px 0 4px;color:#ffe9a8}
 #hdet{z-index:49}#hdet .ovbox{max-width:none;width:100%}
 #hdtab table{border-collapse:collapse;width:min(96vw,900px);font:600 15px var(--font);color:#fff6e0}
@@ -598,6 +636,7 @@ body.remote.cafe2on #power{right:240px}
       <button id="mmeta">A 100 PUNTOS</button>
       <button id="mtor">TORNEO: NO</button>
       <button class="main" id="mplay">JUGAR CONTRA LOS BOTS</button>
+      <button id="mcopa" class="copab">🏆 COPA MUNDIAL</button>
       <button id="mbots">🙂 LOS BOTS: CARAS Y NOMBRES</button>
       <p id="mtv" hidden></p>
     </div>
@@ -605,7 +644,7 @@ body.remote.cafe2on #power{right:240px}
       <div id="lip"></div>
       <div id="lmode"></div>
       <div id="lseats"><div id="lqr"><svg viewBox="0 0 47 47" shape-rendering="crispEdges"><rect width="47" height="47" fill="#fff"/><path d="M3 3h7v1h-7zM13 3h2v1h-2zM16 3h1v1h-1zM18 3h1v1h-1zM21 3h1v1h-1zM24 3h3v1h-3zM29 3h1v1h-1zM32 3h2v1h-2zM37 3h7v1h-7zM3 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM13 4h1v1h-1zM15 4h1v1h-1zM17 4h1v1h-1zM20 4h1v1h-1zM28 4h2v1h-2zM31 4h1v1h-1zM33 4h1v1h-1zM35 4h1v1h-1zM37 4h1v1h-1zM43 4h1v1h-1zM3 5h1v1h-1zM5 5h3v1h-3zM9 5h1v1h-1zM11 5h1v1h-1zM13 5h4v1h-4zM19 5h8v1h-8zM28 5h1v1h-1zM31 5h1v1h-1zM33 5h3v1h-3zM37 5h1v1h-1zM39 5h3v1h-3zM43 5h1v1h-1zM3 6h1v1h-1zM5 6h3v1h-3zM9 6h1v1h-1zM11 6h1v1h-1zM17 6h1v1h-1zM22 6h2v1h-2zM25 6h3v1h-3zM30 6h2v1h-2zM33 6h3v1h-3zM37 6h1v1h-1zM39 6h3v1h-3zM43 6h1v1h-1zM3 7h1v1h-1zM5 7h3v1h-3zM9 7h1v1h-1zM13 7h2v1h-2zM16 7h2v1h-2zM21 7h3v1h-3zM25 7h2v1h-2zM33 7h2v1h-2zM37 7h1v1h-1zM39 7h3v1h-3zM43 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM13 8h5v1h-5zM24 8h2v1h-2zM28 8h1v1h-1zM31 8h2v1h-2zM35 8h1v1h-1zM37 8h1v1h-1zM43 8h1v1h-1zM3 9h7v1h-7zM11 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM23 9h1v1h-1zM25 9h1v1h-1zM27 9h1v1h-1zM29 9h1v1h-1zM31 9h1v1h-1zM33 9h1v1h-1zM35 9h1v1h-1zM37 9h7v1h-7zM11 10h1v1h-1zM15 10h4v1h-4zM21 10h1v1h-1zM23 10h1v1h-1zM25 10h2v1h-2zM30 10h2v1h-2zM3 11h1v1h-1zM9 11h1v1h-1zM11 11h1v1h-1zM14 11h1v1h-1zM19 11h2v1h-2zM22 11h2v1h-2zM25 11h1v1h-1zM27 11h2v1h-2zM32 11h1v1h-1zM34 11h1v1h-1zM36 11h2v1h-2zM40 11h3v1h-3zM5 12h1v1h-1zM8 12h1v1h-1zM12 12h1v1h-1zM15 12h2v1h-2zM19 12h1v1h-1zM21 12h2v1h-2zM24 12h7v1h-7zM32 12h3v1h-3zM36 12h1v1h-1zM38 12h2v1h-2zM3 13h4v1h-4zM9 13h1v1h-1zM11 13h1v1h-1zM16 13h2v1h-2zM23 13h1v1h-1zM25 13h1v1h-1zM29 13h4v1h-4zM35 13h1v1h-1zM37 13h2v1h-2zM3 14h4v1h-4zM8 14h1v1h-1zM11 14h1v1h-1zM13 14h2v1h-2zM16 14h1v1h-1zM18 14h2v1h-2zM22 14h2v1h-2zM25 14h1v1h-1zM29 14h1v1h-1zM31 14h1v1h-1zM34 14h2v1h-2zM37 14h2v1h-2zM40 14h1v1h-1zM43 14h1v1h-1zM4 15h1v1h-1zM6 15h1v1h-1zM8 15h2v1h-2zM12 15h3v1h-3zM16 15h1v1h-1zM19 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM30 15h1v1h-1zM35 15h1v1h-1zM37 15h1v1h-1zM42 15h2v1h-2zM3 16h2v1h-2zM7 16h2v1h-2zM11 16h2v1h-2zM14 16h1v1h-1zM16 16h3v1h-3zM20 16h2v1h-2zM28 16h1v1h-1zM33 16h1v1h-1zM37 16h1v1h-1zM39 16h5v1h-5zM3 17h1v1h-1zM8 17h2v1h-2zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM23 17h5v1h-5zM29 17h3v1h-3zM33 17h1v1h-1zM35 17h2v1h-2zM38 17h1v1h-1zM40 17h2v1h-2zM4 18h3v1h-3zM8 18h1v1h-1zM10 18h1v1h-1zM13 18h2v1h-2zM18 18h2v1h-2zM23 18h1v1h-1zM25 18h2v1h-2zM31 18h1v1h-1zM34 18h3v1h-3zM39 18h5v1h-5zM4 19h1v1h-1zM6 19h2v1h-2zM9 19h4v1h-4zM14 19h1v1h-1zM19 19h1v1h-1zM25 19h6v1h-6zM32 19h1v1h-1zM34 19h1v1h-1zM36 19h1v1h-1zM38 19h1v1h-1zM41 19h1v1h-1zM3 20h1v1h-1zM11 20h7v1h-7zM19 20h1v1h-1zM21 20h4v1h-4zM26 20h2v1h-2zM30 20h10v1h-10zM43 20h1v1h-1zM7 21h4v1h-4zM13 21h3v1h-3zM17 21h1v1h-1zM20 21h3v1h-3zM26 21h1v1h-1zM28 21h4v1h-4zM34 21h6v1h-6zM43 21h1v1h-1zM3 22h1v1h-1zM7 22h2v1h-2zM11 22h1v1h-1zM13 22h1v1h-1zM18 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM29 22h1v1h-1zM31 22h3v1h-3zM35 22h2v1h-2zM39 22h1v1h-1zM3 23h1v1h-1zM5 23h2v1h-2zM8 23h2v1h-2zM13 23h4v1h-4zM21 23h2v1h-2zM24 23h4v1h-4zM30 23h1v1h-1zM34 23h3v1h-3zM41 23h1v1h-1zM6 24h3v1h-3zM10 24h4v1h-4zM16 24h2v1h-2zM19 24h1v1h-1zM22 24h1v1h-1zM25 24h2v1h-2zM28 24h1v1h-1zM30 24h1v1h-1zM32 24h5v1h-5zM39 24h1v1h-1zM41 24h1v1h-1zM4 25h2v1h-2zM9 25h1v1h-1zM12 25h3v1h-3zM16 25h2v1h-2zM23 25h1v1h-1zM28 25h4v1h-4zM33 25h1v1h-1zM35 25h1v1h-1zM38 25h1v1h-1zM40 25h1v1h-1zM3 26h2v1h-2zM6 26h3v1h-3zM12 26h4v1h-4zM17 26h1v1h-1zM19 26h1v1h-1zM23 26h1v1h-1zM25 26h1v1h-1zM30 26h1v1h-1zM34 26h5v1h-5zM40 26h1v1h-1zM4 27h1v1h-1zM9 27h1v1h-1zM13 27h3v1h-3zM18 27h1v1h-1zM22 27h2v1h-2zM26 27h2v1h-2zM34 27h2v1h-2zM37 27h2v1h-2zM40 27h1v1h-1zM42 27h1v1h-1zM3 28h1v1h-1zM5 28h1v1h-1zM11 28h2v1h-2zM16 28h3v1h-3zM21 28h4v1h-4zM26 28h1v1h-1zM28 28h1v1h-1zM30 28h3v1h-3zM34 28h1v1h-1zM37 28h4v1h-4zM43 28h1v1h-1zM4 29h1v1h-1zM7 29h1v1h-1zM9 29h1v1h-1zM11 29h1v1h-1zM13 29h2v1h-2zM18 29h1v1h-1zM21 29h1v1h-1zM25 29h1v1h-1zM28 29h1v1h-1zM30 29h1v1h-1zM32 29h2v1h-2zM35 29h2v1h-2zM39 29h1v1h-1zM3 30h1v1h-1zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h1v1h-1zM17 30h3v1h-3zM23 30h1v1h-1zM26 30h1v1h-1zM29 30h1v1h-1zM31 30h1v1h-1zM34 30h1v1h-1zM36 30h8v1h-8zM4 31h1v1h-1zM7 31h1v1h-1zM9 31h2v1h-2zM14 31h4v1h-4zM20 31h1v1h-1zM25 31h2v1h-2zM28 31h2v1h-2zM32 31h1v1h-1zM34 31h1v1h-1zM38 31h1v1h-1zM40 31h2v1h-2zM3 32h2v1h-2zM7 32h1v1h-1zM10 32h1v1h-1zM14 32h1v1h-1zM19 32h1v1h-1zM23 32h3v1h-3zM27 32h3v1h-3zM31 32h1v1h-1zM33 32h9v1h-9zM43 32h1v1h-1zM3 33h2v1h-2zM6 33h1v1h-1zM8 33h2v1h-2zM11 33h2v1h-2zM14 33h4v1h-4zM21 33h1v1h-1zM23 33h1v1h-1zM26 33h1v1h-1zM28 33h2v1h-2zM31 33h2v1h-2zM34 33h3v1h-3zM39 33h2v1h-2zM43 33h1v1h-1zM3 34h1v1h-1zM5 34h1v1h-1zM8 34h1v1h-1zM13 34h2v1h-2zM16 34h4v1h-4zM22 34h2v1h-2zM25 34h1v1h-1zM27 34h1v1h-1zM29 34h3v1h-3zM33 34h1v1h-1zM37 34h1v1h-1zM40 34h1v1h-1zM42 34h2v1h-2zM3 35h1v1h-1zM6 35h1v1h-1zM8 35h3v1h-3zM12 35h2v1h-2zM16 35h1v1h-1zM18 35h1v1h-1zM20 35h1v1h-1zM22 35h1v1h-1zM25 35h1v1h-1zM27 35h3v1h-3zM32 35h2v1h-2zM35 35h5v1h-5zM41 35h2v1h-2zM11 36h1v1h-1zM14 36h2v1h-2zM18 36h1v1h-1zM20 36h1v1h-1zM22 36h1v1h-1zM25 36h2v1h-2zM28 36h3v1h-3zM33 36h1v1h-1zM35 36h1v1h-1zM39 36h2v1h-2zM3 37h7v1h-7zM12 37h1v1h-1zM14 37h1v1h-1zM17 37h1v1h-1zM19 37h2v1h-2zM23 37h2v1h-2zM27 37h5v1h-5zM33 37h3v1h-3zM37 37h1v1h-1zM39 37h3v1h-3zM3 38h1v1h-1zM9 38h1v1h-1zM13 38h6v1h-6zM20 38h2v1h-2zM23 38h1v1h-1zM25 38h2v1h-2zM28 38h1v1h-1zM30 38h2v1h-2zM34 38h2v1h-2zM39 38h2v1h-2zM42 38h1v1h-1zM3 39h1v1h-1zM5 39h3v1h-3zM9 39h1v1h-1zM13 39h4v1h-4zM19 39h2v1h-2zM23 39h3v1h-3zM27 39h2v1h-2zM31 39h10v1h-10zM42 39h2v1h-2zM3 40h1v1h-1zM5 40h3v1h-3zM9 40h1v1h-1zM17 40h1v1h-1zM19 40h1v1h-1zM21 40h3v1h-3zM25 40h2v1h-2zM30 40h2v1h-2zM35 40h1v1h-1zM38 40h1v1h-1zM40 40h3v1h-3zM3 41h1v1h-1zM5 41h3v1h-3zM9 41h1v1h-1zM12 41h1v1h-1zM15 41h2v1h-2zM18 41h2v1h-2zM21 41h1v1h-1zM24 41h1v1h-1zM28 41h1v1h-1zM30 41h2v1h-2zM34 41h6v1h-6zM41 41h1v1h-1zM3 42h1v1h-1zM9 42h1v1h-1zM14 42h2v1h-2zM20 42h4v1h-4zM31 42h1v1h-1zM33 42h2v1h-2zM39 42h3v1h-3zM43 42h1v1h-1zM3 43h7v1h-7zM11 43h1v1h-1zM13 43h2v1h-2zM18 43h1v1h-1zM20 43h2v1h-2zM23 43h1v1h-1zM25 43h1v1h-1zM27 43h3v1h-3zM32 43h1v1h-1zM38 43h2v1h-2zM41 43h1v1h-1z" fill="#000"/></svg><span><b class="qrt">📱 TELÉFONO</b>Baja la app</span></div><div id="lqr2"><div id="lqr2svg"></div><span><b class="qrt">OCUPAR SILLA</b>Para sentarte</span></div><button class="lseat" data-s="2"></button><button class="lseat" data-s="3"></button><div id="lmid"></div><button class="lseat" data-s="1"></button><button class="lseat" data-s="0"></button></div>
-      <div id="lbtns"><button id="lnum">JUGADORES: 4</button><button id="lpar">MODO PAREJAS</button><button id="lind">INDIVIDUAL</button><button id="lcount">CONTAR: TODAS</button><button id="lmeta">A 100 PUNTOS</button><button id="ltor">TORNEO: NO</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
+      <div id="lbtns"><button id="lnum">JUGADORES: 4</button><button id="lpar">MODO PAREJAS</button><button id="lind">INDIVIDUAL</button><button id="lcount">CONTAR: TODAS</button><button id="lmeta">A 100 PUNTOS</button><button id="ltor">TORNEO: NO</button><button id="lcopa" class="copab">🏆 COPA MUNDIAL</button><button class="main" id="lplay">EMPEZAR PARTIDA</button></div>
     </div>
   </div>
 </div>
@@ -636,6 +675,8 @@ body.remote.cafe2on #power{right:240px}
 <p class="small">Al tirar la ficha duro (deslizando hacia arriba) sale la frase del número.</p>
 <button id="cfgx" class="main">LISTO</button></div></div>
 <div id="mfold" class="ov" hidden><div class="ovbox"><h2>📂 CARPETAS CON MÚSICA</h2><p class="small" id="mftxt">Solo se ven las carpetas que tienen canciones</p><div id="mfgrid"></div><div class="row"><button id="mfprev">◀ ATRÁS</button><span id="mfpg"></span><button id="mfnext">SIGUIENTE ▶</button></div><div class="row"><button id="mfx">VOLVER</button></div></div></div>
+<div id="copa" class="ov" hidden><div class="ovbox" id="copabox"></div></div>
+<div id="copasc" hidden><div class="cnight"></div><div class="crays"></div><div class="cconf" hidden></div><div id="copain"></div></div>
 <div id="swov" class="ov" hidden><div class="ovbox"><h2>⇄ CAMBIAR SILLAS</h2><p id="swtxt"></p><div id="swgrid"></div><div class="row" id="swact" hidden><button id="swmove">⇄ CAMBIAR DE SILLA</button><button id="swbot">🤖 PONER BOT</button></div><div class="row"><button id="swok" class="main">LISTO</button></div></div></div>
 <div id="hdet" class="ov" hidden><div class="ovbox"><h2 id="hdtit">MANO POR MANO</h2><div id="hdtab"></div><div class="row"><button id="hdx">VOLVER</button></div></div></div>
 <div id="hist" class="ov" hidden><div class="ovbox"><h2>📜 HISTORIAL DE PARTIDAS</h2>
@@ -2958,7 +2999,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.9.66';
+const VERSION='v3.10.0';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3135,7 +3176,7 @@ const same=(x,y)=>x&&y&&((x[0]===y[0]&&x[1]===y[1])||(x[0]===y[1]&&x[1]===y[0]))
 
 /* ================= REGLAS ================= */
 const SEATS=['TÚ','DERECHA','COMPAÑERO','IZQUIERDA'];
-const TEAMN=()=>isTV?['ROJOS','AZULES']:['NOSOTROS','ELLOS'];
+const TEAMN=()=>{ if(COPA&&COPA.playing){ const t=[], h=COPA.hum; t[h]=CP[COPA.me].join(' '); t[1-h]=CP[COPA.opp].join(' '); return t; } return isTV?['ROJOS','AZULES']:['NOSOTROS','ELLOS']; };
 let BOTN=['','','','']; try{ const a=JSON.parse(localStorage.getItem('dominoBots')||'[]'); if(Array.isArray(a)) BOTN=[0,1,2,3].map(i=>String(a[i]||'').toUpperCase().slice(0,14)); }catch(_){}
 // caras de los bots: nombre, experiencia (1 poca, 2 media, 3 mucha: los mayores juegan mejor) y personalidad
 const BOTF=[['YOANDRY',1,'Juega rápido y pega duro; se le escapan fichas.'],['YASMANI',1,'Fiestero: todo lo celebra con un golpetazo.'],['ALEJANDRO',1,'Callado y nervioso; a veces se tranca solo.'],
@@ -3147,7 +3188,7 @@ const BOTF=[['YOANDRY',1,'Juega rápido y pega duro; se le escapan fichas.'],['Y
 const FIMG=BOTF.map((_,i)=>{ const im=new Image(); im.src='faces/f'+i+'.jpg'; return im; });
 let BOTFACE=[12,6,7,15]; try{ const a=JSON.parse(localStorage.getItem('dominoBotFace')||'null'); if(Array.isArray(a)) BOTFACE=[0,1,2,3].map(i=>Number.isInteger(a[i])?a[i]:BOTFACE[i]); }catch(_){}
 function botFace(s){ const f=BOTFACE[s]; return f>=0&&f<BOTF.length?f:-1; }
-function botLvl(s){ const f=botFace(s); return f>=0?BOTF[f][1]:2; }
+function botLvl(s){ if(COPA&&COPA.playing&&s%2!==COPA.hum) return COPA.lv; const f=botFace(s); return f>=0?BOTF[f][1]:2; }
 function botImg(s){ const f=botFace(s); return f>=0&&FIMG[f].complete&&FIMG[f].naturalWidth?FIMG[f]:null; }
 function botName(s){ return BOTN[s]||(botFace(s)>=0?BOTF[botFace(s)][0]:('BOT '+(isTV?s+1:s))); }
 const G=window.__D={state:'menu',hands:[[],[],[],[]],chain:[],ends:null,turn:0,passes:0,log:[],wins:[0,0,0,0],countMode:'todas',cnt:null,matchNo:0,nPlayers:4,energy:[0,0,0,0],scores:[0,0],pscores:[0,0,0,0],mode:'parejas',handNo:0,starter:0,lastWinner:-1,msg:'',msgT:0,
@@ -3157,7 +3198,8 @@ function canPlay(t){ if(!G.ends) return ['L']; const s=[]; if(t[0]===G.ends[0]||
 function playable(seat){ return G.hands[seat].filter(t=>canPlay(t).length); }
 function startMatch(){
   const key=G.mode+'|'+ACT().join(',');
-  if(TOR>0&&G.ser&&!G.ser.done&&G.ser.n===TOR&&G.ser.key===key){ /* sigue el torneo */ }
+  if(COPA&&COPA.playing){ G.ser=null; G.cafeUsed=[false,false,false,false]; G.cafeWant=[0,1,2,3].map(()=>Math.random()<0.55); }
+  else if(TOR>0&&G.ser&&!G.ser.done&&G.ser.n===TOR&&G.ser.key===key){ /* sigue el torneo */ }
   else if(TOR>0){ G.ser={n:TOR,key,w:[0,0,0,0],games:0,done:false,id:Date.now()}; G.cafeUsed=[false,false,false,false]; G.cafeWant=[0,1,2,3].map(()=>Math.random()<0.55); }
   else { G.ser=null; G.cafeUsed=[false,false,false,false]; G.cafeWant=[0,1,2,3].map(()=>Math.random()<0.55); }   // sin torneo: 1 café por jugador en cada juego
  G.mWin=[0,0]; G.mLose=[0,0]; G.rum=1; G.burn=0; G.ash=0; G.log=[]; G.matchNo=(G.matchNo||0)+1; G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.salPick=null; G.over=false; dealHand(); }
@@ -4488,6 +4530,68 @@ document.getElementById('pcont').addEventListener('click',()=>pauseChoose('cont'
 document.getElementById('prest').addEventListener('click',()=>pauseChoose('restart'));
 document.getElementById('pnew').addEventListener('click',()=>pauseChoose('new'));
 // ---- cambiar sillas en plena partida (desde el menú): toca una silla y luego la otra; cada uno se lleva su nombre/foto/teléfono ----
+/* ================= COPA MUNDIAL DE DOMINÓ: 8 países, cuartos (fácil) → semifinal (normal) → final (difícil), partidas a 50 ================= */
+const CP=[['🇨🇺','CUBA'],['🇦🇴','ANGOLA'],['🇺🇸','EE.UU.'],['🇨🇳','CHINA'],['🇨🇦','CANADÁ'],['🇧🇷','BRASIL'],['🇪🇸','ESPAÑA'],['🇲🇽','MÉXICO']];
+const CRN=['CUARTOS','SEMIFINAL','FINAL'], CLV=['fácil','normal','difícil'];
+let COPA=null; const copaEl=document.getElementById('copa'), copaBox=document.getElementById('copabox'), copaSc=document.getElementById('copasc'), copaIn=document.getElementById('copain');
+const cfl=i=>CP[i][0]+' '+CP[i][1];
+function copaHumans(){ return ACT().filter(s=>G.human[s]||G.remote[s]!=null); }
+function copaOpen(){ initAudio();
+  G.mode='parejas'; G.nPlayers=4; try{ modeLabel(); }catch(_){} try{ updateTvMenu(); }catch(_){}
+  const H=copaHumans();
+  const err=!H.length?'Primero siéntate en la mesa con tu teléfono (escanea el QR).':new Set(H.map(x=>x%2)).size>1?'En la Copa las personas juegan en la misma pareja (una enfrente de la otra). Cambia las sillas y vuelve a entrar.':'';
+  if(err){ COPA=null; copaBox.innerHTML='<h2>🏆 COPA MUNDIAL DE DOMINÓ</h2><p id="cmsg">'+err+'</p><div class="row"><button class="main" id="cpx">ENTENDIDO</button></div>'; copaBox.querySelector('#cpx').addEventListener('click',()=>{ copaEl.hidden=true; }); copaEl.hidden=false; fitAll(true); ovFoc(copaEl,0); return; }
+  COPA={hum:H[0]%2,me:-1}; copaBox.innerHTML='<h2>🏆 COPA MUNDIAL DE DOMINÓ</h2><p id="cmsg">Elige el país que vas a defender</p><div id="cpk"></div><div class="row"><button id="cpx">VOLVER</button></div>';
+  const g=copaBox.querySelector('#cpk'); CP.forEach((c,i)=>{ const b=document.createElement('button'); b.innerHTML='<b>'+c[0]+'</b>'+c[1]; b.addEventListener('click',()=>copaPick(i)); g.appendChild(b); });
+  copaBox.querySelector('#cpx').addEventListener('click',()=>{ copaEl.hidden=true; COPA=null; });
+  copaEl.hidden=false; fitAll(true); ovFoc(copaEl,0); }
+function copaPick(i){ const o=[0,1,2,3,4,5,6,7].filter(x=>x!==i); for(let k=o.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [o[k],o[j]]=[o[j],o[k]]; }
+  Object.assign(COPA,{me:i,slots:[i,...o],R:[[],[],[]],round:0,out:false,done:false,playing:false,prevT:G.target});
+  copaEl.hidden=true; copaIntro(); }
+function copaFanfare(){ if(!AC) return; const t=AC.currentTime, N=[[523,0,.18],[659,.18,.18],[784,.36,.18],[1047,.54,.5],[784,.98,.16],[1047,1.14,.8]];
+  for(const [f,d,l] of N){ for(const [m,v] of [[1,.16],[2,.05],[1.5,.04]]){ const o=AC.createOscillator(), gn=AC.createGain(); o.type='sawtooth'; o.frequency.value=f*m;
+    const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2400; gn.gain.setValueAtTime(0,t+d); gn.gain.linearRampToValueAtTime(v,t+d+.03); gn.gain.exponentialRampToValueAtTime(.001,t+d+l+.25);
+    o.connect(lp); lp.connect(gn); gn.connect(master); o.start(t+d); o.stop(t+d+l+.3); } } }
+let copaT=null;
+function copaScene(html,conf){ copaSc.querySelector('.cconf').hidden=!conf; copaIn.innerHTML=html; copaSc.hidden=false; const b=copaIn.querySelector('button'); if(b) setTimeout(()=>{ ovFoc(copaSc,0); },50); }
+function copaIntro(){ initAudio(); copaFanfare();
+  copaScene('<div class="tro">🏆</div><h1><small>★ 2026 ★</small>COPA MUNDIAL<br>DE DOMINÓ</h1><div class="cfl">'+CP.map((c,i)=>'<div style="animation-delay:'+(1.1+i*.18)+'s"><b>'+c[0]+'</b>'+c[1]+'</div>').join('')+'</div><div class="cann">🎙️ «¡Bienvenidos a la Copa Mundial! Ocho países, una sola mesa... ¡'+CP[COPA.me][1]+' sale a defender su bandera!»</div><button class="main" id="cgo">▶ VER EL CUADRO</button>');
+  copaIn.querySelector('#cgo').addEventListener('click',()=>{ clearTimeout(copaT); copaSc.hidden=true; copaBracket(); });
+  clearTimeout(copaT); copaT=setTimeout(()=>{ if(!copaSc.hidden&&COPA&&!COPA.done){ copaSc.hidden=true; copaBracket(); } },9000); }
+function copaPairs(r){ if(r===0){ const S=COPA.slots; return [[S[0],S[1]],[S[2],S[3]],[S[4],S[5]],[S[6],S[7]]]; } const W=COPA.R[r-1].map(m=>m.w); const P=[]; for(let k=0;k<W.length;k+=2) P.push([W[k],W[k+1]]); return P; }
+function copaSim(a,b){ const w=Math.random()<.5?a:b, sw=50+Math.floor(Math.random()*18), sl=12+Math.floor(Math.random()*36); return {a,b,sa:w===a?sw:sl,sb:w===b?sw:sl,w}; }
+function copaMyPair(r){ return copaPairs(r).find(p=>p.includes(COPA.me)); }
+function copaBracket(){ const C=COPA; let h='<h2>🏆 CUADRO DEL MUNDIAL</h2><div class="cbr">';
+  for(let r=0;r<3;r++){ const P=C.R[r].length?C.R[r].map(m=>[m.a,m.b,m]):(r===0||C.R[r-1].length?copaPairs(r).map(p=>[p[0],p[1],null]):[]);
+    h+='<div class="col"><div class="lab">'+CRN[r]+' · '+CLV[r]+'</div>'+(r===2?'<div class="cup">🏆</div>':'');
+    const n=r===0?4:r===1?2:1; for(let k=0;k<n;k++){ const q=P[k]; const row=(x,sc,win)=>'<div class="'+(x===C.me?'me ':'')+(win?'w':'')+'">'+(x==null?'¿ ?':cfl(x)+(x===C.me?' (TÚ)':''))+'<span>'+(sc==null?'':sc)+'</span></div>';
+      h+='<div class="m'+(r===2?' fin':'')+'">'+(q?row(q[0],q[2]?q[2].sa:null,q[2]&&q[2].w===q[0])+row(q[1],q[2]?q[2].sb:null,q[2]&&q[2].w===q[1]):row(null)+row(null))+'</div>'; }
+    if(r===2) h+='<div class="lab">🥉 el que pierda la semifinal con más puntos</div>';
+    h+='</div>'; }
+  h+='</div><p id="cmsg">';
+  if(C.done) h+=(C.out?'Tu país quedó fuera, pero el Mundial ya terminó.':'¡Se jugó la final!')+'</p><div class="row"><button class="main" id="cnext">🏅 VER EL PODIO</button></div>';
+  else { const op=copaMyPair(C.round).find(x=>x!==C.me); h+='Próximo: '+cfl(C.me)+' contra '+cfl(op)+' · a 50 puntos · rivales '+CLV[C.round]+'</p><div class="row"><button class="main" id="cnext">▶ JUGAR '+CRN[C.round]+'</button><button class="pred" id="cout">SALIR DE LA COPA</button></div>'; }
+  copaBox.innerHTML=h; copaBox.querySelector('#cnext').addEventListener('click',()=>C.done?copaPodium():copaPlay());
+  const xo=copaBox.querySelector('#cout'); if(xo) xo.addEventListener('click',copaEnd);
+  copaEl.hidden=false; fitAll(true); ovFoc(copaEl,0); }
+function copaPlay(){ const C=COPA; if(!C||C.done) return; if(!canStart()) return; C.opp=copaMyPair(C.round).find(x=>x!==C.me); C.lv=C.round+1; C.playing=true;
+  G.target=50; copaEl.hidden=true; menu.hidden=true; startMatch(); layout(); renderHand(); say('🏆 '+CRN[C.round]+': '+cfl(C.me)+' VS '+cfl(C.opp),160); broadcast(); }
+function copaResult(){ const C=COPA; C.playing=false; const h=C.hum, sm=G.scores[h], so=G.scores[1-h], won=sm>=G.target&&sm>=so;
+  const r=C.round; C.R[r]=copaPairs(r).map(p=>p.includes(C.me)?{a:p[0],b:p[1],sa:p[0]===C.me?sm:so,sb:p[1]===C.me?sm:so,w:won?C.me:(p[0]===C.me?p[1]:p[0])}:copaSim(p[0],p[1]));
+  if(!won) C.out=true;
+  if(C.out){ for(let q=r+1;q<3;q++) C.R[q]=copaPairs(q).map(p=>copaSim(p[0],p[1])); C.done=true; }
+  else if(r===2) C.done=true; else C.round++;
+  if(won) say(r===2?'¡CAMPEONES DEL MUNDO!':'¡'+CP[C.me][1]+' PASA A LA '+CRN[r+1]+'!',180); else say(CP[C.me][1]+' QUEDA ELIMINADO',160);
+  G.target=C.prevT; copaBracket(); }
+function copaPodium(){ const C=COPA, F=C.R[2][0], gold=F.w, silv=F.a===gold?F.b:F.a;
+  const L=C.R[1].map(m=>{ const l=m.w===m.a?m.b:m.a; return {l,p:m.w===m.a?m.sb:m.sa}; }); const br=(L[0].p===L[1].p?(Math.random()<.5?L[0]:L[1]):(L[0].p>L[1].p?L[0]:L[1])).l;
+  const who=x=>x===C.me?'<small>'+[C.hum,C.hum+2].map(s=>G.names[s]).join(' y ')+'</small>':'';
+  const st=(x,m,n,hh,dl)=>'<div class="st" style="animation-delay:'+dl+'s"><div class="md">'+m+'</div><div class="f2">'+CP[x][0]+'</div><div class="nm">'+CP[x][1]+who(x)+'</div><div class="blk" style="height:'+hh+'">'+n+'</div></div>';
+  copaFanfare(); copaScene('<h1 style="font-size:min(8vh,48px)">'+(gold===C.me?'¡CAMPEONES DEL MUNDO!':'¡'+CP[gold][1]+' CAMPEÓN DEL MUNDO!')+'</h1><div class="pod">'+st(silv,'🥈',2,'12vh',.9)+st(gold,'🥇',1,'19vh',.3)+st(br,'🥉',3,'8vh',1.5)+'</div><button class="main" id="cend">TERMINAR</button>',true);
+  copaIn.querySelector('#cend').addEventListener('click',()=>{ copaSc.hidden=true; copaEnd(); }); copaEl.hidden=true; }
+function copaEnd(){ if(COPA&&COPA.prevT) G.target=COPA.prevT; COPA=null; copaEl.hidden=true; copaSc.hidden=true; try{ metaLabel(); }catch(_){} try{ updateTvMenu(); }catch(_){} }
+document.getElementById('lcopa').addEventListener('click',copaOpen);
+document.getElementById('mcopa').addEventListener('click',copaOpen);
 let swSel=null, swAct=null; const swEl=document.getElementById('swov'), SWPOS=[[3,2],[2,3],[1,2],[2,1]];   // [fila,col] como en la mesa
 function swRender(){ const g=document.getElementById('swgrid'); g.innerHTML='';
   for(const s of ACT()){ const b=document.createElement('button'); b.dataset.s=s; b.style.gridRow=SWPOS[s][0]; b.style.gridColumn=SWPOS[s][1];
@@ -4520,7 +4624,7 @@ document.getElementById('pexit').addEventListener('click',askExit);
 document.getElementById('gsalir').addEventListener('click',askExit);
 // SALIR solo en la pantalla de inicio, arriba a la derecha
 setInterval(()=>{ const $=i=>document.getElementById(i), g=$('gsalir'); const vis=e=>e&&!e.hidden;
-  const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','fpick','hdet','swov','mfold','paywall','exitask'].some(i=>vis($(i)));
+  const ini=vis($('menu'))&&vis($('pick'))&&!['sub','lobby','prof','guide','vidov','pause','cfg','hist','seatop','bnames','fpick','hdet','swov','mfold','copa','copasc','paywall','exitask'].some(i=>vis($(i)));
   document.body.classList.toggle('home',ini); if(g.hidden===ini){ g.hidden=!ini; if(!ini) g.classList.remove('focus'); } },120);
 // ===== historial de partidas: se guarda en el aparato (no se borra al actualizar) =====
 const HKEY='dominoHistorial', HPP=4; let HP=0;
@@ -4687,7 +4791,7 @@ window.kikoMsg=(id,line)=>{
   if(o.t==='sal'){ setSalida(seat,!!o.me); return; }
   if(o.t==='cafe'){ if(o.p){ const p=partnerBot(seat); if(p>=0) orderCafe(p,true); } else orderCafe(seat,true); return; }
   if(o.t==='ctl'){ if(o.a==='song'){ if(!MUS) setMusV(4); songNext(1); return; } if(o.a==='mus'){ setMus(!!o.v); return; } if(o.a==='snd'){ setSnd(!!o.v); return; } if(o.a==='musv'){ setMusV(+o.v); return; } if(o.a==='sndv'){ setSndV(+o.v); return; } if(o.a==='pause'){ G.paused=true; G.pausedBy=seat; say(G.names[seat]+' PUSO PAUSA',99999); return; } if(o.a==='resume'){ if(pauseEl.hidden){ G.paused=false; } G.msgT=0; return; }
-    if(o.a==='start'){ if(isTV&&G.state==='menu'){ document.getElementById('lplay').click(); broadcast(); } return; }
+    if(o.a==='start'){ if(COPA&&!COPA.done&&!document.getElementById('copa').hidden){ copaPlay(); return; } if(isTV&&G.state==='menu'){ document.getElementById('lplay').click(); broadcast(); } return; }
     if(o.a==='restart'||o.a==='new') gameAction(o.a); else if(o.a==='next'&&G.state==='handover'&&G.cnt&&G.cnt.done) nextHandOrMenu(); return; }
   if(o.t==='seat'){ if(G.state==='menu'&&isTV){ const to=o.s|0, from=peers[id]; if(to>=0&&to<4&&to!==from&&isAct(to)) swapSeats(from,to); } return; }
   if(o.t==='say'){ if((o.type==='f'||o.type==='c')&&Number.isInteger(o.i)) sayShow(seat,o.type,o.i); return; }
@@ -4784,7 +4888,7 @@ function fitKids(box,force){ if(!box||box.hidden||!box.offsetParent&&getComputed
   kids.forEach(c=>c.style.zoom=''); let k=1;
   for(let i=0;i<12;i++){ const nh=box.scrollHeight, h=box.clientHeight, nw=box.scrollWidth, w=box.clientWidth; if(nh<=h+1&&nw<=w+1) break; k=Math.max(0.35,k*Math.min(0.985,(h-2)/nh,(w-2)/nw)); kids.forEach(c=>c.style.zoom=k); } }
 function fitMenu(force){ fitKids(menu,force); }
-function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','fpick','hdet','swov','mfold','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
+function fitAll(force){ try{ fitKids(menu,force); fitKids(document.getElementById('pause'),force); ['paywall','bnames','fpick','hdet','swov','mfold','copa','seatop','prof','cfg','hist'].forEach(id=>fitKids(document.getElementById(id),force));
   const g=document.getElementById('guide'); if(g&&!g.hidden){ const pg=document.querySelector('.gpage:not([hidden])'); fitKids(pg,force); } }catch(_){} }
 window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false),500);
 // en cuanto se abre o cierra una pantalla, se ajusta al momento (si no, el primer toque caía en un botón que se movía)
@@ -4972,17 +5076,17 @@ window.kikoKey=(k,down)=>{ if(!down) return; if(k==='a'||k==='start') k='ok';
   const t=document.activeElement; if(k==='ok'&&t&&t.tagName==='INPUT'){ const ov=openOv(); if(ov===payEl&&t.value.trim()){ document.getElementById('pwok').click(); return; } }
   navKey(k); };
 window.kikoBack=()=>{ if(!vidov.hidden){ closeVideo(); return true; } const ov=openOv(); if(ov){ ov.hidden=true; return true; } if(!guide.hidden){ guide.hidden=true; return true; } if(!pauseEl.hidden){ closePause(); return true; } if(!G.remoteMode&&menu.hidden&&(G.state==='play'||G.state==='handover')){ openPause(); return true; } if(G.remoteMode){ document.getElementById('rexit').click(); return true; } if(!prof.hidden){ prof.hidden=true; menu.hidden=false; showPick(); return true; } if(menu.hidden){ menu.hidden=false; G.state='menu'; return true; } if(!sub.hidden||!lobby.hidden){ showPick(); return true; } return false; };
-function nextHandOrMenu(){ G.trq=null; G.rev=null; G.revWait=false; if(G.over){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } broadcast(); } else dealHand(); }
+function nextHandOrMenu(){ G.trq=null; G.rev=null; G.revWait=false; if(G.over&&COPA&&COPA.playing){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } broadcast(); copaResult(); return; } if(G.over){ G.state='menu'; menu.hidden=false; if(isTV){ lobby.hidden=false; updateTvMenu(); } broadcast(); } else dealHand(); }
 cv.addEventListener('pointerdown',()=>{ initAudio(); if(hsOK()) nextHandOrMenu(); });
 
 /* ===== cuadros: nombres de las máquinas y activación ===== */
 const bnEl=document.getElementById('bnames'), payEl=document.getElementById('paywall');
 const soEl=document.getElementById('seatop'); let soSeat=0;
-function openOv(){ return [document.getElementById('mfold'),document.getElementById('swov'),document.getElementById('exitask'),payEl,document.getElementById('hdet'),document.getElementById('fpick'),bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
+function openOv(){ return [document.getElementById('copasc'),document.getElementById('copa'),document.getElementById('mfold'),document.getElementById('swov'),document.getElementById('exitask'),payEl,document.getElementById('hdet'),document.getElementById('fpick'),bnEl,soEl,document.getElementById('cfg'),document.getElementById('hist')].find(x=>x&&!x.hidden)||null; }
 function ovEls(el){ return [...el.querySelectorAll('input,button'),document.getElementById('gsalir')].filter(x=>x.offsetParent!==null||(x.id==='gsalir'&&!x.hidden)); }
 let ovFocus=0;
 function ovFoc(el,i){ const b=ovEls(el); if(!b.length) return; ovFocus=(i+b.length)%b.length; b.forEach((x,k)=>x.classList.toggle('focus',k===ovFocus)); try{ b[ovFocus].focus({preventScroll:true}); }catch(_){} }
-['bnames','fpick','paywall','seatop','swov','mfold'].forEach(id=>document.getElementById(id).addEventListener('focusin',e=>{ const el=document.getElementById(id), b=ovEls(el), i=b.indexOf(e.target); if(i>=0){ ovFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } }));
+['bnames','fpick','paywall','seatop','swov','mfold','copa','copasc'].forEach(id=>document.getElementById(id).addEventListener('focusin',e=>{ const el=document.getElementById(id), b=ovEls(el), i=b.indexOf(e.target); if(i>=0){ ovFocus=i; b.forEach((x,k)=>x.classList.toggle('focus',k===i)); } }));
 // --- nombres de las máquinas ---
 function openBots(){
   const rows=document.getElementById('bnrows'); rows.innerHTML='';
