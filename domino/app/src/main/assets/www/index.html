@@ -119,7 +119,7 @@ body.remote:not(.linked) #rconn{display:flex;position:absolute;left:0;right:0;to
 @keyframes rcpulse{50%{box-shadow:0 0 40px rgba(255,210,60,.9),0 6px 0 #145a33}}
 #rcst{margin:0;font-size:15px;color:#ffe9a8;min-height:2.6em;max-width:520px}
 #rcqr{font:800 17px var(--font);padding:12px 18px;border-radius:14px;background:#1e3f6a;color:#fff;border:2px solid #4a7fc0;width:min(80%,400px)}
-#rconn small{color:#cfe3d4;font-size:13px} #rcprof{font:700 14px var(--font);padding:8px 14px;border-radius:12px;background:#6b3a1a;color:#fff6e0;border:2px solid #8a5a2a}
+#rconn small{color:#cfe3d4;font-size:13px} #rclg{margin:0;max-width:520px;font-size:14px;color:#9fe6b8;background:rgba(0,0,0,.35);border:2px solid #2fbf71;border-radius:12px;padding:6px 10px} #rcprof{font:700 14px var(--font);padding:8px 14px;border-radius:12px;background:#6b3a1a;color:#fff6e0;border:2px solid #8a5a2a}
 @media (orientation:landscape) and (max-height:500px){ body.remote:not(.linked) #rconn{gap:8px;padding:8px} #rcbig{padding:14px 24px;font-size:24px} #rcst{min-height:1.4em;font-size:13px} #rcqr{padding:8px 14px;font-size:15px} }
 body.remote:not(.linked) #rscan,body.remote:not(.linked) #rpair,body.remote:not(.linked) #rst,body.remote:not(.linked) #rwifi{display:none!important}
 #salbox{position:absolute;left:12px;right:12px;top:28px;height:34px;box-sizing:border-box;z-index:21;background:rgba(20,40,70,.97);border:2px solid var(--gold);border-radius:12px;display:flex;flex-direction:row;align-items:center;gap:10px;padding:3px 6px;text-align:center}
@@ -500,7 +500,7 @@ body.remote.cafe2on #power{right:240px}
     <div id="rack"></div>
     <button id="bcafe" hidden>☕ YO</button><button id="bcafe2" hidden>☕ PAREJA</button>
     <button id="bigsort">⇅&nbsp; ORDENAR FICHAS &nbsp;⇅</button>
-    <div id="rconn"><button id="rcqr">📷 ESCANEAR QR DE LA TV</button><button id="rcbig">📺 CONECTAR CON TV</button><p id="rcst">Toca para buscar la tele</p><small>La tele y este teléfono tienen que estar en la <b>misma red Wi-Fi</b></small><button id="rcprof">✏️ NOMBRE Y FOTO</button></div>
+    <div id="rconn"><button id="rcqr">📷 ESCANEAR QR DE LA TV</button><button id="rcbig">📺 CONECTAR CON TV</button><p id="rcst">Toca para buscar la tele</p><small>La tele y este teléfono tienen que estar en la <b>misma red Wi-Fi</b></small><p id="rclg" hidden></p><button id="rcprof">✏️ NOMBRE Y FOTO</button></div>
     <div id="salbox" hidden><b>¿QUIÉN SALE?</b><div><button id="salme">SALGO YO</button><button id="salpa">SALE <span id="salpn">MI PAREJA</span></button></div></div>
     <div id="joinbox" hidden><b>LA MANO YA EMPEZÓ</b><span>¿Coges la mano del bot o esperas a la siguiente?</span><div><button id="jnow">COGER LA MANO</button><button id="jwait">ESPERAR LA SIGUIENTE</button></div></div>
     <button id="bvirar" hidden>MOSTRAR MIS FICHAS</button>
@@ -2999,7 +2999,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.0';
+const VERSION='v3.10.1';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4822,11 +4822,17 @@ window.kikoFromTV=(line)=>{
   }
 };
 let rcRetry=null;
+// tele LG (webOS): si no aparece ninguna tele Android, este teléfono se vuelve la CENTRAL y la tele LG se engancha a él
+function lgNote(){ const e=document.getElementById('rclg'); if(!e) return; e.hidden=!G.lgCentral; if(!G.lgCentral) return; let ip=''; try{ ip=KikoApp.relayIp(); }catch(_){}
+  e.innerHTML=G.lgOn?'📺 Tele LG enganchada. Conectando...':'📺 <b>¿Tu tele es LG?</b> Abre el Dominó en la tele LG: este teléfono hace de central'+(ip?' ('+ip+')':'')+'.'; }
 function rcSearch(){ clearTimeout(rcRetry); rcRetry=null; document.getElementById('rcbig').classList.add('busy'); document.getElementById('rcst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} }
 window.kikoCtrl=(m)=>{
   const st=document.getElementById('rst'), ip=document.querySelector('.ipbox'), rc=document.getElementById('rcst'), rb=document.getElementById('rcbig');
-  if(m.startsWith('OK:')){ rb.classList.remove('busy'); clearTimeout(rcRetry); }
-  else if(m.startsWith('ERR:')){ rc.textContent='Todavía no encuentro la tele. Sigo buscando solo... (o escanea el QR de la tele)';
+  if(m.startsWith('LG:on')){ G.lgOn=true; lgNote(); clearTimeout(rcRetry); try{ KikoApp.ctrlStart('127.0.0.1'); }catch(_){} return; }
+  if(m==='LG:off'){ G.lgOn=false; lgNote(); if(G.lgLocal){ G.lgLocal=false; try{ KikoApp.ctrlStop(); }catch(_){} document.body.classList.remove('linked'); rc.textContent='Se desconectó la tele LG. Esperando que vuelva...'; rcRetry=setTimeout(()=>{ if(G.remoteMode&&!document.body.classList.contains('linked')) rcSearch(); },4000); } return; }
+  if(m.startsWith('OK:')){ G.lgLocal=m.slice(3).startsWith('127.'); rb.classList.remove('busy'); clearTimeout(rcRetry); }
+  else if(m.startsWith('ERR:')){ if(/No encuentro/.test(m)&&!G.lgCentral&&window.KikoApp&&KikoApp.relayStart){ G.lgCentral=true; try{ KikoApp.relayStart(); }catch(_){} lgNote(); }
+    if(G.lgOn) return; rc.textContent='Todavía no encuentro la tele. Sigo buscando solo... (o escanea el QR de la tele)';
     clearTimeout(rcRetry); rcRetry=setTimeout(()=>{ if(G.remoteMode&&!document.body.classList.contains('linked')) rcSearch(); },2500); }
   else rc.textContent=m;
   if(m.startsWith('OK:')){ st.textContent='Conectado a la tele ('+m.slice(3)+')'; st.className='ok'; ip.hidden=true; document.body.classList.add('linked'); netSend({t:'hi',name:PR.name,photo:PR.photo}); }
@@ -4870,7 +4876,7 @@ window.kikoQR=(t)=>{ const st=document.getElementById('rst'); t=String(t||'');
 document.getElementById('rpair').addEventListener('click',()=>{ document.getElementById('rst').textContent='Buscando la tele en tu Wi-Fi...'; try{ KikoApp.ctrlStart(''); }catch(_){} });
 document.getElementById('rgo').addEventListener('click',()=>{ const ip=document.getElementById('rip').value.trim(); if(ip) try{ KikoApp.ctrlStart(ip); }catch(_){} });
 document.getElementById('rexit').addEventListener('click',()=>{ if(document.body.classList.contains('linked')){ rPauseOpen(); return; } rExitNow(); });
-function rExitNow(){ clearTimeout(rcRetry); try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
+function rExitNow(){ clearTimeout(rcRetry); try{ if(G.lgCentral&&KikoApp.relayStop) KikoApp.relayStop(); }catch(_){} G.lgCentral=false; G.lgOn=false; G.lgLocal=false; try{ lgNote(); }catch(_){} try{ KikoApp.ctrlStop(); KikoApp.setPortrait(false); }catch(_){} G.remoteMode=false; G.rMust=false; G.rCntDone=false;
   ['seatbox','passbox','libreta','panel','sidebox','pause'].forEach(i=>{ const e=document.getElementById(i); if(e) e.hidden=true; }); document.body.classList.remove('remote','linked'); document.getElementById('menu').hidden=false; showPick(); layout(); }
 document.getElementById('prexit').addEventListener('click',()=>{ closePause(); rExitNow(); });
 document.getElementById('prfr').addEventListener('click',()=>{ closePause(); openPanel('f'); });

@@ -372,13 +372,13 @@ public class MainActivity extends Activity {
         wifiRapido();
         new Thread(() -> {
             try {
-                server = new ServerSocket(TCP);
-                while (running) {
+                server = new ServerSocket(); server.setReuseAddress(true); server.bind(new InetSocketAddress(TCP));
+                while (running && hosting) {
                     Socket c = server.accept();
                     c.setTcpNoDelay(true);
                     final int id;
                     synchronized (this) { id = clientSeq++; }
-                    clients.put(id, c.getOutputStream());
+                    clients.put(id, c.getOutputStream()); socks.put(id, c);
                     new Thread(() -> readClient(c, id)).start();
                 }
             } catch (Exception ignored) { }
@@ -387,7 +387,8 @@ public class MainActivity extends Activity {
             try (DatagramSocket ds = new DatagramSocket()) {
                 ds.setBroadcast(true);
                 byte[] msg = BEACON.getBytes();
-                while (running) {
+                while (running && hosting) {
+                    if (relayHost && lgOut == null) { Thread.sleep(1000); continue; }   // central LG: solo se anuncia cuando la tele LG ya está enganchada
                     try { ds.send(new DatagramPacket(msg, msg.length, InetAddress.getByName("255.255.255.255"), UDP)); } catch (Exception ignored) { }
                     try {
                         for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces()))
@@ -405,21 +406,130 @@ public class MainActivity extends Activity {
             String line; boolean announced = false;
             while ((line = r.readLine()) != null) {
                 if (line.length() > 120000) continue;
-                if (!announced) { announced = true; js("window.kikoPeer&&kikoPeer(" + id + ",true)"); notifyNet(); }
-                js("window.kikoMsg&&kikoMsg(" + id + "," + JSONObject.quote(line) + ")");
+                if (!announced) { announced = true; peerEv(id, true); notifyNet(); }
+                if (relayHost) { try { JSONObject o = new JSONObject(); o.put("k", "msg"); o.put("id", id); o.put("line", line); wsSend(o.toString()); } catch (Exception ignored) { } }
+                else js("window.kikoMsg&&kikoMsg(" + id + "," + JSONObject.quote(line) + ")");
             }
-            clients.remove(id);
+            clients.remove(id); socks.remove(id);
             try { c.close(); } catch (Exception ignored) { }
-            if (announced) { js("window.kikoPeer&&kikoPeer(" + id + ",false)"); notifyNet(); }
+            if (announced) { peerEv(id, false); notifyNet(); }
             return;
         } catch (Exception ignored) { }
-        clients.remove(id);
+        clients.remove(id); socks.remove(id);
         try { c.close(); } catch (Exception ignored) { }
-        js("window.kikoPeer&&kikoPeer(" + id + ",false)");
+        peerEv(id, false);
         notifyNet();
     }
+    private void peerEv(int id, boolean on) {
+        if (on) annIds.add(id); else annIds.remove(id);
+        if (relayHost) wsSend("{\"k\":\"peer\",\"id\":" + id + ",\"on\":" + on + "}");
+        else js("window.kikoPeer&&kikoPeer(" + id + "," + on + ")");
+    }
 
-    private void notifyNet() { js("window.kikoNet&&kikoNet(" + clients.size() + ",'" + myIp() + "','" + allIps() + "')"); }
+    private void notifyNet() {
+        if (relayHost) { wsSend("{\"k\":\"net\",\"n\":" + clients.size() + ",\"ip\":\"" + myIp() + "\",\"ips\":\"" + allIps() + "\"}"); return; }
+        js("window.kikoNet&&kikoNet(" + clients.size() + ",'" + myIp() + "','" + allIps() + "')");
+    }
+
+    // ================= CENTRAL PARA TELE LG (webOS) =================
+    // La tele LG no puede recibir a los teléfonos: este teléfono hace de central. La tele LG se engancha por WebSocket
+    // (puerto WS) y los teléfonos se conectan aquí como si fuera la tele; todo lo que llega se pasa a la tele LG y al revés.
+    private static final int WS = 47812;
+    private volatile boolean relay = false, relayHost = false;
+    private volatile OutputStream lgOut = null; private volatile Socket lgSock = null; private ServerSocket relaySrv = null;
+    private final Object lgLock = new Object();
+    private final java.util.Set<Integer> annIds = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<Integer, Socket> socks = new ConcurrentHashMap<>();
+    private synchronized void startRelay() {
+        if (relay) return;
+        relay = true; wifiRapido();
+        new Thread(() -> {
+            try (ServerSocket ss = new ServerSocket()) {
+                ss.setReuseAddress(true); ss.bind(new InetSocketAddress(WS)); relaySrv = ss;
+                while (running && relay) { final Socket c = ss.accept(); new Thread(() -> lgClient(c)).start(); }
+            } catch (Exception ignored) { }
+        }).start();
+    }
+    private synchronized void stopRelay() {
+        relay = false;
+        try { if (relaySrv != null) relaySrv.close(); } catch (Exception ignored) { }
+        try { if (lgSock != null) lgSock.close(); } catch (Exception ignored) { }
+        lgOut = null; lgSock = null;
+        if (relayHost) {
+            relayHost = false; hosting = false;
+            try { if (server != null) server.close(); } catch (Exception ignored) { }
+            for (Socket k : socks.values()) try { k.close(); } catch (Exception ignored) { }
+            socks.clear(); clients.clear(); annIds.clear();
+        }
+    }
+    private void lgClient(Socket c) {
+        try {
+            c.setTcpNoDelay(true);
+            java.io.DataInputStream in = new java.io.DataInputStream(new java.io.BufferedInputStream(c.getInputStream()));
+            String key = null; StringBuilder ln = new StringBuilder(); int b, prev = -1; int lines = 0;
+            while ((b = in.read()) >= 0) {        // cabecera HTTP del WebSocket
+                if (b == '\n') { String l = ln.toString().trim(); ln.setLength(0); if (l.isEmpty()) break; if (++lines > 60) return;
+                    int k = l.indexOf(':'); if (k > 0 && l.substring(0, k).trim().equalsIgnoreCase("Sec-WebSocket-Key")) key = l.substring(k + 1).trim(); }
+                else if (b != '\r') { if (ln.length() < 4000) ln.append((char) b); }
+            }
+            if (key == null) { c.close(); return; }
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-1");
+            String acc = Base64.encodeToString(md.digest((key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP);
+            OutputStream out = c.getOutputStream();
+            out.write(("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " + acc + "\r\n\r\n").getBytes(StandardCharsets.UTF_8)); out.flush();
+            synchronized (lgLock) { if (lgSock != null && lgSock != c) try { lgSock.close(); } catch (Exception ignored) { } lgSock = c; lgOut = out; }
+            if (!relayHost) { relayHost = true; startHost(); }
+            final String tvIp = c.getInetAddress().getHostAddress();
+            js("window.kikoCtrl&&kikoCtrl('LG:on:" + tvIp + "')");
+            notifyNet();
+            for (Integer id : annIds) wsSend("{\"k\":\"peer\",\"id\":" + id + ",\"on\":true}");
+            ByteArrayOutputStream msg = new ByteArrayOutputStream();
+            while (true) {
+                int b0 = in.read(); if (b0 < 0) break; int b1 = in.read(); if (b1 < 0) break;
+                int op = b0 & 0x0f; boolean fin = (b0 & 0x80) != 0; long len = b1 & 0x7f;
+                if (len == 126) len = in.readUnsignedShort(); else if (len == 127) len = in.readLong();
+                if (len > 4_000_000) break;
+                byte[] mk = new byte[4]; if ((b1 & 0x80) != 0) in.readFully(mk);
+                byte[] p = new byte[(int) len]; in.readFully(p);
+                if ((b1 & 0x80) != 0) for (int i = 0; i < p.length; i++) p[i] ^= mk[i & 3];
+                if (op == 8) break;
+                if (op == 9) { wsFrame(0x8A, p); continue; }
+                if (op == 1 || op == 0) { msg.write(p); if (fin) { lgIn(new String(msg.toByteArray(), StandardCharsets.UTF_8)); msg.reset(); } }
+            }
+        } catch (Exception ignored) { }
+        try { c.close(); } catch (Exception ignored) { }
+        boolean was;
+        synchronized (lgLock) { was = lgSock == c; if (was) { lgSock = null; lgOut = null; } }
+        if (was) js("window.kikoCtrl&&kikoCtrl('LG:off')");
+    }
+    private void lgIn(String s) {
+        try {
+            JSONObject o = new JSONObject(s);
+            if ("send".equals(o.optString("k"))) {
+                final OutputStream o2 = clients.get(o.getInt("id")); if (o2 == null) return;
+                final int id = o.getInt("id");
+                final byte[] data = (o.getString("line").replace("\n", " ") + "\n").getBytes(StandardCharsets.UTF_8);
+                tx.execute(() -> { try { o2.write(data); o2.flush(); } catch (Exception e) { clients.remove(id); } });
+            }
+        } catch (Exception ignored) { }
+    }
+    private void wsSend(String s) { wsFrame(0x81, s.getBytes(StandardCharsets.UTF_8)); }
+    private void wsFrame(int head, byte[] d) {
+        final OutputStream o = lgOut; if (o == null) return;
+        tx.execute(() -> {
+            synchronized (lgLock) {
+                if (lgOut != o) return;
+                try {
+                    ByteArrayOutputStream f = new ByteArrayOutputStream(d.length + 10);
+                    f.write(head);
+                    if (d.length < 126) f.write(d.length);
+                    else if (d.length < 65536) { f.write(126); f.write(d.length >> 8); f.write(d.length & 255); }
+                    else { f.write(127); for (int i = 7; i >= 0; i--) f.write((int) (((long) d.length >> (8 * i)) & 255)); }
+                    f.write(d, 0, d.length); o.write(f.toByteArray()); o.flush();
+                } catch (Exception e) { try { if (lgSock != null) lgSock.close(); } catch (Exception ignored) { } }
+            }
+        });
+    }
 
     // todas las direcciones de este aparato en la red local (para el QR de conectar)
     private String allIps() {
@@ -601,7 +711,7 @@ public class MainActivity extends Activity {
                     s2.setTcpNoDelay(true);
                     if (gen != ctrlGen) { s2.close(); return; }
                     ctrl = s2; ctrlOut = s2.getOutputStream();
-                    prefs().edit().putString("ultimaTele", ip).apply();
+                    if (!ip.startsWith("127.")) prefs().edit().putString("ultimaTele", ip).apply();
                     wifiRapido();
                     ctrlStatus("OK:" + ip);
                     // escuchar lo que manda la tele
@@ -645,6 +755,12 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void startHost() { MainActivity.this.startHost(); notifyNet(); }
+        @JavascriptInterface
+        public void relayStart() { startRelay(); }
+        @JavascriptInterface
+        public void relayStop() { stopRelay(); }
+        @JavascriptInterface
+        public String relayIp() { return myIp(); }
 
         // foto del jugador con la cámara frontal (miniatura, sin permisos)
         @JavascriptInterface
