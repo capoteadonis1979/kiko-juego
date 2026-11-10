@@ -2999,7 +2999,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.1';
+const VERSION='v3.10.2';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4900,7 +4900,7 @@ window.addEventListener('resize',()=>fitAll(true)); setInterval(()=>fitAll(false
 // en cuanto se abre o cierra una pantalla, se ajusta al momento (si no, el primer toque caía en un botón que se movía)
 try{ new MutationObserver(()=>fitAll(false)).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden']}); new MutationObserver(()=>fitAll(false)).observe(document.body,{attributes:true,attributeFilter:['class']}); }catch(_){} setTimeout(()=>fitAll(true),50);
 document.getElementById('mplay').addEventListener('click',()=>{ initAudio(); if(!canStart()) return; menu.hidden=true; startMatch(); layout(); renderHand(); });
-if(isTV) document.getElementById('psolo').hidden=true;   // en la tele no tiene sentido: con el mando no se pueden tocar fichas (se juega con MESA + cels)
+if(isTV&&!window.KIKO_LG) document.getElementById('psolo').hidden=true;   // en la tele no tiene sentido: con el mando no se pueden tocar fichas (se juega con MESA + cels)
 const tvDevice=isTV, pick=document.getElementById('pick'), sub=document.getElementById('sub'), lobby=document.getElementById('lobby');
 document.getElementById('lplay').addEventListener('click',()=>document.getElementById('mplay').click());
 // rota los jugadores de los puestos 1,2,3 (el 0 se queda): así salen las 3 formas de hacer parejas
@@ -5069,6 +5069,30 @@ function navKey(k){
   if(!bm.hidden){ if(k==='ok'&&bm.classList.contains('focus')){ openPause(); return true; } if(k!=='ok'){ bm.classList.add('focus'); return true; } }
   if(k==='ok'&&hsOK()){ nextHandOrMenu(); return true; }
   return false; }
+/* tele LG (webOS): jugar solo contra los bots con el mando — flechas eligen la ficha, OK la pone (solo en la versión LG) */
+if(window.KIKO_LG){ let kIdx=0, sideK='L';
+  const vis=el=>!!(el&&!el.hidden&&el.offsetParent!==null);
+  const handMode=()=>!G.remoteMode&&!isTV&&menu.hidden&&pauseEl.hidden&&!openOv()&&G.state==='play'&&G.human[0];
+  const paint=()=>{ const t=document.querySelectorAll('#tiles .tile'); if(!t.length) return; kIdx=Math.max(0,Math.min(kIdx,t.length-1)); t.forEach((x,i)=>x.classList.toggle('kfoc',i===kIdx)); };
+  const paintSide=()=>['sideL','sideR'].forEach(id=>{ const b=document.getElementById(id); if(b) b.classList.toggle('kfoc',id===(sideK==='L'?'sideL':'sideR')); });
+  setInterval(()=>{ try{ if(handMode()&&!document.getElementById('bmesa').classList.contains('focus')) paint(); }catch(_){} },300);
+  document.addEventListener('keydown',e=>{ const k=e.keyCode, sb=document.getElementById('sidebox'), pb=document.getElementById('passbox');
+    const stop=()=>{ e.preventDefault(); e.stopPropagation(); };
+    if(vis(sb)){ if(k===37){ sideK='L'; paintSide(); } else if(k===39){ sideK='R'; paintSide(); } else if(k===13){ const b=document.getElementById(sideK==='L'?'sideL':'sideR'); if(b) b.click(); } else if(k===461||k===38){ document.getElementById('sideX').click(); } else return; stop(); return; }
+    if(pb&&!pb.hidden&&k===13&&mustPass()){ const r=Math.random(); sendPass(Math.random()<0.4?2:1,r<0.6?'toque':r<0.8?'palma':'senalar'); stop(); return; }
+    if(!handMode()) return;
+    const bm=document.getElementById('bmesa'); if(bm.classList.contains('focus')){ if(k===40){ bm.classList.remove('focus'); paint(); stop(); } return; }
+    const tl=document.querySelectorAll('#tiles .tile'); if(!tl.length) return;
+    if(k===37){ kIdx=(kIdx-1+tl.length)%tl.length; paint(); }
+    else if(k===39){ kIdx=(kIdx+1)%tl.length; paint(); }
+    else if(k===38){ tl.forEach(x=>x.classList.remove('kfoc')); bm.classList.add('focus'); }
+    else if(k===13){ const el=tl[kIdx]; if(!el||!el._t) return; stop(); initAudio();
+      if(!myTurn()){ flashMsg('Espera tu turno'); return; }
+      const o=myOpts(el._t); if(!o.length){ noFit(); return; }
+      const go=side=>{ el.classList.add('fly'); el.style.transform='translate(0,-'+(tilesEl.clientHeight+200)+'px)'; throwTile(el._t,side,0.45,0); };
+      if(o.length>1){ sideK='L'; askSide(el._t,0,go); setTimeout(paintSide,30); } else go(o[0]); return; }
+    else return;
+    stop(); },true); }
 const KMAP={ArrowDown:'down',ArrowUp:'up',ArrowLeft:'left',ArrowRight:'right',Enter:'ok',NumpadEnter:'ok'};
 addEventListener('keydown',e=>{
   const t=e.target, inInput=t&&t.tagName==='INPUT';
@@ -5172,13 +5196,13 @@ let LIC=null; try{ LIC=checkCode(localStorage.getItem('dominoLic')); }catch(_){}
 let T0=Date.now(); try{ const v=+localStorage.getItem('dominoInicio'); if(v>0) T0=v; else localStorage.setItem('dominoInicio',String(T0)); }catch(_){}
 const today=()=>{ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 function usedToday(){ try{ const j=JSON.parse(localStorage.getItem('dominoHoy')||'{}'); return j.d===today()?(j.n|0):0; }catch(_){ return 0; } }
-function licOK(){ return !!(LIC&&(LIC.perm||Date.now()<=LIC.until)); }
+function licOK(){ if(window.KIKO_LG) return true; return !!(LIC&&(LIC.perm||Date.now()<=LIC.until)); }
 const TRIAL_MS=3600000; let USO=0; try{ USO=Math.max(0,+localStorage.getItem('dominoUso')||0); }catch(_){}
 function trialLeft(){ return Math.max(0,TRIAL_MS-USO); }
 function trialDays(){ return trialLeft()>0?1:0; }
 // cuenta solo el tiempo jugando de verdad (partida en marcha, sin pausa, en la mesa)
 setInterval(()=>{ try{ if(licOK()||trialLeft()<=0) return; if(!menu.hidden||!G||G.remoteMode||G.paused||document.hidden) return; USO+=10000; localStorage.setItem('dominoUso',String(USO)); }catch(_){} },10000);
-function licInfo(){ if(licOK()) return LIC.perm?'✔ ACTIVADA PARA SIEMPRE':'✔ ACTIVADA HASTA EL '+new Date(LIC.until).toLocaleDateString('es-ES');
+function licInfo(){ if(window.KIKO_LG) return ''; if(licOK()) return LIC.perm?'✔ ACTIVADA PARA SIEMPRE':'✔ ACTIVADA HASTA EL '+new Date(LIC.until).toLocaleDateString('es-ES');
   const ml=Math.ceil(trialLeft()/60000); if(ml>0) return 'PRUEBA GRATIS: '+(ml>=60?'1 HORA DE JUEGO':(ml===1?'QUEDA 1 MINUTO':'QUEDAN '+ml+' MINUTOS')+' DE JUEGO');
   const r=Math.max(0,3-usedToday()); return 'HOY TE '+(r===1?'QUEDA 1 PARTIDA GRATIS':'QUEDAN '+r+' PARTIDAS GRATIS')+' DE 3'; }
 function updLic(){ document.getElementById('lic').textContent=licInfo(); }

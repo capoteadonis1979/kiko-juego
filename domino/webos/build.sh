@@ -10,6 +10,8 @@ python3 - "$V" <<'P'
 import sys,re,json
 v=sys.argv[1]; p='dist/index.html'; s=open(p,encoding='utf-8').read()
 s=s.replace('<head><meta charset="utf-8">','<head><meta charset="utf-8"><script src="lg.js"></script>',1)
+import re as _re
+s=_re.sub(r'<h3>4 · Bajar la app y comprarla</h3>.*?(?=<h3>Créditos</h3>)','',s,count=1,flags=_re.S)
 open(p,'w',encoding='utf-8').write(s)
 a=json.load(open('dist/appinfo.json')); parts=(re.findall(r'\d+',v)+['0','0','0'])[:3]; a['version']='.'.join(parts); json.dump(a,open('dist/appinfo.json','w'),ensure_ascii=False,indent=2)
 P
