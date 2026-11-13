@@ -2999,7 +2999,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.4';
+const VERSION='v3.10.5';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3087,7 +3087,7 @@ function musStepPlay(t,st){
   const k=MONT.indexOf(s16); if(k>=0){ const n=ch[k%3]+(k>3?12:0); mPluck(t,mNote(n+12),0.16,0.08); mPluck(t,mNote(n+24),0.12,0.05,'triangle'); }   // montuno
 }
 /* canciones cubanas (Suno Pro): se bajan una vez y quedan guardadas en el aparato; mientras tanto suena el son de la casa */
-const SONGS=[['¡Ay alabao!','24.mp3'],['O bairro tá bué fixe','36.mp3'],['Pega la ficha, compay','01.mp3'],['Devagarinho','25.mp3'],['Río Yayabo','02.mp3'],['Así se forma el son','26.mp3'],['Tinajón de mi tierra','03.mp3'],['Lejos de casa','27.mp3'],['Habana de mi Malecón','04.mp3'],['Tu mano en la mía','28.mp3'],['Cubano em Angola','05.mp3'],['Dominó del mundo','29.mp3'],['Me fui sin decir adiós','06.mp3'],['Quintal da avó','30.mp3'],['La conga de Santiago','08.mp3'],['Barrio de mi gente','31.mp3'],['Café y tabaco','09.mp3'],['El solar se alegra','32.mp3'],['La pollona','10.mp3'],['Noche de tertulia','33.mp3'],['Pon el doble, compay','11.mp3'],['Domenica in piazza','34.mp3'],['De Pinar a Guantánamo','12.mp3'],['Saudade de Luanda','35.mp3'],['La Habana que dejé','13.mp3'],['Carta a mi madre','14.mp3'],['Malecón de mis recuerdos','15.mp3'],['Cuando vuelva a Santiago','16.mp3'],['Las palmas me esperan','17.mp3'],['La mesa del barrio','18.mp3'],['Hombre de campo','19.mp3'],['Cinco en la mesa','20.mp3'],['Guajira de mi río','21.mp3'],['Que suene la orquesta','22.mp3'],['La última ficha','23.mp3']];
+const SONGS=[['¡Ay alabao!','24.mp3'],['O bairro tá bué fixe','36.mp3'],['Devagarinho','25.mp3'],['Así se forma el son','26.mp3'],['Lejos de casa','27.mp3'],['Tu mano en la mía','28.mp3'],['Dominó del mundo','29.mp3'],['Quintal da avó','30.mp3'],['Barrio de mi gente','31.mp3'],['El solar se alegra','32.mp3'],['Noche de tertulia','33.mp3'],['Domenica in piazza','34.mp3'],['Saudade de Luanda','35.mp3'],['Pega la ficha, compay','01.mp3'],['Río Yayabo','02.mp3'],['Tinajón de mi tierra','03.mp3'],['Habana de mi Malecón','04.mp3'],['Cubano em Angola','05.mp3'],['Me fui sin decir adiós','06.mp3'],['La conga de Santiago','08.mp3'],['Café y tabaco','09.mp3'],['La pollona','10.mp3'],['Pon el doble, compay','11.mp3'],['De Pinar a Guantánamo','12.mp3'],['La Habana que dejé','13.mp3'],['Carta a mi madre','14.mp3'],['Malecón de mis recuerdos','15.mp3'],['Cuando vuelva a Santiago','16.mp3'],['Las palmas me esperan','17.mp3'],['La mesa del barrio','18.mp3'],['Hombre de campo','19.mp3'],['Cinco en la mesa','20.mp3'],['Guajira de mi río','21.mp3'],['Que suene la orquesta','22.mp3'],['La última ficha','23.mp3']];
 const NATIVE_MUS=!!(window.KikoApp&&KikoApp.songsReady);
 let songIdx=0;   // siempre empieza con el tema del dominó
 let songEl=null, songOK=true, songErr=0, songRetry=0, songReady=new Set(), songAsked=false, songReadyT=0;
