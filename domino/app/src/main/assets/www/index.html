@@ -3002,7 +3002,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.8';
+const VERSION='v3.10.9';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -5192,6 +5192,7 @@ const DEV=(()=>{ let raw=''; try{ raw=(window.KikoApp&&KikoApp.deviceId)?KikoApp
   if(!raw){ try{ raw=localStorage.getItem('dominoDev')||''; if(!raw){ raw='W'+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('dominoDev',raw); } }catch(_){ raw='X'; } }
   const c=hcode('DCDEV|'+raw,8); return c.slice(0,4)+'-'+c.slice(4); })();
 function checkCode(code){ const c=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''), dv=DEV.replace('-','');
+  if(window.KIKO_LG&&c==='LGQA'+hcode(LSEC+'|LGQA',6)) return {until:new Date(2027,5,30,23,59,59).getTime(),code:c};   // código de prueba para los revisores de LG
   if(c.length===9&&c[0]==='P'&&c.slice(1)===hcode(LSEC+'|P|'+dv,8)) return {perm:true,code:c};
   if(c.length===13&&c[0]==='M'&&/^\d{4}$/.test(c.slice(1,5))&&c.slice(5)===hcode(LSEC+'|M'+c.slice(1,5)+'|'+dv,8)){ const yy=2000+(+c.slice(1,3)), mm=+c.slice(3,5); if(mm>=1&&mm<=12) return {until:new Date(yy,mm,0,23,59,59).getTime(),code:c}; }
   return null; }
