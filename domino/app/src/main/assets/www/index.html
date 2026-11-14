@@ -3002,7 +3002,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.7';
+const VERSION='v3.10.8';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -5212,7 +5212,7 @@ function updLic(){ document.getElementById('lic').textContent=licInfo(); }
 function canStart(){ if(licOK()||trialDays()>0) return true; const u=usedToday(); if(u<3){ try{ localStorage.setItem('dominoHoy',JSON.stringify({d:today(),n:u+1})); }catch(_){} updLic(); return true; }
   showPay('SE ACABARON LAS 3 PARTIDAS GRATIS DE HOY'); return false; }
 // --- compra con el secretario de Capote Apps (PayPal, USDT o transferencia BAI) ---
-const SALES_URL='';   // URL del secretario (Google Apps Script). Vacío = solo código a mano
+const SALES_URL='https://script.google.com/macros/s/AKfycbyCqB99c6DgyghGQM-mszTHH1e5KCT8tStzvLYBmgkIdZaPFIBdkAjk6Tq7ACoz49Nh/exec';   // URL del secretario (Google Apps Script). Vacío = solo código a mano
 let PW={plan:null,met:null,poll:null};
 const pwEl=id=>document.getElementById(id);
 function pwStep(n){ ['pwstep1','pwstep2','pwstep3'].forEach((id,i)=>pwEl(id).hidden=i!==n-1); setTimeout(()=>ovFoc(payEl,0),0); }
