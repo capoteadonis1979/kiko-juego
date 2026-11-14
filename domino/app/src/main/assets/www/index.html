@@ -2999,7 +2999,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.6';
+const VERSION='v3.10.7';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -3199,7 +3199,7 @@ function playable(seat){ return G.hands[seat].filter(t=>canPlay(t).length); }
 function startMatch(){
   const key=G.mode+'|'+ACT().join(',');
   if(COPA&&COPA.playing){ G.ser=null; G.cafeUsed=[false,false,false,false]; G.cafeWant=[0,1,2,3].map(()=>Math.random()<0.55); }
-  else if(TOR>0&&G.ser&&!G.ser.done&&G.ser.n===TOR&&G.ser.key===key){ /* sigue el torneo */ }
+  else if(TOR>0&&G.ser&&!G.ser.done&&G.ser.n===TOR&&G.ser.key===key&&G.over===true){ /* sigue el torneo: solo si el juego anterior terminó (si se salió a mitad, el marcador vuelve a 0-0) */ }
   else if(TOR>0){ G.ser={n:TOR,key,w:[0,0,0,0],games:0,done:false,id:Date.now()}; G.cafeUsed=[false,false,false,false]; G.cafeWant=[0,1,2,3].map(()=>Math.random()<0.55); }
   else { G.ser=null; G.cafeUsed=[false,false,false,false]; G.cafeWant=[0,1,2,3].map(()=>Math.random()<0.55); }   // sin torneo: 1 café por jugador en cada juego
  G.mWin=[0,0]; G.mLose=[0,0]; G.rum=1; G.burn=0; G.ash=0; G.log=[]; G.matchNo=(G.matchNo||0)+1; G.energy=[0,0,0,0]; G.scores=[0,0]; G.pscores=[0,0,0,0]; G.handNo=0; G.lastWinner=-1; G.salPick=null; G.over=false; dealHand(); }
