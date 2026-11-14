@@ -389,6 +389,9 @@ body.mesa #lobby:not([hidden])~#cred,body.mesa #menu p#cred{display:none!importa
   body.home #menu{overflow:hidden}
   /* fondo de mesa de madera con palmas (diseño de Gemini) y botones con brillo y relieve */
   body.home #menu{background:#0b1a12 url(bg_home.jpg) center/100% 100% no-repeat}
+  /* fondo con la bandera tallada y el tinajón de Camagüey: botones dentro del paño, sin el subtítulo ni la bandera suelta */
+  body.home #menu{padding-bottom:17vh!important} body.home #menu h1{margin-top:4.5vh;font-size:6.2vh!important} body.home #menu>p:not(#cred){display:none!important}
+  body.home #pick{gap:1.4vh!important;width:68vw!important;max-width:68vw!important} body.home #cuba .cmg{display:none!important} body.home #cuba{min-height:6vh} body.home #cuba .flag{visibility:hidden}
   body.home #cuba .cmg svg{display:none} body.home #cuba .cmg{right:2.5vw;bottom:2px}
   body.home #menu h1{text-shadow:0 3px 0 #5e3214,0 0 18px rgba(0,0,0,.6)}
   body.home #menu #pick button{border:3px solid #d6a24a;border-radius:12px;text-shadow:0 2px 2px rgba(0,0,0,.55);
@@ -3002,7 +3005,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.9';
+const VERSION='v3.10.10';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;

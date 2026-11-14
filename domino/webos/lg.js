@@ -62,6 +62,6 @@
 /* ===== versión LG: estilos (lo demás va dentro del juego, activado con window.KIKO_LG) ===== */
 window.addEventListener('DOMContentLoaded',function(){
   var css=document.createElement('style');
-  css.textContent='#pact,#lic{display:none!important} #tiles .tile.kfoc{outline:5px solid #ffd23a;outline-offset:3px;transform:translateY(-16px);z-index:5} #sidebox button.kfoc{outline:5px solid #ffd23a;outline-offset:3px}';
+  css.textContent='#tiles .tile.kfoc{outline:5px solid #ffd23a;outline-offset:3px;transform:translateY(-16px);z-index:5} #sidebox button.kfoc{outline:5px solid #ffd23a;outline-offset:3px}';
   document.head.appendChild(css);
 });
