@@ -3005,7 +3005,7 @@ var qrcode = function() {
 </script>
 <script>
 (()=>{
-const VERSION='v3.10.12';
+const VERSION='v3.10.13';
 document.getElementById('ver').textContent=VERSION;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const inApp=!!window.KikoApp;
@@ -4951,7 +4951,11 @@ function metaNext(){ const i=METAS.indexOf(G.target); if(i>=0&&i<METAS.length-1)
 ['ltor','mtor'].forEach(id=>document.getElementById(id).addEventListener('click',torNext)); torLabel();
 metaLabel();
 
-function showPick(){ document.body.classList.remove('mesa'); lobby.hidden=true; pick.hidden=false; sub.hidden=true; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
+// que el texto de cada botón del menú siempre quepa dentro (en teles con letra grande se salía)
+function fitPick(){ try{ document.querySelectorAll('#pick button').forEach(b=>{ b.style.fontSize=''; if(!b.offsetWidth) return; let fs=parseFloat(getComputedStyle(b).fontSize), n=0;
+  while(b.scrollWidth>b.clientWidth+1 && fs>10 && n++<40){ fs-=1; b.style.setProperty('font-size',fs+'px','important'); } }); }catch(_){} }
+window.addEventListener('resize',()=>setTimeout(fitPick,50)); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitPick); setTimeout(fitPick,300); setTimeout(fitPick,1500);
+function showPick(){ setTimeout(fitPick,0);  document.body.classList.remove('mesa'); lobby.hidden=true; pick.hidden=false; sub.hidden=true; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
 function showSub(){ pick.hidden=true; sub.hidden=false; mFocus=-1; menuBtns().forEach(b=>b.classList.remove('focus')); }
 // MESA: este aparato es la mesa (la tele); los cels se conectan a él
 function becomeTable(){
