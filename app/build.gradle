@@ -20,6 +20,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    // Las librerías del motor de voz se instalan desempaquetadas: es como mejor las encuentra.
+    packaging { jniLibs { useLegacyPackaging true } }
     lint {
         checkReleaseBuilds false
         abortOnError false
