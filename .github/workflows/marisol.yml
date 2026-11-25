@@ -1,0 +1,65 @@
+name: Compilar Guarda Contactos (Marisol)
+
+on:
+  push:
+    branches: [marisol]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Instalar SDK Android 36
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Bajar el modelo de voz en español (va dentro de la app)
+        run: |
+          curl -fsSL -o modelo.zip https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip
+          unzip -q modelo.zip
+          mkdir -p app/src/main/assets
+          mv vosk-model-small-es-0.42 app/src/main/assets/model-es
+          ls app/src/main/assets/model-es
+
+      - name: Compilar APK (sin firmar)
+        run: |
+          set -o pipefail
+          gradle :app:assembleRelease --stacktrace 2>&1 | tee compilacion.log
+
+      - name: Preparar salida
+        if: always()
+        run: |
+          mkdir -p salida
+          tail -c 200000 compilacion.log > salida/compilacion.txt || echo "sin registro" > salida/compilacion.txt
+          if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            cp app/build/outputs/apk/release/app-release-unsigned.apk salida/GuardaContactos-sin-firmar.apk
+          fi
+          grep -o "versionName '[^']*'" app/build.gradle | cut -d"'" -f2 > salida/version.txt
+          git rev-parse HEAD > salida/commit.txt
+
+      - name: Publicar compilación sin firmar
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: marisol-compilacion
+          name: Guarda Contactos - compilación sin firmar (uso interno)
+          body: Salida de la última compilación. El APK para instalar está en la release "marisol".
+          files: salida/*
+          prerelease: true
+          make_latest: false

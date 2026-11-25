@@ -1,0 +1,33 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.capote.guardacontactos'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'com.capote.guardacontactos'
+        minSdk 23
+        targetSdk 34
+        versionCode 6
+        versionName '1.3.0'
+        ndk { abiFilters 'arm64-v8a', 'armeabi-v7a' }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false   // sale sin firmar: la firma se pone aparte, la llave no vive en el repo
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+dependencies {
+    // Motor de voz que va dentro de la app (oye la palabra clave sin internet)
+    implementation 'net.java.dev.jna:jna:5.18.1@aar'
+    implementation 'com.alphacephei:vosk-android:0.3.75@aar'
+}
