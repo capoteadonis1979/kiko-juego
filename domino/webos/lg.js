@@ -22,7 +22,7 @@
   function status(t,ok){ if(!document.body) return; if(!bar){ bar=document.createElement('div'); bar.id='lgbar';
       bar.style.cssText='position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:90;font:700 15px Fredoka,Arial,sans-serif;color:#fff;background:rgba(0,0,0,.72);border:2px solid #d6a24a;border-radius:12px;padding:6px 14px;max-width:80vw;text-align:center;pointer-events:none';
       document.body.appendChild(bar); }
-    bar.style.borderColor=ok?'#2fbf71':'#d6a24a'; bar.innerHTML=t; bar.style.display=t?'block':'none'; }
+    bar.style.borderColor=ok?'#2fbf71':'#d6a24a'; bar.innerHTML=(window.kikoT?kikoT(t):t); bar.style.display=t?'block':'none'; }
   function lobbyVisible(){ var l=document.getElementById('lobby'); return !!(l&&!l.hidden&&l.offsetParent!==null); }
   setInterval(function(){ if(bar) bar.style.visibility=(lobbyVisible()||!ws)&&wantHost?'visible':'hidden'; },500);
   function attach(w,ip){ ws=w; lss('lgCentral',ip);

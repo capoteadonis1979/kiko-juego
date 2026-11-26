@@ -140,6 +140,8 @@ public class MainActivity extends Activity {
     private String permMusica() { return Build.VERSION.SDK_INT >= 33 ? "android.permission.READ_MEDIA_AUDIO" : "android.permission.READ_EXTERNAL_STORAGE"; }
     private boolean tienePermMusica() { return Build.VERSION.SDK_INT < 23 || checkSelfPermission(permMusica()) == android.content.pm.PackageManager.PERMISSION_GRANTED; }
     private android.content.SharedPreferences prefs() { return getSharedPreferences("domino", MODE_PRIVATE); }
+    private String lang() { String l = prefs().getString("lang", ""); if (l.isEmpty()) { String d = java.util.Locale.getDefault().getLanguage(); l = d.startsWith("es") ? "es" : d.startsWith("pt") ? "pt" : "en"; } return l; }
+    private String tr(String es, String en, String pt) { String l = lang(); return "en".equals(l) ? en : "pt".equals(l) ? pt : es; }
     private void cancionesLocales(boolean pedir) {
         if (!pedir) {
             String m = prefs().getString("carpetaMS", null);
@@ -157,7 +159,7 @@ public class MainActivity extends Activity {
         if ((f == null || f.isEmpty()) && iData >= 0) { try { String d = c.getString(iData); if (d != null) { int k = d.lastIndexOf('/'); f = k > 0 ? d.substring(0, k) : d; } } catch (Exception ignored) { } }
         if (f == null) f = ""; while (f.endsWith("/")) f = f.substring(0, f.length() - 1);
         f = f.replaceFirst("^/storage/emulated/0/", "").replaceFirst("^/sdcard/", "");
-        return f.isEmpty() ? "Música" : f;
+        return f.isEmpty() ? tr("Música","Music","Música") : f;
     }
     private android.database.Cursor cursorAudio() {
         java.util.ArrayList<String> cols = new java.util.ArrayList<>(java.util.Arrays.asList(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DATA));
@@ -307,15 +309,15 @@ public class MainActivity extends Activity {
     private void ofrecer(String v) {
         if (isFinishing() || avisando) return; avisando = true;
         new AlertDialog.Builder(this)
-            .setTitle("Versión nueva " + v)
-            .setMessage("Hay una versión nueva del Dominó Cubano TV (tienes la " + miVersion() + ").\n¿La instalo ahora?")
-            .setPositiveButton("ACTUALIZAR", (d, w) -> descargar(v))
-            .setNegativeButton("DESPUÉS", null)
+            .setTitle(tr("Versión nueva ","New version ","Versão nova ") + v)
+            .setMessage(tr("Hay una versión nueva del Dominó Cubano TV (tienes la ","There is a new version of Cuban Dominoes TV (you have ","Há uma versão nova do Dominó Cubano TV (tens a ") + miVersion() + tr(").\n¿La instalo ahora?",").\nInstall it now?",").\nInstalo agora?"))
+            .setPositiveButton(tr("ACTUALIZAR","UPDATE","ATUALIZAR"), (d, w) -> descargar(v))
+            .setNegativeButton(tr("DESPUÉS","LATER","DEPOIS"), null)
             .setOnDismissListener(d -> avisando = false)
             .show();
     }
     private void descargar(final String quiero) {
-        final AlertDialog dlg = new AlertDialog.Builder(this).setTitle("Actualizando").setMessage("Descargando… 0%").setCancelable(false).create();
+        final AlertDialog dlg = new AlertDialog.Builder(this).setTitle(tr("Actualizando","Updating","A atualizar")).setMessage(tr("Descargando… ","Downloading… ","A baixar… ") + "0%").setCancelable(false).create();
         dlg.show();
         new Thread(() -> {
             try {
@@ -327,14 +329,14 @@ public class MainActivity extends Activity {
                 try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(f)) {
                     byte[] buf = new byte[32768]; int n;
                     while ((n = in.read(buf)) > 0) { out.write(buf, 0, n); hecho += n;
-                        if (total > 0) { final int pc = (int) (hecho * 100L / total); if (pc != ult) { ult = pc; runOnUiThread(() -> dlg.setMessage("Descargando… " + pc + "%")); } } }
+                        if (total > 0) { final int pc = (int) (hecho * 100L / total); if (pc != ult) { ult = pc; runOnUiThread(() -> dlg.setMessage(tr("Descargando… ","Downloading… ","A baixar… ") + pc + "%")); } } }
                 }
                 // comprobar que lo bajado es de verdad la última (si GitHub aún da la anterior, no se instala)
                 String bajada = "0"; try { android.content.pm.PackageInfo pi = getPackageManager().getPackageArchiveInfo(f.getPath(), 0); if (pi != null && pi.versionName != null) bajada = pi.versionName; } catch (Exception ignored) { }
-                if (compara(bajada, quiero) < 0) { f.delete(); runOnUiThread(() -> { dlg.dismiss(); new AlertDialog.Builder(this).setMessage("La versión " + quiero + " todavía se está subiendo. Prueba otra vez en un par de minutos.").setPositiveButton("OK", null).show(); }); return; }
+                if (compara(bajada, quiero) < 0) { f.delete(); runOnUiThread(() -> { dlg.dismiss(); new AlertDialog.Builder(this).setMessage(tr("La versión ","Version ","A versão ") + quiero + tr(" todavía se está subiendo. Prueba otra vez en un par de minutos."," is still being uploaded. Try again in a couple of minutes."," ainda está a ser enviada. Tenta outra vez daqui a uns minutos.")).setPositiveButton("OK", null).show(); }); return; }
                 runOnUiThread(() -> { dlg.dismiss(); apkNueva = f; instalar(); });
             } catch (Exception e) {
-                runOnUiThread(() -> { dlg.dismiss(); new AlertDialog.Builder(this).setMessage("No se pudo descargar la versión nueva. Revisa el internet y vuelve a abrir el juego.").setPositiveButton("OK", null).show(); });
+                runOnUiThread(() -> { dlg.dismiss(); new AlertDialog.Builder(this).setMessage(tr("No se pudo descargar la versión nueva. Revisa el internet y vuelve a abrir el juego.","Couldn't download the new version. Check the internet and open the game again.","Não foi possível baixar a versão nova. Verifica a internet e volta a abrir o jogo.")).setPositiveButton("OK", null).show(); });
             }
         }).start();
     }
@@ -343,12 +345,12 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
             esperaPermiso = true;
             new AlertDialog.Builder(this)
-                .setMessage("Para actualizar, activa \"Permitir de esta fuente\" (instalar apps desconocidas) para Dominó Cubano TV y vuelve atrás.")
-                .setPositiveButton("ABRIR AJUSTES", (d, w) -> {
+                .setMessage(tr("Para actualizar, activa \"Permitir de esta fuente\" (instalar apps desconocidas) para Dominó Cubano TV y vuelve atrás.","To update, turn on \"Allow from this source\" (install unknown apps) for Cuban Dominoes TV and come back.","Para atualizar, ativa \"Permitir desta fonte\" (instalar apps desconhecidas) para o Dominó Cubano TV e volta atrás."))
+                .setPositiveButton(tr("ABRIR AJUSTES","OPEN SETTINGS","ABRIR DEFINIÇÕES"), (d, w) -> {
                     try { startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()))); }
                     catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS)); } catch (Exception ignored) { } }
                 })
-                .setNegativeButton("DESPUÉS", (d, w) -> esperaPermiso = false)
+                .setNegativeButton(tr("DESPUÉS","LATER","DEPOIS"), (d, w) -> esperaPermiso = false)
                 .show();
             return;
         }
@@ -593,6 +595,10 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isTV() { return tv; }
 
+        // idioma elegido en el juego (es / en / pt) para los avisos de Android
+        @JavascriptInterface
+        public void setLang(String l) { try { prefs().edit().putString("lang", l == null ? "" : l).apply(); } catch (Exception ignored) { } }
+
         // abre el teclado de la tele / el cel para escribir en un cuadro de texto
         @JavascriptInterface
         public void askText(String title, String value, String tag) {
@@ -606,8 +612,8 @@ public class MainActivity extends Activity {
                     android.widget.FrameLayout box = new android.widget.FrameLayout(MainActivity.this);
                     int p = (int) (20 * getResources().getDisplayMetrics().density); box.setPadding(p, p / 2, p, 0); box.addView(et);
                     final AlertDialog d = new AlertDialog.Builder(MainActivity.this).setTitle(title).setView(box)
-                        .setPositiveButton("GUARDAR", (x, w) -> js("window.kikoText&&kikoText(" + JSONObject.quote(tag) + "," + JSONObject.quote(et.getText().toString()) + ")"))
-                        .setNegativeButton("CANCELAR", null).create();
+                        .setPositiveButton(tr("GUARDAR","SAVE","GUARDAR"), (x, w) -> js("window.kikoText&&kikoText(" + JSONObject.quote(tag) + "," + JSONObject.quote(et.getText().toString()) + ")"))
+                        .setNegativeButton(tr("CANCELAR","CANCEL","CANCELAR"), null).create();
                     et.setOnEditorActionListener((v, id, ev) -> { if (id == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) { d.getButton(AlertDialog.BUTTON_POSITIVE).performClick(); return true; } return false; });
                     if (d.getWindow() != null) d.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
                     d.setOnShowListener(x -> { et.requestFocus(); et.selectAll(); });
