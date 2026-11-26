@@ -1,0 +1,13 @@
+{
+  "id": "com.capote.dominocubano",
+  "version": "3.10.14",
+  "vendor": "Adonis Capote",
+  "type": "web",
+  "main": "index.html",
+  "title": "Dominó Cubano",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "resolution": "1280x720",
+  "disableBackHistoryAPI": true,
+  "bgColor": "#002A8F"
+}
